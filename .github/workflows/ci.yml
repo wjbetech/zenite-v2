@@ -44,7 +44,7 @@ jobs:
   deploy_vercel:
     needs: build
     runs-on: ubuntu-latest
-  if: github.ref == 'refs/heads/main' && (secrets.VERCEL_TOKEN != '' || secrets.VERCEL_TOKEN != null)
+    if: github.ref == 'refs/heads/main' && (secrets.VERCEL_TOKEN != '' || secrets.VERCEL_TOKEN != null)
 
     steps:
       - name: Checkout

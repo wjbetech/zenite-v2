@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Button } from './ui/Button';
 import React from 'react';
+import DiamondLogo from './DiamondLogo';
 
 export default function Navbar() {
   return (
@@ -10,20 +11,13 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center w-full justify-between">
         {/* Left: logo + links */}
         <div className="flex items-center gap-4">
-          <Link href="/" className="text-2xl md:text-3xl font-extrabold text-indigo-600">
-            Zenite
+          <Link
+            href="/"
+            className="flex items-center gap-3 text-2xl md:text-3xl font-extrabold text-indigo-600"
+          >
+            <DiamondLogo className="w-7 h-7 inline-block transform translate-y-0.5" />
+            <span>Zenite</span>
           </Link>
-          <div className="hidden md:flex items-center gap-3 text-sm text-gray-600">
-            <Link href="/" className="hover:text-gray-900">
-              Home
-            </Link>
-            <Link href="/tasks" className="hover:text-gray-900">
-              Tasks
-            </Link>
-            <Link href="/about" className="hover:text-gray-900">
-              About
-            </Link>
-          </div>
         </div>
 
         {/* Right: auth buttons */}

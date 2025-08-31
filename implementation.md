@@ -80,7 +80,11 @@ Design principles:
 
 ---
 
-## 🌐 Pages
+## � Styles
+
+- Use tones of green-emerald throughout the app to align with the zen visual language and create a calming, focused experience.
+
+## �🌐 Pages
 
 - [ ] `/dashboard`
 - [ ] `/login`

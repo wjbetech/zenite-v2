@@ -13,7 +13,7 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           <Link
             href="/"
-            className="flex items-center gap-3 text-2xl md:text-3xl font-extrabold text-indigo-600"
+            className="flex items-center gap-3 text-2xl md:text-3xl font-extrabold text-emerald-600"
           >
             <DiamondLogo className="w-7 h-7 inline-block transform translate-y-0.5" />
             <span>Zenite</span>
@@ -26,7 +26,9 @@ export default function Navbar() {
             <Button variant="ghost">Login</Button>
           </Link>
           <Link href="/signup">
-            <Button variant="primary">Sign up</Button>
+            <Button variant="primary" className="">
+              Sign up
+            </Button>
           </Link>
         </div>
       </div>

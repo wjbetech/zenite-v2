@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:webpack": "next dev",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
@@ -15,19 +16,28 @@
     "prisma:migrate:dev": "prisma migrate dev --name init",
     "prisma:db:push": "prisma db push",
     "db:start": "docker compose up -d db",
-    "db:stop": "docker compose down"
+    "db:stop": "docker compose down",
+    "tailwind:build": "npx tailwindcss -c tailwind.config.mjs -i ./src/app/globals.css -o ./public/tailwind.css",
+    "tailwind:watch": "npx tailwindcss -c tailwind.config.mjs -i ./src/app/globals.css -o ./public/tailwind.css --watch"
   },
   "prisma": {
     "schema": "./prisma/schema.prisma"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.542.0",
     "next": "15.5.2",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/postcss": "^4.1.12",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

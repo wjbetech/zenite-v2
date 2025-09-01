@@ -52,7 +52,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
 
   return (
     <UISidebar width={collapsed ? 'w-16' : 'w-52'} showHeader={!hideHeader}>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full text-gray-900 dark:text-gray-100">
         {/* header / collapse toggle */}
         <div className="flex items-center justify-start pl-1 py-2">
           <button
@@ -78,11 +78,11 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-3 rounded px-2 py-2 hover:bg-gray-100 ${
+                    className={`flex items-center gap-3 rounded px-2 py-2 hover:bg-gray-100 dark:hover:bg-slate-800 ${
                       collapsed ? 'justify-center w-full' : 'w-full'
                     }`}
                   >
-                    <div className="w-6 h-6 flex items-center justify-center text-gray-700">
+                    <div className="w-6 h-6 flex items-center justify-center text-gray-700 dark:text-gray-200">
                       <Icon className="w-5 h-5" />
                     </div>
                     {!collapsed && <span>{item.label}</span>}
@@ -97,11 +97,11 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                   role="link"
                   aria-disabled="true"
                   tabIndex={-1}
-                  className={`flex items-center gap-3 rounded px-2 py-2 text-gray-400 cursor-not-allowed ${
+                  className={`flex items-center gap-3 rounded px-2 py-2 text-gray-400 dark:text-slate-400 cursor-not-allowed ${
                     collapsed ? 'justify-center w-full' : 'w-full'
                   }`}
                 >
-                  <div className="w-6 h-6 flex items-center justify-center text-gray-400">
+                  <div className="w-6 h-6 flex items-center justify-center text-gray-400 dark:text-slate-400">
                     <Icon className="w-5 h-5" />
                   </div>
                   {!collapsed && <span>{item.label}</span>}

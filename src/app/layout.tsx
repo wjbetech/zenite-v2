@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Navbar, Sidebar } from '../components';
+import ThemeProvider from '../components/ThemeProvider';
+import useThemeStore from '../lib/themeStore';
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -18,11 +20,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-vend`}>
-        <Navbar />
-        <div className="flex">
-          <Sidebar isLoggedIn={isLoggedIn} />
-          <main className="flex-1 p-6">{children}</main>
-        </div>
+        <ThemeProvider>
+          <Navbar />
+          <div className="flex">
+            <Sidebar isLoggedIn={isLoggedIn} />
+            <main className="flex-1 p-6">{children}</main>
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );

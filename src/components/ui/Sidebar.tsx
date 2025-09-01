@@ -58,7 +58,10 @@ export function UISidebar({
             </div>
             <div
               {...props}
-              className={cn('flex flex-col p-4 min-h-[calc(100vh-72px)] bg-white', className)}
+              className={cn(
+                'flex flex-col p-4 min-h-[calc(100vh-72px)] bg-white dark:bg-slate-900',
+                className,
+              )}
             >
               {children}
             </div>
@@ -70,7 +73,7 @@ export function UISidebar({
       <aside
         {...props}
         className={cn(
-          'hidden md:flex flex-col p-4 min-h-[calc(100vh-72px)] border-r border-gray-200 bg-white/90',
+          'hidden md:flex flex-col p-4 min-h-[calc(100vh-72px)] border-r border-gray-200 bg-white dark:bg-slate-900 dark:border-slate-700',
           width,
           className,
         )}

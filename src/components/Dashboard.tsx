@@ -70,7 +70,7 @@ export default function Dashboard({ tasks }: DashboardProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-10">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
         <Link href="/tasks/new">
           <Button variant="primary">New Task</Button>
@@ -80,21 +80,21 @@ export default function Dashboard({ tasks }: DashboardProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         <TaskSection
           title="Imminent tasks"
-          accent="rose-400"
+          accentClass="border-rose-400"
           tasks={soonest}
-          renderRight={(t) => {
+          renderRight={(t: Task) => {
             const days = daysUntil(t.dueDate);
             const dueLabel = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days}d`;
             return <span className="text-xs text-gray-500">{dueLabel}</span>;
           }}
         />
 
-        <div className="mt-12 md:mt-0">
+        <div className=" md:mt-0">
           <TaskSection
             title="Newly created"
-            accent="emerald-400"
+            accentClass="border-emerald-400"
             tasks={newTasks}
-            renderRight={(t) => (
+            renderRight={(t: Task) => (
               <span className="text-xs text-gray-400">
                 {new Date(t.createdAt).toLocaleDateString()}
               </span>
@@ -104,9 +104,9 @@ export default function Dashboard({ tasks }: DashboardProps) {
       </div>
 
       <section className="min-h-[260px]">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-medium text-gray-700 dark:text-white">
-            <span className="inline-block border-b-4 border-indigo-300 pb-0.5">
+            <span className="inline-block border-b-4 border-sky-500 pb-0.5 mb-3">
               Today&apos;s tasks
             </span>
           </h2>
@@ -115,7 +115,7 @@ export default function Dashboard({ tasks }: DashboardProps) {
           </span>
         </div>
         <TaskSection
-          accent="indigo-300"
+          accentClass="border-sky-500"
           tasks={today}
           renderRight={() => <span className="text-xs text-gray-400">Due today</span>}
         />

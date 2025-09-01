@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Button } from './ui/Button';
+import { Plus } from 'lucide-react';
 import TaskSection from './TaskSection';
 import type { Task } from './TaskCard';
 
@@ -73,7 +74,10 @@ export default function Dashboard({ tasks }: DashboardProps) {
       <div className="flex items-center justify-between mb-10">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
         <Link href="/tasks/new">
-          <Button variant="primary">New Task</Button>
+          <Button variant="primary">
+            <Plus className="mr-2 h-4 w-4" />
+            New Task
+          </Button>
         </Link>
       </div>
 

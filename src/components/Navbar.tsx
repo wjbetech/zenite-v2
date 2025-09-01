@@ -9,7 +9,7 @@ import DiamondLogo from './DiamondLogo';
 export default function Navbar() {
   return (
     <nav className="flex w-full bg-white dark:bg-slate-900 backdrop-blur-sm border-b border-gray-200 dark:border-slate-700 h-[72px]">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center w-full justify-between">
+      <div className="mx-auto px-4 py-3 flex items-center w-full justify-between">
         {/* Left: logo + links */}
         <div className="flex items-center gap-4">
           <Link

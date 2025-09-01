@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Navbar, Sidebar } from '../components';
 import ThemeProvider from '../components/ThemeProvider';
-import useThemeStore from '../lib/themeStore';
 
 export const metadata: Metadata = {
   title: 'Create Next App',

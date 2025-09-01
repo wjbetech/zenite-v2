@@ -42,7 +42,6 @@ function TaskCard({ task, href, right }: { task: Task; href?: string; right?: Re
 
 function daysUntil(date?: string | null) {
   if (!date) return Infinity;
-  const now = new Date();
   const d = new Date(date);
   const diff = Math.ceil(
     (d.setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24),

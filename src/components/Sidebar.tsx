@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import UISidebar from './ui/Sidebar';
-import { Button } from './ui/Button';
+// Button intentionally not used here yet
 import {
   ChevronLeft,
   ChevronRight,
@@ -27,16 +27,16 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
     try {
       const raw = localStorage.getItem(SIDEBAR_KEY);
       if (raw !== null) setCollapsed(raw === 'true');
-    } catch (e) {
-      /* ignore */
+    } catch {
+      // ignore
     }
   }, []);
 
   React.useEffect(() => {
     try {
       localStorage.setItem(SIDEBAR_KEY, String(collapsed));
-    } catch (e) {
-      /* ignore */
+    } catch {
+      // ignore
     }
   }, [collapsed]);
 
@@ -69,7 +69,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
         </div>
 
         {/* nav area: vertically centered container but left-aligned items */}
-        <div className="flex-1 flex flex-col justify-center">
+        <div className="flex-1 flex flex-col">
           <nav className="flex flex-col gap-2 items-start w-full">
             {nav.map((item) => {
               const Icon = item.icon;
@@ -110,42 +110,6 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
             })}
           </nav>
         </div>
-
-        {/* footer: auth buttons anchored to bottom */}
-        {!hideHeader && (
-          <div className="mt-auto px-2 pb-4 w-full">
-            {isLoggedIn ? (
-              <div className="space-y-2">
-                <Link href="/login">
-                  <Button variant="ghost" className={`w-full ${collapsed ? 'px-1 py-1' : ''}`}>
-                    {!collapsed ? 'Login' : 'L'}
-                  </Button>
-                </Link>
-                <Link href="/signup">
-                  <Button variant="primary" className={`w-full ${collapsed ? 'px-1 py-1' : ''}`}>
-                    {!collapsed ? 'Sign up' : '+'}
-                  </Button>
-                </Link>
-              </div>
-            ) : (
-              <div>
-                <h5 className="text-gray-400 mb-2 text-center">You are not logged in!</h5>
-                <div className="flex flex-col gap-4 w-full">
-                  <Link href="/login" className="w-full">
-                    <Button variant="default" className={`w-full ${collapsed ? 'px-1 py-1' : ''}`}>
-                      {!collapsed ? 'Login' : 'L'}
-                    </Button>
-                  </Link>
-                  <Link href="/signup" className="w-full">
-                    <Button variant="primary" className={`w-full ${collapsed ? 'px-1 py-1' : ''}`}>
-                      {!collapsed ? 'Sign up' : '+'}
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </UISidebar>
   );

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { Navbar } from '../components';
+import { Navbar, Sidebar } from '../components';
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -12,11 +12,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // TODO: replace with real auth logic
+  const isLoggedIn = false;
+
   return (
     <html lang="en">
       <body className={`font-vend`}>
         <Navbar />
-        {children}
+        <div className="flex">
+          <Sidebar isLoggedIn={isLoggedIn} />
+          <main className="flex-1 p-6">{children}</main>
+        </div>
       </body>
     </html>
   );

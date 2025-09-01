@@ -69,6 +69,10 @@ Design principles:
 
 ---
 
+## 🖼️ Icons
+
+- All icons in the app should be handled using [lucide icons](https://lucide.dev/) via the `lucide-react` package for consistency and modern SVG support.
+
 ## 🎨 UI Components
 
 - [ ] Task Card

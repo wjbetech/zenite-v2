@@ -15,6 +15,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     try {
       stored = localStorage.getItem('zenite.theme');
     } catch (e) {
+      console.log(e);
       /* ignore */
     }
 

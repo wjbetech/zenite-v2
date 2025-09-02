@@ -9,6 +9,8 @@ type TaskSectionProps = {
   accentClass?: string;
   tasks: Task[];
   renderRight?: (t: Task) => React.ReactNode;
+  onEdit?: (t: Task) => void;
+  onDelete?: (id: string) => void;
 };
 
 export default function TaskSection({
@@ -16,6 +18,8 @@ export default function TaskSection({
   accentClass = 'border-indigo-300',
   tasks,
   renderRight,
+  onEdit,
+  onDelete,
 }: TaskSectionProps) {
   return (
     <section className="mb-[74px]">
@@ -32,6 +36,8 @@ export default function TaskSection({
               task={t}
               href={`/tasks/${t.id}`}
               right={renderRight ? renderRight(t) : undefined}
+              onEdit={onEdit}
+              onDelete={onDelete}
             />
           </li>
         ))}

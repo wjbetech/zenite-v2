@@ -6,6 +6,9 @@ import { Button } from './ui/Button';
 import { Plus } from 'lucide-react';
 import TaskSection from './TaskSection';
 import type { Task } from './TaskCard';
+import useTaskStore from '../lib/taskStore';
+import TaskModal from './TaskModal';
+import { useState } from 'react';
 
 type DashboardProps = {
   tasks?: Task[];
@@ -21,6 +24,13 @@ function daysUntil(date?: string | null) {
 }
 
 export default function Dashboard({ tasks }: DashboardProps) {
+  const storeTasks = useTaskStore((s) => s.tasks);
+
+  const deleteTask = useTaskStore((s) => s.deleteTask);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<Partial<Task> | undefined>(undefined);
+
   const sample: Task[] = [
     {
       id: '1',
@@ -50,7 +60,12 @@ export default function Dashboard({ tasks }: DashboardProps) {
     },
   ];
 
-  const all = tasks ?? sample;
+  // merge sample and store tasks by id (store overrides sample)
+  const mergedById: Record<string, Task> = {};
+  [...(tasks ?? sample), ...storeTasks].forEach((t) => {
+    mergedById[t.id] = t;
+  });
+  const all = Object.values(mergedById).slice(0, 50);
   const newTasks = [...all]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5);
@@ -91,6 +106,11 @@ export default function Dashboard({ tasks }: DashboardProps) {
             const dueLabel = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days}d`;
             return <span className="text-xs text-gray-500">{dueLabel}</span>;
           }}
+          onEdit={(t) => {
+            setEditing(t);
+            setModalOpen(true);
+          }}
+          onDelete={(id) => deleteTask(id)}
         />
 
         <div className=" md:mt-0">
@@ -103,6 +123,11 @@ export default function Dashboard({ tasks }: DashboardProps) {
                 {new Date(t.createdAt).toLocaleDateString()}
               </span>
             )}
+            onEdit={(t) => {
+              setEditing(t);
+              setModalOpen(true);
+            }}
+            onDelete={(id) => deleteTask(id)}
           />
         </div>
       </div>
@@ -122,8 +147,21 @@ export default function Dashboard({ tasks }: DashboardProps) {
           accentClass="border-sky-500"
           tasks={today}
           renderRight={() => <span className="text-xs text-gray-400">Due today</span>}
+          onEdit={(t) => {
+            setEditing(t);
+            setModalOpen(true);
+          }}
+          onDelete={(id) => deleteTask(id)}
         />
       </section>
+      <TaskModal
+        open={modalOpen}
+        onOpenChange={(v) => {
+          setModalOpen(v);
+          if (!v) setEditing(undefined);
+        }}
+        initial={editing}
+      />
     </div>
   );
 }

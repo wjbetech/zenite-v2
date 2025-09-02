@@ -74,7 +74,7 @@ export default function Dashboard({ tasks }: DashboardProps) {
       <div className="flex items-center justify-between mb-10">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
         <Link href="/tasks/new">
-          <Button variant="primary">
+          <Button variant="primary" className="pr-3">
             <Plus className="mr-2 h-4 w-4" />
             New Task
           </Button>

@@ -13,7 +13,7 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 
 export function Button({ variant = 'default', className, ...props }: ButtonProps) {
   const base =
-    'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors px-3 py-1';
+    'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors px-2 py-1';
   const variants: Record<string, string> = {
     default:
       'bg-white border text-gray-700 hover:bg-gray-50 border-gray-200 cursor-pointer dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 dark:hover:bg-slate-700',

@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Root-level defaults for light/dark. These ensure elements default to
 	 readable backgrounds and text when toggling the html.dark class. */
 :root {

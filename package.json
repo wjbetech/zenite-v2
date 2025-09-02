@@ -17,8 +17,8 @@
     "prisma:db:push": "prisma db push",
     "db:start": "docker compose up -d db",
     "db:stop": "docker compose down",
-    "tailwind:build": "npx tailwindcss -c tailwind.config.mjs -i ./src/app/globals.css -o ./public/tailwind.css",
-    "tailwind:watch": "npx tailwindcss -c tailwind.config.mjs -i ./src/app/globals.css -o ./public/tailwind.css --watch"
+    "tailwind:build": "npx tailwindcss -c tailwind.config.cjs -i ./src/app/globals.css -o ./public/tailwind.css",
+    "tailwind:watch": "npx tailwindcss -c tailwind.config.cjs -i ./src/app/globals.css -o ./public/tailwind.css --watch"
   },
   "prisma": {
     "schema": "./prisma/schema.prisma"

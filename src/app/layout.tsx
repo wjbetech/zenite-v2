@@ -32,7 +32,7 @@ export default async function RootLayout({
         </Script>
       </head>
 
-      <body className={`font-vend bg-white text-slate-900 dark:bg-slate-900 dark:text-white`}>
+      <body className={`font-vend bg-white text-slate-900 dark:bg-gray-900 dark:text-white`}>
         <ThemeProvider>
           <Navbar />
           <div className="flex">

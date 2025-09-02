@@ -57,7 +57,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
 
   const cardInner = (
     <div
-      className={`${bgClass} relative z-10 rounded-md shadow-sm border ${borderClass} p-4 md:p-5 lg:p-6 transition-transform duration-150 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
+      className={`${bgClass} relative z-10 rounded-md shadow-sm border ${borderClass} p-2 transition-transform duration-150 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">

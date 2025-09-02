@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from './ui/Button';
 import { Plus } from 'lucide-react';
 import TaskSection from './TaskSection';
+import ActivityHeatmap from './ActivityHeatmap';
 import type { Task } from './TaskCard';
 import useTaskStore from '../lib/taskStore';
 import TaskModal from './TaskModal';
@@ -94,6 +95,11 @@ export default function Dashboard({ tasks }: DashboardProps) {
             New Task
           </Button>
         </Link>
+      </div>
+
+      {/* Activity heatmap under the title */}
+      <div className="mb-10">
+        <ActivityHeatmap />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">

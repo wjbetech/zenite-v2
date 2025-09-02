@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Edit, Trash, Check } from 'lucide-react';
 
 export type Task = {
@@ -15,12 +16,13 @@ export type Task = {
 type Props = {
   task: Task;
   right?: React.ReactNode;
+  href?: string;
   onEdit?: (task: Task) => void;
   onDelete?: (id: string) => void;
   onStatusChange?: (id: string, status: 'none' | 'done' | 'tilde') => void;
 };
 
-export default function TaskCard({ task, right, onEdit, onDelete, onStatusChange }: Props) {
+export default function TaskCard({ task, right, href, onEdit, onDelete, onStatusChange }: Props) {
   const [status, setStatus] = useState<'none' | 'done' | 'tilde'>('none');
 
   const cycleStatus = () => {
@@ -36,63 +38,70 @@ export default function TaskCard({ task, right, onEdit, onDelete, onStatusChange
       ? 'bg-amber-500/25'
       : 'bg-white dark:bg-gray-900';
 
-  return (
+  const cardInner = (
     <div
-      className={`${bgClass} rounded-md shadow-sm border border-gray-100 dark:border-zinc-800 p-3`}
+      className={`${bgClass} relative z-10 rounded-md shadow-sm border border-gray-100 dark:border-zinc-800 p-3 transition-transform duration-150 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-2">
-                <div className="text-sm font-medium text-gray-900 dark:text-white">
-                  {task.title}
-                </div>
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-2">
+              <div className="text-sm font-medium text-gray-900 dark:text-white">{task.title}</div>
 
-                {/* tri-state checkbox placed next to the title */}
+              <button
+                aria-label="Toggle task status"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  cycleStatus();
+                }}
+                className="h-5 w-5 flex items-center justify-center rounded border text-xs cursor-pointer"
+                title={
+                  status === 'none'
+                    ? 'Mark done'
+                    : status === 'done'
+                    ? 'Mark tilde'
+                    : 'Clear status'
+                }
+              >
+                {status === 'done' ? (
+                  <Check className="h-4 w-4 text-black" strokeWidth={2} />
+                ) : status === 'tilde' ? (
+                  <span className="text-sm font-bold text-black">~</span>
+                ) : null}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {onEdit && (
                 <button
-                  aria-label="Toggle task status"
-                  onClick={cycleStatus}
-                  className="h-5 w-5 flex items-center justify-center rounded border text-xs cursor-pointer"
-                  title={
-                    status === 'none'
-                      ? 'Mark done'
-                      : status === 'done'
-                      ? 'Mark tilde'
-                      : 'Clear status'
-                  }
+                  aria-label="Edit task"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onEdit(task);
+                  }}
+                  className="cursor-pointer text-amber-500 hover:text-amber-700 dark:text-amber-400"
+                  title="Edit"
                 >
-                  {status === 'done' ? (
-                    <Check className="h-4 w-4 text-black" strokeWidth={2} />
-                  ) : status === 'tilde' ? (
-                    <span className="text-sm font-bold text-black">~</span>
-                  ) : null}
+                  <Edit className="h-4 w-4" />
                 </button>
-              </div>
+              )}
 
-              <div className="flex items-center gap-3">
-                {onEdit && (
-                  <button
-                    aria-label="Edit task"
-                    onClick={() => onEdit(task)}
-                    className="cursor-pointer text-amber-500 hover:text-amber-700 dark:text-amber-400"
-                    title="Edit"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </button>
-                )}
-
-                {onDelete && (
-                  <button
-                    aria-label="Delete task"
-                    onClick={() => onDelete(task.id)}
-                    className="cursor-pointer text-red-500 hover:text-red-700 dark:text-red-400"
-                    title="Delete"
-                  >
-                    <Trash className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
+              {onDelete && (
+                <button
+                  aria-label="Delete task"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onDelete(task.id);
+                  }}
+                  className="cursor-pointer text-red-500 hover:text-red-700 dark:text-red-400"
+                  title="Delete"
+                >
+                  <Trash className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -101,6 +110,22 @@ export default function TaskCard({ task, right, onEdit, onDelete, onStatusChange
           </div>
         </div>
       </div>
+    </div>
+  );
+
+  return (
+    <div className="relative">
+      {/* Deep slab (chunky 3D base) */}
+      <div className="absolute inset-0 translate-x-3 translate-y-3 rounded-md bg-gray-100 dark:bg-zinc-900 border border-gray-200/20 dark:border-zinc-900 z-0" />
+      {/* Mid slab (subtle rim) */}
+      <div className="absolute inset-0 translate-x-1 translate-y-1 rounded-md bg-gray-50 dark:bg-zinc-800 border border-gray-100 dark:border-zinc-800 z-0" />
+      {href ? (
+        <Link href={href} className="block">
+          {cardInner}
+        </Link>
+      ) : (
+        cardInner
+      )}
     </div>
   );
 }

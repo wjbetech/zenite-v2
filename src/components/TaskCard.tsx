@@ -26,7 +26,8 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
   const [status, setStatus] = useState<'none' | 'done' | 'tilde'>('none');
 
   const cycleStatus = () => {
-    const next = status === 'none' ? 'done' : status === 'done' ? 'tilde' : 'none';
+    // Order: none -> tilde (in-progress) -> done -> none
+    const next = status === 'none' ? 'tilde' : status === 'tilde' ? 'done' : 'none';
     setStatus(next);
     onStatusChange?.(task.id, next);
   };
@@ -38,9 +39,25 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
       ? 'bg-amber-500/25'
       : 'bg-white dark:bg-gray-800';
 
+  // border color for the card depending on status
+  const borderClass =
+    status === 'done'
+      ? 'border-emerald-600 dark:border-emerald-700'
+      : status === 'tilde'
+      ? 'border-amber-600 dark:border-amber-700'
+      : 'border-gray-100 dark:border-zinc-500';
+
+  // class for the small status toggle button so it matches the status color
+  const buttonClass =
+    status === 'done'
+      ? 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-emerald-700 bg-emerald-100 dark:bg-emerald-900 text-sm cursor-pointer'
+      : status === 'tilde'
+      ? 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-amber-700 bg-amber-100 dark:bg-amber-900 text-sm cursor-pointer'
+      : 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-gray-700 text-sm cursor-pointer';
+
   const cardInner = (
     <div
-      className={`${bgClass} relative z-10 rounded-md shadow-sm border border-gray-100 dark:border-zinc-500 p-4 md:p-5 lg:p-6 transition-transform duration-150 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
+      className={`${bgClass} relative z-10 rounded-md shadow-sm border ${borderClass} p-4 md:p-5 lg:p-6 transition-transform duration-150 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
@@ -57,19 +74,24 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
                   e.preventDefault();
                   cycleStatus();
                 }}
-                className="h-5 w-5 flex items-center justify-center rounded-md border-2 border-gray-700 text-sm cursor-pointer"
+                className={buttonClass}
                 title={
                   status === 'none'
+                    ? 'Mark in progress'
+                    : status === 'tilde'
                     ? 'Mark done'
-                    : status === 'done'
-                    ? 'Mark tilde'
                     : 'Clear status'
                 }
               >
                 {status === 'done' ? (
-                  <Check className="h-4 w-4 text-black" strokeWidth={2} />
+                  // dark green for completed
+                  <Check
+                    className="h-4 w-4 text-emerald-800 dark:text-emerald-300"
+                    strokeWidth={2}
+                  />
                 ) : status === 'tilde' ? (
-                  <span className="text-sm font-bold text-black">~</span>
+                  // dark orange for in-progress/tilde
+                  <span className="text-sm font-bold text-amber-800 dark:text-amber-300">~</span>
                 ) : null}
               </button>
             </div>
@@ -83,7 +105,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
                     e.preventDefault();
                     onEdit(task);
                   }}
-                  className="cursor-pointer text-amber-500 hover:text-amber-700 dark:text-amber-400"
+                  className="cursor-pointer text-emerald-500 hover:text-emerald-500/80"
                   title="Edit"
                 >
                   <Edit className="h-5 w-5" />
@@ -98,7 +120,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
                     e.preventDefault();
                     onDelete(task.id);
                   }}
-                  className="cursor-pointer text-red-500 hover:text-red-700 dark:text-red-400"
+                  className="cursor-pointer text-red-400 hover:text-red-400/80"
                   title="Delete"
                 >
                   <Trash className="h-5 w-5" />

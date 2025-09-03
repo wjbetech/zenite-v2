@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/Button';
 import useTaskStore, { Task } from '../lib/taskStore';
+import useProjectStore from '../lib/projectStore';
 
 export default function TaskModal({
   open,
@@ -19,20 +20,23 @@ export default function TaskModal({
   const [title, setTitle] = useState(initial?.title ?? '');
   const [notes, setNotes] = useState(initial?.notes ?? '');
   const [dueDate, setDueDate] = useState<string | null>(initial?.dueDate ?? null);
+  const [projectId, setProjectId] = useState<string | null>(initial?.projectId ?? null);
+  const projects = useProjectStore((s) => s.projects);
 
   useEffect(() => {
     setTitle(initial?.title ?? '');
     setNotes(initial?.notes ?? '');
     setDueDate(initial?.dueDate ?? null);
+    setProjectId(initial?.projectId ?? null);
   }, [initial, open]);
 
   function submit(e?: React.FormEvent) {
     e?.preventDefault();
     if (!title.trim()) return;
     if (initial?.id) {
-      updateTask(initial.id, { title: title.trim(), notes: notes.trim(), dueDate });
+      updateTask(initial.id, { title: title.trim(), notes: notes.trim(), dueDate, projectId });
     } else {
-      createTask({ title: title.trim(), notes: notes.trim(), dueDate });
+      createTask({ title: title.trim(), notes: notes.trim(), dueDate, projectId });
     }
     onOpenChange(false);
   }
@@ -77,6 +81,22 @@ export default function TaskModal({
             }
             className="p-2 rounded border dark:border-slate-700 bg-white dark:bg-slate-900"
           />
+        </label>
+
+        <label className="block mt-3">
+          <div className="text-sm text-gray-600 mb-1">Project</div>
+          <select
+            value={projectId ?? ''}
+            onChange={(e) => setProjectId(e.target.value || null)}
+            className="p-2 rounded border dark:border-slate-700 bg-white dark:bg-slate-900"
+          >
+            <option value="">(none)</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
         </label>
 
         <div className="mt-4 flex justify-end gap-2">

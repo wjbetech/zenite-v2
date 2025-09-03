@@ -10,6 +10,7 @@ export type Task = {
   dueDate?: string | null;
   createdAt: string;
   completed?: boolean;
+  projectId?: string | null;
 };
 
 type State = {

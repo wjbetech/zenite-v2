@@ -11,20 +11,23 @@ export default function HomeHero() {
   const router = useRouter();
 
   return (
-    <section className="relative overflow-hidden min-h-[calc(100vh-136px)] flex items-center py-12">
+    <section
+      className="relative overflow-hidden flex items-start sm:items-center pt-6 sm:py-12"
+      style={{ minHeight: 'calc(100vh - var(--nav-height) - 48px)' }}
+    >
       <div className="container mx-auto px-6 lg:px-12">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-4xl mx-auto text-center grid place-items-center gap-6 sm:gap-8">
           <h1 className="text-4xl md:text-6xl font-extrabold text-gray-700 dark:text-gray-300 leading-tight tracking-tight">
             Productivity should be
             <span className="ml-2 text-emerald-600">zenful</span>
           </h1>
 
-          <p className="mt-4 text-xl text-gray-600 dark:text-white font-medium">
-            A modern, minimal productivity tool focused on calm and clarity.
+          <p className="sm:mt-4 text-xl text-gray-600 dark:text-white font-medium">
+            A modern, minimal tool for real productivity.
           </p>
 
           {/* Prefer the 3D WebGL gem when available; fall back to the inline SVG */}
-          <div className="w-full flex items-center justify-center">
+          <div className="w-full hidden sm:flex items-center justify-center py-10">
             <Gem3D size={160} />
             <noscript>
               {/* if JS is disabled, show the static SVG gem */}
@@ -34,7 +37,7 @@ export default function HomeHero() {
 
           {/* Absolutely positioned button so it doesn't move page content when adjusted. */}
           {isSignedIn && (
-            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-16">
+            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-8 sm:bottom-16">
               <Button
                 variant="primary"
                 className="px-4 py-2"

@@ -41,10 +41,13 @@ export default async function RootLayout({
           </Script>
         </head>
 
-        <body className={`font-vend bg-white text-slate-900 dark:bg-gray-900 dark:text-white`}>
+        <body
+          className={`font-vend bg-white text-slate-900 dark:bg-gray-900 dark:text-white`}
+          style={{ ['--nav-height' as any]: '72px' } as React.CSSProperties}
+        >
           <Providers>
             <Navbar />
-            {/* spacer for fixed navbar height (72px) */}
+            {/* spacer for fixed navbar height (kept for layout), use CSS var '--nav-height' for precise centering */}
             <div style={{ height: 72 }} />
             <div className="flex">
               <Sidebar isLoggedIn={isLoggedIn} />

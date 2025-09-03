@@ -251,7 +251,7 @@ export default function Gem3D({ size = 120 }: { size?: number }) {
   }, [size]);
 
   return (
-    <div className="mt-12 flex justify-center">
+    <div className="flex justify-center">
       {/* pushed down from text */}
       <div ref={containerRef} style={{ width: Math.max(64, size), height: Math.max(64, size) }}>
         {!webglAvailable && (

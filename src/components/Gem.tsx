@@ -8,7 +8,7 @@ export default function Gem({ size = 64 }: GemProps) {
   const px = `${size}px`;
 
   return (
-    <div style={{ perspective: '600px' }} className="mt-8 flex justify-center" aria-hidden>
+    <div style={{ perspective: '600px' }} className="flex justify-center" aria-hidden>
       <div
         style={{ width: px, height: px }}
         className="transform-gpu [transform-style:preserve-3d] animate-[gemSpin_6s_linear_infinite]"

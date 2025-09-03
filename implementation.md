@@ -39,10 +39,10 @@ Design principles:
 
 ## 🔐 Authentication
 
-- [ ] Set up Clerk
-- [ ] Protect API routes
-- [ ] Display login/logout UI
-- [ ] Secure session storage
+- [x] Set up Clerk (done 2025-09-03)
+- [x] Protect API routes
+- [x] Display login/logout UI
+- [x] Secure session storage
 
 ---
 

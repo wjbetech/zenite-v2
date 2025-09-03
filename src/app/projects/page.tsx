@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import useProjectStore from '../../lib/projectStore';
 import { Input } from '../../components/ui/input';
-import { Check, Trash } from 'lucide-react';
+import { Button } from '../../components/ui/Button';
+import { Check, Trash, Plus } from 'lucide-react';
 
 type Status = 'none' | 'tilde' | 'done';
 
@@ -39,12 +40,17 @@ export default function ProjectsPage() {
           placeholder="New project name"
           className="mr-2"
         />
-        <button onClick={create} className="px-3 py-1 rounded bg-emerald-500 text-white">
-          Create
-        </button>
+        <Button
+          variant="primary"
+          onClick={create}
+          className="pl-1 py-3 flex items-center gap-2 w-[90px]"
+        >
+          <Plus className="h-4 w-4" />
+          <span className="leading-none">Create</span>
+        </Button>
       </div>
 
-      <div className="grid gap-2">
+      <div className="grid gap-4">
         {projects.length === 0 ? (
           <div className="min-h-[60vh] flex items-center justify-center">
             <div className="text-lg md:text-xl text-gray-500">- No projects yet! -</div>
@@ -75,7 +81,7 @@ export default function ProjectsPage() {
                 : 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-gray-700 text-sm cursor-pointer';
 
             return (
-              <div key={p.id} className="relative">
+              <div key={p.id} className="relative cursor-pointer">
                 {/* chunky 3D slab shadow/base under the card */}
                 <div className="absolute inset-0 translate-x-2 translate-y-2 rounded-md bg-gray-100 dark:bg-gray-700 border border-gray-200/20 dark:border-zinc-900 z-0" />
 

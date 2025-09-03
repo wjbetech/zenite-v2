@@ -70,3 +70,22 @@ a {
     transform: translateY(0) rotate(0deg);
   }
 }
+
+/* Gem 3D-like spin keyframes: rotate on multiple axes to imply depth */
+@keyframes gemSpin {
+  0% {
+    transform: rotateX(8deg) rotateY(0deg) rotateZ(0deg);
+  }
+  25% {
+    transform: rotateX(6deg) rotateY(90deg) rotateZ(6deg);
+  }
+  50% {
+    transform: rotateX(8deg) rotateY(180deg) rotateZ(0deg);
+  }
+  75% {
+    transform: rotateX(10deg) rotateY(270deg) rotateZ(-6deg);
+  }
+  100% {
+    transform: rotateX(8deg) rotateY(360deg) rotateZ(0deg);
+  }
+}

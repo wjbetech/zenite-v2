@@ -44,6 +44,8 @@ export default async function RootLayout({
         <body className={`font-vend bg-white text-slate-900 dark:bg-gray-900 dark:text-white`}>
           <Providers>
             <Navbar />
+            {/* spacer for fixed navbar height (72px) */}
+            <div style={{ height: 72 }} />
             <div className="flex">
               <Sidebar isLoggedIn={isLoggedIn} />
               <main className="flex-1 p-6">{children}</main>

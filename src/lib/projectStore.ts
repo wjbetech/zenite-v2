@@ -2,6 +2,7 @@
 
 import create from 'zustand';
 import { nanoid } from 'nanoid/non-secure';
+import api from './api';
 
 export type Project = {
   id: string;
@@ -17,6 +18,7 @@ type State = {
   updateProject: (id: string, patch: Partial<Project>) => Project | undefined;
   deleteProject: (id: string) => void;
   setProjects: (p: Project[]) => void;
+  loadRemote: () => Promise<void>;
 };
 
 const STORAGE_KEY = 'zenite:projects:v1';
@@ -63,6 +65,25 @@ const useProjectStore = create<State>((set, get) => ({
     const projects = get().projects.filter((p) => p.id !== id);
     set({ projects });
     save(projects);
+  },
+  async loadRemote() {
+    try {
+      if (process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true') {
+        const remote = await api.fetchProjects();
+        if (Array.isArray(remote)) {
+          const projects = (remote as Array<Partial<Project>>).map((r) => ({
+            id: r.id || '',
+            name: r.name || 'Untitled',
+            description: r.description,
+            createdAt: r.createdAt || new Date().toISOString(),
+          }));
+          set({ projects });
+          save(projects);
+        }
+      }
+    } catch (e) {
+      console.error('failed to load remote projects', e);
+    }
   },
 }));
 

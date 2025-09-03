@@ -1,4 +1,6 @@
-import React, { useMemo, useState } from 'react';
+'use client';
+
+import React, { useMemo, useState, useEffect } from 'react';
 
 type RangeKey = '3m' | '1m' | '1w';
 
@@ -49,6 +51,14 @@ function generateDemoData(start: Date, end: Date): ActivityMap {
     // random 0..6
     const r = Math.floor(Math.random() * 7);
     map[formatDateISO(cur)] = r;
+  }
+  return map;
+}
+
+function zeroMap(start: Date, end: Date): ActivityMap {
+  const map: ActivityMap = {};
+  for (let cur = new Date(start); cur <= end; cur = addDays(cur, 1)) {
+    map[formatDateISO(cur)] = 0;
   }
   return map;
 }
@@ -125,9 +135,22 @@ export default function ActivityHeatmap({
     return { startDate: start, endDate: end, days: allDays };
   }, [range]);
 
-  const map = useMemo(() => {
+  // avoid generating random demo data during server render to prevent
+  // hydration mismatches. Initialize to zeros on first render (server and
+  // client) and only generate demo data on the client after mount.
+  const [map, setMap] = useState<ActivityMap>(() => {
     if (activity) return activity;
-    return generateDemoData(startDate, endDate);
+    return zeroMap(startDate, endDate);
+  });
+
+  useEffect(() => {
+    if (activity) {
+      setMap(activity);
+      return;
+    }
+    // generate demo data only on client after mount
+    const demo = generateDemoData(startDate, endDate);
+    setMap(demo);
   }, [activity, startDate, endDate]);
 
   // prepare layouts

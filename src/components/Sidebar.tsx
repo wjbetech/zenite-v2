@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import { useUser } from '@clerk/nextjs';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import UISidebar from './ui/Sidebar';
 // Button intentionally not used here yet
@@ -21,7 +23,19 @@ type SidebarProps = {
 };
 
 export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
+  const pathname = usePathname();
+  const allowedPrefixes = ['/dashboard', '/today', '/dailies', '/projects', '/settings'];
+  const showSidebar = Boolean(
+    pathname && allowedPrefixes.some((p) => pathname === p || pathname.startsWith(p + '/') || pathname.startsWith(p)),
+  );
+
   const [collapsed, setCollapsed] = React.useState<boolean>(false);
+
+  // prefer Clerk user state when available (client-side). This lets the
+  // sidebar enable items immediately after Clerk hydration without relying
+  // on a server-provided boolean prop.
+  const { user } = useUser();
+  const effectiveLoggedIn = isLoggedIn || Boolean(user?.id);
 
   React.useEffect(() => {
     try {
@@ -50,6 +64,8 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
 
   const hideHeader = collapsed && !isLoggedIn;
 
+  if (!showSidebar) return null;
+
   return (
     <UISidebar width={collapsed ? 'w-16' : 'w-52'} showHeader={!hideHeader}>
       <div className="flex flex-col h-full text-gray-900 dark:text-gray-100">
@@ -73,7 +89,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
           <nav className="flex flex-col gap-2 items-start w-full">
             {nav.map((item) => {
               const Icon = item.icon;
-              if (isLoggedIn) {
+              if (effectiveLoggedIn) {
                 return (
                   <Link
                     key={item.href}

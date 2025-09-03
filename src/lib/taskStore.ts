@@ -2,6 +2,7 @@
 
 import create from 'zustand';
 import { nanoid } from 'nanoid/non-secure';
+import api from './api';
 
 export type Task = {
   id: string;
@@ -19,6 +20,7 @@ type State = {
   updateTask: (id: string, patch: Partial<Task>) => Task | undefined;
   deleteTask: (id: string) => void;
   setTasks: (tasks: Task[]) => void;
+  loadRemote?: () => Promise<void>;
 };
 
 const STORAGE_KEY = 'zenite:tasks:v1';
@@ -70,6 +72,27 @@ export const useTaskStore = create<State>((set, get) => ({
     const tasks = get().tasks.filter((t) => t.id !== id);
     set({ tasks });
     save(tasks);
+  },
+  async loadRemote() {
+    try {
+      if (process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true') {
+        const remote = await api.fetchTasks();
+        if (Array.isArray(remote)) {
+          const tasks = (remote as Array<Partial<Task>>).map((r) => ({
+            id: r.id || '',
+            title: r.title || 'Untitled',
+            notes: r.notes ?? ((r as Record<string, unknown>)['description'] as string | undefined),
+            createdAt: r.createdAt || new Date().toISOString(),
+            completed: false,
+            projectId: r.projectId ?? null,
+          }));
+          set({ tasks });
+          save(tasks);
+        }
+      }
+    } catch (e) {
+      console.error('failed to load remote tasks', e);
+    }
   },
 }));
 

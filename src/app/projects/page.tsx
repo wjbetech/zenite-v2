@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import useProjectStore from '../../lib/projectStore';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/Button';
@@ -12,6 +12,10 @@ export default function ProjectsPage() {
   const projects = useProjectStore((s) => s.projects);
   const createProject = useProjectStore((s) => s.createProject);
   const deleteProject = useProjectStore((s) => s.deleteProject);
+  const loadRemote = useProjectStore(
+    (s) => (s as unknown as { loadRemote?: () => Promise<void> }).loadRemote,
+  );
+  const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
   const [statuses, setStatuses] = useState<Record<string, Status>>({});
 
@@ -20,6 +24,26 @@ export default function ProjectsPage() {
     createProject(name.trim());
     setName('');
   };
+
+  useEffect(() => {
+    let mounted = true;
+    async function start() {
+      if (process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true') {
+        try {
+          setLoading(true);
+          if (loadRemote) await loadRemote();
+        } catch (err) {
+          console.warn('failed to load remote projects', err);
+        } finally {
+          if (mounted) setLoading(false);
+        }
+      }
+    }
+    start();
+    return () => {
+      mounted = false;
+    };
+  }, [loadRemote]);
 
   const cycleStatus = (id: string) => {
     setStatuses((s) => {
@@ -51,7 +75,11 @@ export default function ProjectsPage() {
       </div>
 
       <div className="grid gap-4">
-        {projects.length === 0 ? (
+        {loading ? (
+          <div className="min-h-[60vh] flex items-center justify-center">
+            <div className="text-lg md:text-xl text-gray-500">Loading projects…</div>
+          </div>
+        ) : projects.length === 0 ? (
           <div className="min-h-[60vh] flex items-center justify-center">
             <div className="text-lg md:text-xl text-gray-500">- No projects yet! -</div>
           </div>

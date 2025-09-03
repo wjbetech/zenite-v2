@@ -10,6 +10,7 @@ import type { Task } from './TaskCard';
 import useTaskStore from '../lib/taskStore';
 import TaskModal from './TaskModal';
 import { useState } from 'react';
+import { useEffect } from 'react';
 
 type DashboardProps = {
   tasks?: Task[];
@@ -26,6 +27,30 @@ function daysUntil(date?: string | null) {
 
 export default function Dashboard({ tasks }: DashboardProps) {
   const storeTasks = useTaskStore((s) => s.tasks);
+  const loadRemote = useTaskStore(
+    (s) => (s as unknown as { loadRemote?: () => Promise<void> }).loadRemote,
+  );
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    async function start() {
+      if (process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true' && loadRemote) {
+        try {
+          setLoading(true);
+          await loadRemote();
+        } catch (err) {
+          console.warn('failed to load remote tasks', err);
+        } finally {
+          if (mounted) setLoading(false);
+        }
+      }
+    }
+    start();
+    return () => {
+      mounted = false;
+    };
+  }, [loadRemote]);
 
   const deleteTask = useTaskStore((s) => s.deleteTask);
 
@@ -87,6 +112,7 @@ export default function Dashboard({ tasks }: DashboardProps) {
 
   return (
     <div className="space-y-6">
+      {loading && <div className="text-sm text-gray-500">Loading remote tasks…</div>}
       <div className="flex items-center justify-between mb-10">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
         <Link href="/tasks/new">
@@ -160,6 +186,11 @@ export default function Dashboard({ tasks }: DashboardProps) {
           onDelete={(id) => deleteTask(id)}
         />
       </section>
+      {all.length === 0 && !loading && (
+        <div className="text-center text-gray-500 py-12">
+          No tasks found — try creating one or enable the remote DB.
+        </div>
+      )}
       <TaskModal
         open={modalOpen}
         onOpenChange={(v) => {

@@ -90,7 +90,7 @@ Design principles:
 
 ## �🌐 Pages
 
-- [ ] `/dashboard`
+- [O] `/dashboard`
 - [ ] `/login`
 - [ ] `/settings`
 - [ ] `/404`
@@ -99,8 +99,8 @@ Design principles:
 
 ## 🚀 DevOps / Deployment
 
-- [ ] Setup GitHub repo
-- [ ] Deploy frontend to Vercel
+- [O] Setup GitHub repo
+- [O] Deploy frontend to Vercel
 - [ ] Connect PostgreSQL via Supabase or Railway
 - [ ] Environment Variables
   - [ ] DATABASE_URL

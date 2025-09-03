@@ -45,6 +45,29 @@ Run a local Postgres using Docker Compose and generate the Prisma client:
 2. Start the DB: `npm run db:start`
 3. Install deps: `npm install`
 4. Generate Prisma client: `npm run prisma:generate`
+
+Local development helpers
+
+- Start the local Postgres defined in `docker-compose.yml`:
+
+  npm run db:start
+
+- Push the Prisma schema (non-destructive):
+
+  npm run prisma:db:push
+
+- Generate the Prisma client:
+
+  npm run prisma:generate
+
+- Seed the local DB safely (script refuses to run against non-local or production-looking DATABASE_URL):
+
+  npm run seed:dev
+
+Safety
+
+- This repo includes `prisma/safety-check.js` and `prisma/seed.js`. Both scripts perform simple checks on `DATABASE_URL` to help avoid running destructive commands against production databases. Always verify your `DATABASE_URL` before running migrations or seeds.
+
 5. To apply migrations during development: `npm run prisma:migrate:dev`
 
 ## Local Docker DB (detailed)

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/Button';
+import { Input } from './ui/input';
 import useTaskStore, { Task } from '../lib/taskStore';
 import useProjectStore from '../lib/projectStore';
 
@@ -20,6 +21,7 @@ export default function TaskModal({
   const [title, setTitle] = useState(initial?.title ?? '');
   const [notes, setNotes] = useState(initial?.notes ?? '');
   const [dueDate, setDueDate] = useState<string | null>(initial?.dueDate ?? null);
+  const [recurrence, setRecurrence] = useState<string | null>(initial?.recurrence ?? 'once');
   const [projectId, setProjectId] = useState<string | null>(initial?.projectId ?? null);
   const projects = useProjectStore((s) => s.projects);
 
@@ -27,6 +29,7 @@ export default function TaskModal({
     setTitle(initial?.title ?? '');
     setNotes(initial?.notes ?? '');
     setDueDate(initial?.dueDate ?? null);
+    setRecurrence(initial?.recurrence ?? 'once');
     setProjectId(initial?.projectId ?? null);
   }, [initial, open]);
 
@@ -34,9 +37,21 @@ export default function TaskModal({
     e?.preventDefault();
     if (!title.trim()) return;
     if (initial?.id) {
-      updateTask(initial.id, { title: title.trim(), notes: notes.trim(), dueDate, projectId });
+      updateTask(initial.id, {
+        title: title.trim(),
+        notes: notes.trim(),
+        dueDate,
+        projectId,
+        recurrence: recurrence ?? undefined,
+      });
     } else {
-      createTask({ title: title.trim(), notes: notes.trim(), dueDate, projectId });
+      createTask({
+        title: title.trim(),
+        notes: notes.trim(),
+        dueDate,
+        projectId,
+        recurrence: recurrence ?? undefined,
+      });
     }
     onOpenChange(false);
   }
@@ -48,16 +63,16 @@ export default function TaskModal({
       <div className="absolute inset-0 bg-black/40" onClick={() => onOpenChange(false)} />
       <form
         onSubmit={submit}
-        className="relative z-10 w-full max-w-lg bg-white dark:bg-slate-800 rounded-lg p-6 shadow-lg"
+        className="relative z-10 w-full max-w-2xl bg-white dark:bg-slate-800 rounded-lg p-6 shadow-lg"
       >
-        <h3 className="text-lg font-medium mb-2">{initial?.id ? 'Edit Task' : 'New Task'}</h3>
+        <h3 className="text-lg font-medium mb-2">{initial?.id ? 'Edit Task' : 'Add New Task'}</h3>
         <label className="block">
           <div className="text-sm text-gray-600 mb-1">Title</div>
-          <input
+          <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full p-2 rounded border dark:border-slate-700 bg-white dark:bg-slate-900"
             required
+            className="rounded-lg"
           />
         </label>
 
@@ -66,10 +81,12 @@ export default function TaskModal({
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full p-2 rounded border dark:border-slate-700 bg-white dark:bg-slate-900"
+            className="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-900"
             rows={4}
           />
         </label>
+
+        {/* status & priority removed — default unstarted; priorities inferred by due date */}
 
         <label className="block mt-3">
           <div className="text-sm text-gray-600 mb-1">Due date</div>
@@ -79,8 +96,22 @@ export default function TaskModal({
             onChange={(e) =>
               setDueDate(e.target.value ? new Date(e.target.value).toISOString() : null)
             }
-            className="p-2 rounded border dark:border-slate-700 bg-white dark:bg-slate-900"
+            className="p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-900"
           />
+        </label>
+
+        {/* starts/completed/estimate/time spent removed per simplified schema */}
+
+        <label className="block mt-3">
+          <div className="text-sm text-gray-600 mb-1">Recurrence</div>
+          <select
+            value={recurrence ?? 'once'}
+            onChange={(e) => setRecurrence(e.target.value || 'once')}
+            className="p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-900 w-full"
+          >
+            <option value="once">Only once</option>
+            <option value="daily">Daily</option>
+          </select>
         </label>
 
         <label className="block mt-3">
@@ -88,7 +119,7 @@ export default function TaskModal({
           <select
             value={projectId ?? ''}
             onChange={(e) => setProjectId(e.target.value || null)}
-            className="p-2 rounded border dark:border-slate-700 bg-white dark:bg-slate-900"
+            className="p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-900"
           >
             <option value="">(none)</option>
             {projects.map((p) => (

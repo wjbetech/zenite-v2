@@ -9,9 +9,11 @@ export type Task = {
   title: string;
   notes?: string;
   dueDate?: string | null;
+  recurrence?: string | null;
   createdAt: string;
   completed?: boolean;
   projectId?: string | null;
+  ownerId?: string;
 };
 
 type State = {
@@ -78,14 +80,19 @@ export const useTaskStore = create<State>((set, get) => ({
       if (process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true') {
         const remote = await api.fetchTasks();
         if (Array.isArray(remote)) {
-          const tasks = (remote as Array<Partial<Task>>).map((r) => ({
-            id: r.id || '',
-            title: r.title || 'Untitled',
-            notes: r.notes ?? ((r as Record<string, unknown>)['description'] as string | undefined),
-            createdAt: r.createdAt || new Date().toISOString(),
-            completed: false,
-            projectId: r.projectId ?? null,
-          }));
+          const arr = remote as Array<Record<string, unknown>>;
+          const tasks = arr.map((r) => {
+            return {
+              id: (r.id as string) || '',
+              title: (r.title as string) || 'Untitled',
+              notes: (r.description as string) || (r.notes as string) || undefined,
+              createdAt: (r.createdAt as string) || new Date().toISOString(),
+              completed: !!r.completed,
+              projectId: (r.projectId as string) ?? null,
+              recurrence: (r.recurrence as string) ?? null,
+              ownerId: (r.ownerId as string) ?? undefined,
+            } as Partial<Task> as Task;
+          });
           set({ tasks });
           save(tasks);
         }

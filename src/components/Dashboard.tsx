@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import { Button } from './ui/Button';
 import { Plus } from 'lucide-react';
 import TaskSection from './TaskSection';
@@ -115,12 +114,17 @@ export default function Dashboard({ tasks }: DashboardProps) {
       {loading && <div className="text-sm text-gray-500">Loading remote tasks…</div>}
       <div className="flex items-center justify-between mb-10">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <Link href="/tasks/new">
-          <Button variant="primary" className="pr-3">
-            <Plus className="mr-2 h-4 w-4" />
-            New Task
-          </Button>
-        </Link>
+        <Button
+          variant="primary"
+          className="pr-3"
+          onClick={() => {
+            setEditing(undefined);
+            setModalOpen(true);
+          }}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          New Task
+        </Button>
       </div>
 
       {/* Activity heatmap under the title */}

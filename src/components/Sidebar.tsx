@@ -26,7 +26,10 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
   const pathname = usePathname();
   const allowedPrefixes = ['/dashboard', '/today', '/dailies', '/projects', '/settings'];
   const showSidebar = Boolean(
-    pathname && allowedPrefixes.some((p) => pathname === p || pathname.startsWith(p + '/') || pathname.startsWith(p)),
+    pathname &&
+      allowedPrefixes.some(
+        (p) => pathname === p || pathname.startsWith(p + '/') || pathname.startsWith(p),
+      ),
   );
 
   const [collapsed, setCollapsed] = React.useState<boolean>(false);

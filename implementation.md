@@ -48,9 +48,9 @@ Design principles:
 
 ## 📁 Backend / API
 
-- [ ] Initialize Drizzle ORM
+- [ ] Initialize Prisma ORM
 - [ ] Set up PostgreSQL schema: users, tasks, projects, tags
-- [ ] Create `db.ts` and `schema.ts` for Drizzle
+- [ ] Create `db.ts` and `schema.ts` for Prisma
 - [ ] Set up tRPC router structure
   - [ ] Task router
   - [ ] Project router
@@ -76,11 +76,16 @@ Design principles:
 ## 🎨 UI Components
 
 - [ ] Task Card
+  - [ ] Task View
 - [ ] Project Sidebar
 - [ ] Add/Edit Task Modal
-- [ ] Navbar
+  - [O] Add
+  - [ ] Edit
+- [O] Navbar
 - [ ] Settings Page
 - [ ] Login/Register Page
+  - [O] Login
+  - [ ] Register
 
 ---
 
@@ -91,7 +96,7 @@ Design principles:
 ## �🌐 Pages
 
 - [O] `/dashboard`
-- [ ] `/login`
+- [O] `/login`
 - [ ] `/settings`
 - [ ] `/404`
 

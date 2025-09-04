@@ -5,6 +5,7 @@ import { Button } from './ui/Button';
 import { Input } from './ui/input';
 import useTaskStore, { Task } from '../lib/taskStore';
 import useProjectStore from '../lib/projectStore';
+import ChevronDown from './icons/ChevronDown';
 
 export default function TaskModal({
   open,
@@ -60,24 +61,24 @@ export default function TaskModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={() => onOpenChange(false)} />
+      <div className="absolute inset-0 bg-gray-900/90" onClick={() => onOpenChange(false)} />
       <form
         onSubmit={submit}
-        className="relative z-10 w-full max-w-2xl bg-white dark:bg-slate-800 rounded-lg p-6 shadow-lg"
+        className="relative z-10 w-full max-w-2xl bg-white dark:bg-slate-800 rounded-lg p-6 shadow-lg border-1 border-gray-600"
       >
-        <h3 className="text-lg font-medium mb-2">{initial?.id ? 'Edit Task' : 'Add New Task'}</h3>
+        <h3 className="text-lg font-medium mb-6">{initial?.id ? 'Edit Task' : 'Add New Task'}</h3>
         <label className="block">
-          <div className="text-sm text-gray-600 mb-1">Title</div>
+          <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Title</div>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            className="rounded-lg"
+            className="w-full rounded-lg"
           />
         </label>
 
-        <label className="block mt-3">
-          <div className="text-sm text-gray-600 mb-1">Notes</div>
+        <label className="block mt-5">
+          <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Notes</div>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -88,8 +89,8 @@ export default function TaskModal({
 
         {/* status & priority removed — default unstarted; priorities inferred by due date */}
 
-        <label className="block mt-3">
-          <div className="text-sm text-gray-600 mb-1">Due date</div>
+        <label className="block mt-5">
+          <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Due date</div>
           <input
             type="date"
             value={dueDate ? dueDate.split('T')[0] : ''}
@@ -102,33 +103,41 @@ export default function TaskModal({
 
         {/* starts/completed/estimate/time spent removed per simplified schema */}
 
-        <label className="block mt-3">
-          <div className="text-sm text-gray-600 mb-1">Recurrence</div>
-          <select
-            value={recurrence ?? 'once'}
-            onChange={(e) => setRecurrence(e.target.value || 'once')}
-            className="p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-900 w-full"
-          >
-            <option value="once">Only once</option>
-            <option value="daily">Daily</option>
-          </select>
-        </label>
+        <div className="mt-5 flex flex-col gap-4 md:flex-row md:gap-4">
+          <label className="w-full md:w-1/2">
+            <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Recurrence</div>
+            <div className="relative w-full">
+              <select
+                value={recurrence ?? 'once'}
+                onChange={(e) => setRecurrence(e.target.value || 'once')}
+                className="p-2 pr-12 appearance-none rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-900 w-full"
+              >
+                <option value="once">Only once</option>
+                <option value="daily">Daily</option>
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
+            </div>
+          </label>
 
-        <label className="block mt-3">
-          <div className="text-sm text-gray-600 mb-1">Project</div>
-          <select
-            value={projectId ?? ''}
-            onChange={(e) => setProjectId(e.target.value || null)}
-            className="p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-900"
-          >
-            <option value="">(none)</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        </label>
+          <label className="w-full md:w-1/2">
+            <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Project</div>
+            <div className="relative w-full">
+              <select
+                value={projectId ?? ''}
+                onChange={(e) => setProjectId(e.target.value || null)}
+                className="p-2 pr-12 appearance-none rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-900 w-full"
+              >
+                <option value="">(none)</option>
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
+            </div>
+          </label>
+        </div>
 
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="default" onClick={() => onOpenChange(false)} type="button">

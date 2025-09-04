@@ -94,9 +94,11 @@ function borderForCount(count: number) {
 export default function ActivityHeatmap({
   activity,
   startRange = '3m',
+  onOpenChange,
 }: {
   activity?: ActivityMap;
   startRange?: RangeKey;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const [open, setOpen] = useState(true);
   const [range, setRange] = useState<RangeKey>(startRange);
@@ -164,12 +166,24 @@ export default function ActivityHeatmap({
   const shortDayName = (d: Date) =>
     d.toLocaleDateString(undefined, { weekday: 'short' }).slice(0, 2);
 
+  // inform parent once on mount about initial state
+  useEffect(() => {
+    onOpenChange?.(open);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="w-full border-l-4 border-emerald-500 px-4">
       <div className="flex items-center mb-2">
         <h5 className="font-semibold">Activity Tracker</h5>
         <button
-          onClick={() => setOpen((s) => !s)}
+          onClick={() =>
+            setOpen((s) => {
+              const next = !s;
+              onOpenChange?.(next);
+              return next;
+            })
+          }
           aria-expanded={open}
           aria-label={open ? 'Collapse activity tracker' : 'Expand activity tracker'}
           className="ml-1 text-lg text-black dark:text-white cursor-pointer flex items-center justify-center"

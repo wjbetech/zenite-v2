@@ -11,6 +11,7 @@ type TaskSectionProps = {
   renderRight?: (t: Task) => React.ReactNode;
   onEdit?: (t: Task) => void;
   onDelete?: (id: string) => void;
+  expanded?: boolean;
 };
 
 export default function TaskSection({
@@ -20,6 +21,7 @@ export default function TaskSection({
   renderRight,
   onEdit,
   onDelete,
+  expanded = false,
 }: TaskSectionProps) {
   return (
     <section className="mb-[74px]">
@@ -28,20 +30,25 @@ export default function TaskSection({
           <span className={`inline-block border-b-4 ${accentClass} pb-0.5`}>{title}</span>
         </h2>
       )}
-      <ul className="space-y-6 md:space-y-7 perspective-[1000px]">
-        {tasks.length === 0 && <li className="text-sm text-gray-400">No items.</li>}
-        {tasks.map((t) => (
-          <li key={t.id}>
-            <TaskCard
-              task={t}
-              href={`/tasks/${t.id}`}
-              right={renderRight ? renderRight(t) : undefined}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          </li>
-        ))}
-      </ul>
+      <div
+        className={`overflow-y-auto transition-all duration-300 ease-in-out pt-4 pl-4 pr-4 pb-2`}
+        style={{ maxHeight: expanded ? 'calc(100vh - 10rem)' : undefined }}
+      >
+        <ul className="space-y-6 md:space-y-7 perspective-[1000px]">
+          {tasks.length === 0 && <li className="text-sm text-gray-400">No items.</li>}
+          {tasks.map((t) => (
+            <li key={t.id}>
+              <TaskCard
+                task={t}
+                href={`/tasks/${t.id}`}
+                right={renderRight ? renderRight(t) : undefined}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }

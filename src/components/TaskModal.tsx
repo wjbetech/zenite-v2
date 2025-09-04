@@ -64,7 +64,7 @@ export default function TaskModal({
       <div className="absolute inset-0 bg-gray-900/90" onClick={() => onOpenChange(false)} />
       <form
         onSubmit={submit}
-        className="relative z-10 w-full max-w-2xl bg-white dark:bg-slate-800 rounded-lg p-6 shadow-lg border-1 border-gray-600"
+        className="relative z-10 w-full max-w-2xl bg-white dark:bg-slate-800 rounded-lg p-6 shadow-lg border-1"
       >
         <h3 className="text-lg font-medium mb-6">{initial?.id ? 'Edit Task' : 'Add New Task'}</h3>
         <label className="block">
@@ -73,7 +73,7 @@ export default function TaskModal({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            className="w-full rounded-lg"
+            className="w-full rounded-lg border-slate-800"
           />
         </label>
 

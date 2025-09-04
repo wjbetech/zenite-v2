@@ -41,7 +41,7 @@ export function UISidebar({
           </div>
 
           <DrawerContent className={cn('p-0', width)}>
-            <div className="relative p-4 border-b">
+            <div className="relative p-4 border-b" style={{ paddingTop: 0 }}>
               <DrawerClose asChild>
                 <button
                   aria-label="Close sidebar"
@@ -58,10 +58,8 @@ export function UISidebar({
             </div>
             <div
               {...props}
-              className={cn(
-                'flex flex-col p-4 min-h-[calc(100vh-72px)] bg-white dark:bg-gray-900',
-                className,
-              )}
+              className={cn('flex flex-col p-4 bg-white dark:bg-gray-900', className)}
+              style={{ height: 'calc(100vh - var(--nav-height))' }}
             >
               {children}
             </div>
@@ -69,14 +67,15 @@ export function UISidebar({
         </Drawer>
       </div>
 
-      {/* Desktop: persistent aside */}
+      {/* Desktop: fixed aside */}
       <aside
         {...props}
         className={cn(
-          'hidden md:flex flex-col p-4 min-h-[calc(100vh-72px)] border-r border-gray-200 bg-white dark:bg-gray-900 dark:border-slate-700',
+          'hidden md:flex flex-col p-4 border-r border-gray-200 bg-white dark:bg-gray-900 dark:border-slate-700 fixed left-0 z-40',
           width,
           className,
         )}
+        style={{ top: 'var(--nav-height)', height: 'calc(100vh - var(--nav-height))' }}
       >
         {children}
       </aside>

@@ -12,7 +12,6 @@ import {
   LayoutDashboard,
   Folder,
   Settings,
-  Calendar,
   Repeat2,
 } from 'lucide-react';
 
@@ -24,7 +23,7 @@ type SidebarProps = {
 
 export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
   const pathname = usePathname();
-  const allowedPrefixes = ['/dashboard', '/today', '/dailies', '/projects', '/settings'];
+  const allowedPrefixes = ['/dashboard', '/dailies', '/projects', '/settings'];
   const showSidebar = Boolean(
     pathname &&
       allowedPrefixes.some(
@@ -59,7 +58,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
 
   const nav = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/today', label: 'Today', icon: Calendar },
+    // Today removed — tasks for today are shown on the Dashboard
     { href: '/dailies', label: 'Dailies', icon: Repeat2 },
     { href: '/projects', label: 'Projects', icon: Folder },
     { href: '/settings', label: 'Settings', icon: Settings },

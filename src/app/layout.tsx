@@ -51,7 +51,8 @@ export default async function RootLayout({
             <div style={{ height: 72 }} />
             <div className="flex">
               <Sidebar isLoggedIn={isLoggedIn} />
-              <main className="flex-1 p-6">{children}</main>
+              {/* reserve space for fixed sidebar on md+;  w-52 is the default sidebar width */}
+              <main className="flex-1 p-6 md:pl-52">{children}</main>
             </div>
           </Providers>
         </body>

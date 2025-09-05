@@ -152,6 +152,7 @@ export default function Dashboard({ tasks }: DashboardProps) {
     .slice(0, 5 + extra);
 
   const handleStatusChange = (id: string, status: 'none' | 'done' | 'tilde') => {
+    console.log('Dashboard: handleStatusChange', { id, status });
     if (status === 'tilde') {
       updateTask(id, { started: true, completed: false });
     } else if (status === 'done') {

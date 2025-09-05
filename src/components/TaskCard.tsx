@@ -23,71 +23,109 @@ type Props = {
   onStatusChange?: (id: string, status: 'none' | 'done' | 'tilde') => void;
 };
 
+// Small helper to compute classes per status so intent is clear
+function getStatusClasses(isStarted: boolean, isDone: boolean) {
+  // default: base (not started)
+  if (!isStarted && !isDone) {
+    return {
+      wrapper: 'bg-base-300 text-base-content',
+      border: 'border-base-200',
+      button:
+        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-base-300 bg-transparent text-base-content text-sm cursor-pointer',
+      icon: 'text-base-content',
+    };
+  }
+
+  if (isStarted && !isDone) {
+    return {
+      wrapper: 'bg-secondary text-secondary-content',
+      border: 'border-secondary',
+      button:
+        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-secondary bg-secondary text-secondary-content text-sm cursor-pointer',
+      icon: 'text-secondary-content',
+    };
+  }
+
+  // done
+  return {
+    wrapper: 'bg-base-content text-base-100',
+    border: 'border-base-content',
+    button:
+      'h-5 w-5 flex items-center justify-center rounded-md border-2 border-base-content bg-base-content text-base-100 text-sm cursor-pointer',
+    icon: 'text-base-100',
+  };
+}
+
 export default function TaskCard({ task, right, href, onEdit, onDelete, onStatusChange }: Props) {
-  // derive a simple status from task flags; prefer explicit task props
   const isDone = !!task.completed;
   const isStarted = !!task.started && !isDone;
 
+  const {
+    wrapper: bgClass,
+    border: borderClass,
+    button: buttonClass,
+    icon: iconClass,
+  } = getStatusClasses(isStarted, isDone);
+
   const cycleStatus = () => {
-    // Order: none -> started -> done -> none
+    // debug/logging to verify handler is called in the browser
+    console.log('TaskCard: cycleStatus', { id: task.id, isStarted, isDone });
     if (!isStarted && !isDone) {
-      // start
+      console.debug('TaskCard -> set started', task.id);
       onStatusChange?.(task.id, 'tilde');
       return;
     }
     if (isStarted && !isDone) {
-      // complete
+      console.debug('TaskCard -> set done', task.id);
       onStatusChange?.(task.id, 'done');
       return;
     }
-    // clear
+    console.debug('TaskCard -> clear status', task.id);
     onStatusChange?.(task.id, 'none');
   };
 
-  // Use CSS variable for neutral-content as the default card background so it
-  // matches the DaisyUI theme token across themes.
-  const bgClass = isDone ? 'bg-gray-400/50' : isStarted ? 'bg-neutral' : '';
-
-  const bgStyle =
-    !isDone && !isStarted
-      ? { backgroundColor: 'hsl(var(--nc) / var(--tw-bg-opacity, 1))' }
-      : undefined;
-
-  const borderClass = isDone ? 'border-gray-500' : isStarted ? 'border-info' : 'border-base-200';
-
-  const buttonClass = isDone
-    ? 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-gray-400 bg-gray-200 text-sm cursor-pointer text-gray-600'
-    : isStarted
-    ? 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-info text-sm cursor-pointer text-info-content'
-    : 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-base-300 text-sm cursor-pointer';
-
   const cardInner = (
     <div
-      style={bgStyle}
       className={`${bgClass} relative z-10 rounded-md shadow-sm border ${borderClass} p-2 transition-transform duration-150 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
-              <div className="text-base md:text-md lg:text-lg font-medium dark:text-white">
-                {task.title}
-              </div>
+              <div className="text-base md:text-md lg:text-lg font-medium">{task.title}</div>
 
               <button
+                type="button"
                 aria-label="Toggle task status"
+                // handle pointerdown to prevent Link navigation handlers and respond immediately on tap
+                onPointerDown={(e) => {
+                  // stop propagation so the Link wrapper doesn't receive the pointer event
+                  e.stopPropagation();
+                  // prevent default on pointerdown so Link/anchor doesn't navigate or steal the click
+                  // we then call cycleStatus here so touch/mouse interactions are handled immediately
+                  e.preventDefault();
+                  cycleStatus();
+                }}
+                // keep click handler to swallow any remaining events
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  cycleStatus();
+                }}
+                onKeyDown={(e) => {
+                  // support keyboard activation (Enter / Space)
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    cycleStatus();
+                  }
                 }}
                 className={buttonClass}
                 title={isDone ? 'Clear status' : isStarted ? 'Mark done' : 'Mark in progress'}
               >
                 {isDone ? (
-                  <Check className="h-4 w-4 text-neutral-content" strokeWidth={2} />
+                  <Check className={`h-4 w-4 ${iconClass}`} strokeWidth={2} />
                 ) : isStarted ? (
-                  <span className="text-sm font-bold">•</span>
+                  <span className={`text-sm font-bold ${iconClass}`}>•</span>
                 ) : null}
               </button>
             </div>
@@ -126,7 +164,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
           </div>
 
           <div className="flex items-start mt-1">
-            {right && <div className="text-sm md:text-base text-neutral-content">{right}</div>}
+            {right && <div className="text-sm md:text-base text-base-content">{right}</div>}
           </div>
         </div>
       </div>

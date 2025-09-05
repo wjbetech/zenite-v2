@@ -14,6 +14,24 @@ module.exports = {
 
   plugins: [require('daisyui')],
   daisyui: {
-    themes: true,
+    themes: [
+      {
+        nord: {
+          primary: '#5E81AC',
+          'primary-content': '#ECEFF4',
+          secondary: '#81A1C1',
+          accent: '#88C0D0',
+          neutral: '#3B4252',
+          'base-100': '#ECEFF4',
+          'base-200': '#E5E9F0',
+          'base-300': '#D8E6F0',
+          info: '#8FBCBB',
+          success: '#A3BE8C',
+          warning: '#EBCB8B',
+          error: '#BF616A',
+        },
+      },
+      'cupcake',
+    ],
   },
 };

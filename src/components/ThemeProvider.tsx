@@ -17,19 +17,21 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     let stored: string | null = null;
     try {
       stored = localStorage.getItem('zenite.theme');
-    } catch (e) {
-      console.log(e);
+    } catch {
       /* ignore */
     }
 
-    if (stored === 'dark' || stored === 'light') {
-      setTheme(stored as 'dark' | 'light');
-      // also try to read daisy theme selections
+    // stored now uses 'light-theme' | 'dark-theme'
+    if (stored === 'dark-theme' || stored === 'light-theme') {
+      const t = stored === 'dark-theme' ? 'dark' : 'light';
+      setTheme(t);
       try {
+        // ensure app-level marker is set
+        document.documentElement.setAttribute('data-app-theme', stored);
         const dl = localStorage.getItem('zenite.daisy.light');
         const dd = localStorage.getItem('zenite.daisy.dark');
         if (dl) document.documentElement.setAttribute('data-theme', dl);
-        else if (dd && stored === 'dark') document.documentElement.setAttribute('data-theme', dd);
+        else if (dd && t === 'dark') document.documentElement.setAttribute('data-theme', dd);
       } catch {
         /* ignore */
       }
@@ -60,7 +62,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
         const mod = await import('theme-change');
         // themeChange(false) is required for React projects
         if (mod && typeof mod.themeChange === 'function') mod.themeChange(false);
-      } catch (e) {
+      } catch {
         // silently ignore if theme-change isn't installed
       }
     })();

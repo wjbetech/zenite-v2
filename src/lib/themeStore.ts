@@ -26,11 +26,15 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     // update DOM class and cookie/localStorage
     if (typeof document !== 'undefined') {
       const root = document.documentElement;
+      // keep Tailwind compatibility by keeping the `dark` class
       if (t === 'dark') root.classList.add('dark');
       else root.classList.remove('dark');
+      // also expose a clearer app-level theme marker for other scripts/styles
+      const appTheme = t === 'dark' ? 'dark-theme' : 'light-theme';
+      root.setAttribute('data-app-theme', appTheme);
       try {
-        // persist a cookie so the server can render the correct html class
-        document.cookie = `zenite.theme=${t}; path=/; max-age=31536000; SameSite=Lax`;
+        // persist a cookie so the server or other tools can read the app-level theme
+        document.cookie = `zenite.theme=${appTheme}; path=/; max-age=31536000; SameSite=Lax`;
       } catch (e) {
         // surface cookie failures in dev console
         console.error('themeStore: failed to write theme cookie', e);
@@ -38,7 +42,8 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     }
 
     try {
-      if (typeof localStorage !== 'undefined') localStorage.setItem('zenite.theme', t);
+      if (typeof localStorage !== 'undefined')
+        localStorage.setItem('zenite.theme', t === 'dark' ? 'dark-theme' : 'light-theme');
     } catch (e) {
       console.error('themeStore: failed to write localStorage (setTheme)', e);
     }
@@ -50,6 +55,9 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         const state = get();
         const daisy = t === 'dark' ? state.daisyDark : state.daisyLight;
         if (daisy) root.setAttribute('data-theme', daisy);
+        // ensure the app-level theme attribute matches
+        const appTheme = t === 'dark' ? 'dark-theme' : 'light-theme';
+        root.setAttribute('data-app-theme', appTheme);
       }
     } catch (e) {
       console.error('themeStore: failed to apply daisy theme', e);
@@ -69,15 +77,20 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       const root = document.documentElement;
       if (next === 'dark') root.classList.add('dark');
       else root.classList.remove('dark');
+      // expose app theme marker
+      root.setAttribute('data-app-theme', next === 'dark' ? 'dark-theme' : 'light-theme');
       try {
-        document.cookie = `zenite.theme=${next}; path=/; max-age=31536000; SameSite=Lax`;
+        document.cookie = `zenite.theme=${
+          next === 'dark' ? 'dark-theme' : 'light-theme'
+        }; path=/; max-age=31536000; SameSite=Lax`;
       } catch (e) {
         console.error('themeStore: failed to write theme cookie (toggle)', e);
       }
     }
 
     try {
-      if (typeof localStorage !== 'undefined') localStorage.setItem('zenite.theme', next);
+      if (typeof localStorage !== 'undefined')
+        localStorage.setItem('zenite.theme', next === 'dark' ? 'dark-theme' : 'light-theme');
     } catch (e) {
       console.error('themeStore: failed to write localStorage (toggle)', e);
     }
@@ -89,6 +102,8 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         const state = get();
         const daisy = next === 'dark' ? state.daisyDark : state.daisyLight;
         if (daisy) root.setAttribute('data-theme', daisy);
+        // keep app-level marker in sync
+        root.setAttribute('data-app-theme', next === 'dark' ? 'dark-theme' : 'light-theme');
       }
     } catch (e) {
       console.error('themeStore: failed to apply daisy theme (toggle)', e);
@@ -106,25 +121,33 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     } catch (e) {
       console.error('themeStore: failed to write localStorage (daisyLight)', e);
     }
-    // apply immediately and log for debugging
+    // apply the daisy data-theme immediately so the UI updates even if state reads race
     try {
       if (typeof document !== 'undefined') {
         document.documentElement.setAttribute('data-theme', name);
-        const state = get();
-        console.log(
-          'setDaisyLight called; current theme:',
-          state.theme,
-          'data-theme:',
-          document.documentElement.getAttribute('data-theme'),
-        );
-        // if the selected daisy theme is a light choice, ensure global theme is light
-        if (state.theme !== 'light') {
-          try {
-            get().setTheme('light');
-          } catch (err) {
-            console.error('themeStore: failed to set global theme to light', err);
-          }
+      }
+    } catch {
+      /* ignore */
+    }
+    // always call setTheme to ensure the app-level theme marker is applied/updated
+    try {
+      try {
+        get().setTheme('light');
+      } catch (err) {
+        console.error('themeStore: failed to set global theme to light', err);
+      }
+      // setTheme will apply the data-theme based on the updated state.daisyLight, keep logs for debugging
+      try {
+        if (typeof document !== 'undefined') {
+          console.log(
+            'setDaisyLight called; current theme:',
+            get().theme,
+            'data-theme:',
+            document.documentElement.getAttribute('data-theme'),
+          );
         }
+      } catch {
+        /* ignore */
       }
     } catch (e) {
       console.error('themeStore: failed to apply daisyLight', e);
@@ -138,25 +161,33 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     } catch (e) {
       console.error('themeStore: failed to write localStorage (daisyDark)', e);
     }
-    // apply immediately and log for debugging
+    // apply the daisy data-theme immediately so the UI updates even if state reads race
     try {
       if (typeof document !== 'undefined') {
         document.documentElement.setAttribute('data-theme', name);
-        const state = get();
-        console.log(
-          'setDaisyDark called; current theme:',
-          state.theme,
-          'data-theme:',
-          document.documentElement.getAttribute('data-theme'),
-        );
-        // if the selected daisy theme is a dark choice, ensure global theme is dark
-        if (state.theme !== 'dark') {
-          try {
-            get().setTheme('dark');
-          } catch (err) {
-            console.error('themeStore: failed to set global theme to dark', err);
-          }
+      }
+    } catch {
+      /* ignore */
+    }
+    // always call setTheme to ensure the app-level theme marker is applied/updated
+    try {
+      try {
+        get().setTheme('dark');
+      } catch (err) {
+        console.error('themeStore: failed to set global theme to dark', err);
+      }
+      // setTheme will apply the data-theme based on the updated state.daisyDark, keep logs for debugging
+      try {
+        if (typeof document !== 'undefined') {
+          console.log(
+            'setDaisyDark called; current theme:',
+            get().theme,
+            'data-theme:',
+            document.documentElement.getAttribute('data-theme'),
+          );
         }
+      } catch {
+        /* ignore */
       }
     } catch (e) {
       console.error('themeStore: failed to apply daisyDark', e);

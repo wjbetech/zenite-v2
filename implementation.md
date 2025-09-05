@@ -125,6 +125,22 @@ Design principles:
 
 ---
 
+## � Further Design Ideas
+
+- [ ] Change the order of tasks in New/Today/This Week based on what current task is being done
+- [ ] Refactor styles to use DaisyUI color themes (pastel/cupcake/nord)
+
+### DaisyUI Theme Settings
+
+- Added a Settings page to pick daisyUI themes for light and dark modes. Selections are stored in localStorage under `zenite.daisy.light` and `zenite.daisy.dark`, and the active theme is applied to the document via the `data-theme` attribute. The `src/lib/themeStore.ts` exposes `setDaisyLight` and `setDaisyDark` to update and persist selections.
+- [ ] Grey out completed tasks
+- [ ] Imminent tasks page should instead style based on 'imminence'
+- [ ] Completed tasks should automatically move towards the bottom of the stack
+  - [ ] Completed tasks could 'minimize' themselves to further reduce their visibility
+- [ ] Add animations so items move around smoothly
+
+---
+
 ## 🧠 Notes
 
 - Consider use of `use-immer` with Zustand for deep state

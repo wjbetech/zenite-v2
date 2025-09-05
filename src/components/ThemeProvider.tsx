@@ -21,6 +21,15 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
 
     if (stored === 'dark' || stored === 'light') {
       setTheme(stored as 'dark' | 'light');
+      // also try to read daisy theme selections
+      try {
+        const dl = localStorage.getItem('zenite.daisy.light');
+        const dd = localStorage.getItem('zenite.daisy.dark');
+        if (dl) document.documentElement.setAttribute('data-theme', dl);
+        else if (dd && stored === 'dark') document.documentElement.setAttribute('data-theme', dd);
+      } catch {
+        /* ignore */
+      }
       return;
     }
 
@@ -32,6 +41,12 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
 
     // 3) final fallback: light (do not auto-apply system preference)
     setTheme('light');
+    try {
+      const dl = localStorage.getItem('zenite.daisy.light');
+      if (dl) document.documentElement.setAttribute('data-theme', dl);
+    } catch {
+      /* ignore */
+    }
   }, [setTheme]);
 
   return <>{children}</>;

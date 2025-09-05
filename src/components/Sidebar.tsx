@@ -76,7 +76,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
           <button
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             onClick={() => setCollapsed((s) => !s)}
-            className="p-1 rounded hover:bg-gray-100 cursor-pointer"
+            className="p-1 rounded hover:bg-base-200 cursor-pointer"
           >
             {collapsed ? (
               <ChevronRight className="w-4 h-4 text-gray-600" />
@@ -96,7 +96,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-3 rounded px-2 py-2 hover:bg-gray-100 dark:hover:bg-slate-800 ${
+                    className={`flex items-center gap-3 rounded px-2 py-2 hover:bg-base-200 dark:hover:bg-base-300 ${
                       collapsed ? 'justify-center w-full' : 'w-full'
                     }`}
                   >

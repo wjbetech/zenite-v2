@@ -126,9 +126,9 @@ export default function TimerWidget({
             : 'max-h-0 opacity-0 -translate-y-1 pointer-events-none'
         }`}
       >
-        <div className="flex flex-col items-stretch bg-white dark:bg-gray-900 border border-gray-200 dark:border-slate-700 p-4 rounded-md">
+        <div className="flex flex-col items-stretch bg-base-100 dark:bg-base-200 border border-gray-200 dark:border-slate-700 p-4 rounded-md">
           {/* top mode selector */}
-          <div className="flex items-center gap-2 mb-3 p-2 rounded-md bg-gray-100 dark:bg-zinc-900/60 w-full">
+          <div className="flex items-center gap-2 mb-3 p-2 rounded-md bg-base-200 dark:bg-base-300/60 w-full">
             <button
               aria-pressed={mode === 'timer'}
               onClick={() => setMode('timer')}
@@ -197,7 +197,7 @@ export default function TimerWidget({
               <button
                 onClick={reset}
                 title="Reset"
-                className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800"
+                className="p-2 rounded-md hover:bg-base-200 dark:hover:bg-base-300"
               >
                 <RefreshCw className="w-5 h-5" />
               </button>

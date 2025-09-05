@@ -3,6 +3,9 @@
 import React, { useEffect } from 'react';
 import useThemeStore from '../lib/themeStore';
 
+// theme-change is used to make data-theme based selects/buttons toggle DaisyUI themes
+// it must run on the client; we'll dynamically import it to avoid SSR issues
+
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
   const setTheme = useThemeStore((s) => s.setTheme);
 
@@ -48,6 +51,20 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
       /* ignore */
     }
   }, [setTheme]);
+
+  useEffect(() => {
+    // initialize theme-change for DaisyUI controls
+    if (typeof window === 'undefined') return;
+    (async () => {
+      try {
+        const mod = await import('theme-change');
+        // themeChange(false) is required for React projects
+        if (mod && typeof mod.themeChange === 'function') mod.themeChange(false);
+      } catch (e) {
+        // silently ignore if theme-change isn't installed
+      }
+    })();
+  }, []);
 
   return <>{children}</>;
 }

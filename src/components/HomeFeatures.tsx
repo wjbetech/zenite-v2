@@ -32,7 +32,7 @@ export default function HomeFeatures() {
           {features.map((f, i) => (
             <div
               key={f.title}
-              className="rounded-xl p-6 bg-white shadow hover:shadow-xl transition transform-gpu hover:-translate-y-1"
+              className="rounded-xl p-6 bg-base-100 shadow hover:shadow-xl transition transform-gpu hover:-translate-y-1"
             >
               <div className="text-emerald-600 font-semibold">{`0${i + 1}`}</div>
               <h3 className="mt-2 font-semibold text-lg">{f.title}</h3>

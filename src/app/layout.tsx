@@ -22,12 +22,16 @@ export default async function RootLayout({
   // read cookie at request-time so server-rendered HTML can include the right theme class
   const cookieStore = await cookies();
   const themeCookie = cookieStore.get('zenite.theme')?.value;
+  const daisyCookie = cookieStore.get('zenite.daisy')?.value;
   const htmlClass = themeCookie === 'dark' ? 'dark' : '';
+  const dataTheme = daisyCookie ?? 'cupcake';
 
   return (
     <ClerkProvider>
-      <html lang="en" className={htmlClass}>
+      <html lang="en" className={htmlClass} data-theme={dataTheme}>
         <head>
+          {/* Link built Tailwind/DaisyUI CSS as a fallback so dev server or Turbopack quirks won't hide styles */}
+          <link rel="stylesheet" href="/tailwind.css" />
           {/* Run before React hydration to apply the saved theme immediately */}
           <Script id="theme-init" strategy="beforeInteractive">
             {`(function(){try{var t=localStorage.getItem('zenite.theme');if(t==='dark')document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark')}catch(e){} })()`}
@@ -35,7 +39,7 @@ export default async function RootLayout({
         </head>
 
         <body
-          className={`font-vend bg-white text-slate-900 dark:bg-gray-900 dark:text-white`}
+          className={`font-vend bg-base-100 text-base-content dark:bg-base-200 dark:text-base-content`}
           style={{ ['--nav-height' as string]: '72px' } as React.CSSProperties}
         >
           <Providers>

@@ -61,10 +61,10 @@ export default function TaskModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-gray-900/90" onClick={() => onOpenChange(false)} />
+      <div className="absolute inset-0 bg-black/80" onClick={() => onOpenChange(false)} />
       <form
         onSubmit={submit}
-        className="relative z-10 w-full max-w-2xl bg-white dark:bg-slate-800 rounded-lg p-6 shadow-lg border-1"
+        className="relative z-10 w-full max-w-2xl bg-base-100 dark:bg-base-200 rounded-lg p-6 shadow-lg border-1"
       >
         <h3 className="text-lg font-medium mb-6">{initial?.id ? 'Edit Task' : 'Add New Task'}</h3>
         <label className="block">
@@ -82,7 +82,7 @@ export default function TaskModal({
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-900"
+            className="w-full p-2 rounded-lg border dark:border-slate-700 bg-base-100 dark:bg-base-200"
             rows={4}
           />
         </label>
@@ -97,7 +97,7 @@ export default function TaskModal({
             onChange={(e) =>
               setDueDate(e.target.value ? new Date(e.target.value).toISOString() : null)
             }
-            className="p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-900"
+            className="p-2 rounded-lg border dark:border-slate-700 bg-base-100 dark:bg-base-200"
           />
         </label>
 
@@ -110,7 +110,7 @@ export default function TaskModal({
               <select
                 value={recurrence ?? 'once'}
                 onChange={(e) => setRecurrence(e.target.value || 'once')}
-                className="p-2 pr-12 appearance-none rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-900 w-full"
+                className="p-2 pr-12 appearance-none rounded-lg border dark:border-slate-700 bg-base-100 dark:bg-base-200 w-full"
               >
                 <option value="once">Only once</option>
                 <option value="daily">Daily</option>

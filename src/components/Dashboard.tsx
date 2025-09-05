@@ -165,8 +165,8 @@ export default function Dashboard({ tasks }: DashboardProps) {
               onClick={() => setView('new')}
               className={`w-full text-center cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
                 view === 'new'
-                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-800/60 dark:text-emerald-100'
-                  : 'bg-transparent text-gray-600 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  ? 'bg-success text-success-content dark:bg-success dark:text-success-content'
+                  : 'bg-transparent text-gray-600 dark:text-gray-200 hover:bg-base-200 dark:hover:bg-base-300'
               }`}
               aria-pressed={view === 'new'}
             >
@@ -177,8 +177,8 @@ export default function Dashboard({ tasks }: DashboardProps) {
               onClick={() => setView('today')}
               className={`w-full text-center cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
                 view === 'today'
-                  ? 'bg-sky-100 text-sky-700 dark:bg-sky-800/60 dark:text-sky-100'
-                  : 'bg-transparent text-gray-600 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  ? 'bg-info text-info-content dark:bg-info dark:text-info-content'
+                  : 'bg-transparent text-gray-600 dark:text-gray-200 hover:bg-base-200 dark:hover:bg-base-300'
               }`}
               aria-pressed={view === 'today'}
             >
@@ -189,8 +189,8 @@ export default function Dashboard({ tasks }: DashboardProps) {
               onClick={() => setView('week')}
               className={`w-full text-center cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
                 view === 'week'
-                  ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-800/60 dark:text-indigo-100'
-                  : 'bg-transparent text-gray-600 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  ? 'bg-primary text-primary-content dark:bg-primary dark:text-primary-content'
+                  : 'bg-transparent text-gray-600 dark:text-gray-200 hover:bg-base-200 dark:hover:bg-base-300'
               }`}
               aria-pressed={view === 'week'}
             >
@@ -201,7 +201,7 @@ export default function Dashboard({ tasks }: DashboardProps) {
               onClick={() => setView('imminent')}
               className={`w-full text-center cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
                 view === 'imminent'
-                  ? 'bg-rose-100 text-rose-700 dark:bg-rose-800/60 dark:text-rose-100'
+                  ? 'bg-error text-error-content dark:bg-error dark:text-error-content'
                   : 'bg-transparent text-gray-600 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-slate-700'
               }`}
               aria-pressed={view === 'imminent'}

@@ -66,12 +66,12 @@ function zeroMap(start: Date, end: Date): ActivityMap {
 function colorForCount(count: number) {
   if (!count) return 'bg-transparent';
   const colors = [
-    'bg-emerald-100',
-    'bg-emerald-200',
-    'bg-emerald-300',
-    'bg-emerald-400',
-    'bg-emerald-500',
-    'bg-emerald-600',
+    'bg-success/20',
+    'bg-success/30',
+    'bg-success/40',
+    'bg-success/50',
+    'bg-success/60',
+    'bg-success/70',
   ];
   const idx = Math.min(Math.max(count, 1), 6) - 1;
   return colors[idx];
@@ -204,7 +204,7 @@ export default function ActivityHeatmap({
             <button
               onClick={() => setRange('3m')}
               className={`cursor-pointer border-2 border-gray-400 px-3 py-1 rounded text-sm ${
-                range === '3m' ? 'bg-white dark:bg-zinc-600 shadow' : ''
+                range === '3m' ? 'bg-base-100 dark:bg-base-300 shadow' : ''
               }`}
             >
               3 months
@@ -212,7 +212,7 @@ export default function ActivityHeatmap({
             <button
               onClick={() => setRange('1m')}
               className={`cursor-pointer border-2 border-gray-400 px-3 py-1 rounded text-sm ${
-                range === '1m' ? 'bg-white dark:bg-zinc-600 shadow' : ''
+                range === '1m' ? 'bg-base-100 dark:bg-base-300 shadow' : ''
               }`}
             >
               1 month
@@ -220,7 +220,7 @@ export default function ActivityHeatmap({
             <button
               onClick={() => setRange('1w')}
               className={`cursor-pointer border-2 border-gray-400 px-3 py-1 rounded text-sm ${
-                range === '1w' ? 'bg-white dark:bg-zinc-600 shadow' : ''
+                range === '1w' ? 'bg-base-100 dark:bg-base-300 shadow' : ''
               }`}
             >
               1 week
@@ -330,7 +330,7 @@ export default function ActivityHeatmap({
                           );
                         })}
                       </div>
-                      {panelIdx < 2 && <div className="h-px bg-gray-200 dark:bg-zinc-700 mt-2" />}
+                      {panelIdx < 2 && <div className="h-px bg-base-200 dark:bg-base-300 mt-2" />}
                     </div>
                   );
                 })}

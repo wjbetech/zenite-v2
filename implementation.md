@@ -129,6 +129,13 @@ Design principles:
 
 - [ ] Change the order of tasks in New/Today/This Week based on what current task is being done
 - [ ] Refactor styles to use DaisyUI color themes (pastel/cupcake/nord)
+- [ ] Grey out completed tasks
+- [ ] Imminent tasks page should instead style tasks based on their imminence
+- [ ] Completed tasks should automatically move to the bottom of the stack and they should be 'minimized', i.e. their card should become narrower vertically
+- [ ] Add animations so that items move around smoothly
+- [ ] Allow users to move tasks up/down in the Today and This Week panel
+- [ ] Tasks in New should be sorted from newest at the top to oldest at the bottom
+- [ ] Tasks in imminent should have timers and be sorted from most imminent at the top to least imminent at the b ottom
 
 ### DaisyUI Theme Settings
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { Edit, Trash, Check } from 'lucide-react';
 
@@ -11,6 +11,7 @@ export type Task = {
   dueDate?: string | null;
   createdAt: string;
   completed?: boolean;
+  started?: boolean;
 };
 
 type Props = {
@@ -23,47 +24,53 @@ type Props = {
 };
 
 export default function TaskCard({ task, right, href, onEdit, onDelete, onStatusChange }: Props) {
-  const [status, setStatus] = useState<'none' | 'done' | 'tilde'>('none');
+  // derive a simple status from task flags; prefer explicit task props
+  const isDone = !!task.completed;
+  const isStarted = !!task.started && !isDone;
 
   const cycleStatus = () => {
-    // Order: none -> tilde (in-progress) -> done -> none
-    const next = status === 'none' ? 'tilde' : status === 'tilde' ? 'done' : 'none';
-    setStatus(next);
-    onStatusChange?.(task.id, next);
+    // Order: none -> started -> done -> none
+    if (!isStarted && !isDone) {
+      // start
+      onStatusChange?.(task.id, 'tilde');
+      return;
+    }
+    if (isStarted && !isDone) {
+      // complete
+      onStatusChange?.(task.id, 'done');
+      return;
+    }
+    // clear
+    onStatusChange?.(task.id, 'none');
   };
 
-  const bgClass =
-    status === 'done'
-      ? 'bg-success/25'
-      : status === 'tilde'
-      ? 'bg-warning/25'
-      : 'bg-base-100 dark:bg-base-200';
+  // Use CSS variable for neutral-content as the default card background so it
+  // matches the DaisyUI theme token across themes.
+  const bgClass = isDone ? 'bg-gray-400/50' : isStarted ? 'bg-neutral' : '';
 
-  // border color for the card depending on status
-  const borderClass =
-    status === 'done'
-      ? 'border-emerald-600 dark:border-emerald-700'
-      : status === 'tilde'
-      ? 'border-amber-600 dark:border-amber-700'
-      : 'border-gray-100 dark:border-zinc-500';
+  const bgStyle =
+    !isDone && !isStarted
+      ? { backgroundColor: 'hsl(var(--nc) / var(--tw-bg-opacity, 1))' }
+      : undefined;
 
-  // class for the small status toggle button so it matches the status color
-  const buttonClass =
-    status === 'done'
-      ? 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-success bg-success/20 dark:bg-success text-sm cursor-pointer'
-      : status === 'tilde'
-      ? 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-warning bg-warning/20 dark:bg-warning text-sm cursor-pointer'
-      : 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-gray-700 text-sm cursor-pointer';
+  const borderClass = isDone ? 'border-gray-500' : isStarted ? 'border-info' : 'border-base-200';
+
+  const buttonClass = isDone
+    ? 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-gray-400 bg-gray-200 text-sm cursor-pointer text-gray-600'
+    : isStarted
+    ? 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-info text-sm cursor-pointer text-info-content'
+    : 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-base-300 text-sm cursor-pointer';
 
   const cardInner = (
     <div
+      style={bgStyle}
       className={`${bgClass} relative z-10 rounded-md shadow-sm border ${borderClass} p-2 transition-transform duration-150 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
-              <div className="text-base md:text-md lg:text-lg font-medium text-gray-900 dark:text-white">
+              <div className="text-base md:text-md lg:text-lg font-medium dark:text-white">
                 {task.title}
               </div>
 
@@ -75,23 +82,12 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
                   cycleStatus();
                 }}
                 className={buttonClass}
-                title={
-                  status === 'none'
-                    ? 'Mark in progress'
-                    : status === 'tilde'
-                    ? 'Mark done'
-                    : 'Clear status'
-                }
+                title={isDone ? 'Clear status' : isStarted ? 'Mark done' : 'Mark in progress'}
               >
-                {status === 'done' ? (
-                  // dark green for completed
-                  <Check
-                    className="h-4 w-4 text-emerald-800 dark:text-emerald-300"
-                    strokeWidth={2}
-                  />
-                ) : status === 'tilde' ? (
-                  // dark orange for in-progress/tilde
-                  <span className="text-sm font-bold text-amber-800 dark:text-amber-300">~</span>
+                {isDone ? (
+                  <Check className="h-4 w-4 text-neutral-content" strokeWidth={2} />
+                ) : isStarted ? (
+                  <span className="text-sm font-bold">•</span>
                 ) : null}
               </button>
             </div>
@@ -130,9 +126,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
           </div>
 
           <div className="flex items-start mt-1">
-            {right && (
-              <div className="text-sm md:text-base text-gray-400 dark:text-white">{right}</div>
-            )}
+            {right && <div className="text-sm md:text-base text-neutral-content">{right}</div>}
           </div>
         </div>
       </div>

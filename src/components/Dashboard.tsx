@@ -58,6 +58,7 @@ export default function Dashboard({ tasks }: DashboardProps) {
   }, [loadRemote]);
 
   const deleteTask = useTaskStore((s) => s.deleteTask);
+  const updateTask = useTaskStore((s) => s.updateTask);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Task> | undefined>(undefined);
@@ -103,10 +104,21 @@ export default function Dashboard({ tasks }: DashboardProps) {
 
   const newTasks = [...all]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .sort((a, b) => {
+      // started first, completed last
+      const sa = a.completed ? 1 : a.started ? -1 : 0;
+      const sb = b.completed ? 1 : b.started ? -1 : 0;
+      return sa - sb;
+    })
     .slice(0, 5 + extra);
   const soonest = [...all]
     .filter((t) => t.dueDate)
     .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
+    .sort((a, b) => {
+      const sa = a.completed ? 1 : a.started ? -1 : 0;
+      const sb = b.completed ? 1 : b.started ? -1 : 0;
+      return sa - sb;
+    })
     .slice(0, 5 + extra);
   const today = [...all]
     .filter((t) => {
@@ -119,6 +131,11 @@ export default function Dashboard({ tasks }: DashboardProps) {
         d.getDate() === n.getDate()
       );
     })
+    .sort((a, b) => {
+      const sa = a.completed ? 1 : a.started ? -1 : 0;
+      const sb = b.completed ? 1 : b.started ? -1 : 0;
+      return sa - sb;
+    })
     .slice(0, 5 + extra);
 
   const week = [...all]
@@ -127,7 +144,22 @@ export default function Dashboard({ tasks }: DashboardProps) {
       const days = daysUntil(t.dueDate);
       return days >= 0 && days <= 6; // this week including today
     })
+    .sort((a, b) => {
+      const sa = a.completed ? 1 : a.started ? -1 : 0;
+      const sb = b.completed ? 1 : b.started ? -1 : 0;
+      return sa - sb;
+    })
     .slice(0, 5 + extra);
+
+  const handleStatusChange = (id: string, status: 'none' | 'done' | 'tilde') => {
+    if (status === 'tilde') {
+      updateTask(id, { started: true, completed: false });
+    } else if (status === 'done') {
+      updateTask(id, { started: false, completed: true });
+    } else {
+      updateTask(id, { started: false, completed: false });
+    }
+  };
 
   if (!mounted) {
     // render a simple placeholder during SSR so server and client markup match
@@ -228,6 +260,7 @@ export default function Dashboard({ tasks }: DashboardProps) {
               setModalOpen(true);
             }}
             onDelete={(id) => deleteTask(id)}
+            onStatusChange={handleStatusChange}
           />
         )}
 
@@ -246,6 +279,7 @@ export default function Dashboard({ tasks }: DashboardProps) {
               setModalOpen(true);
             }}
             onDelete={(id) => deleteTask(id)}
+            onStatusChange={handleStatusChange}
           />
         )}
 
@@ -260,6 +294,7 @@ export default function Dashboard({ tasks }: DashboardProps) {
               setModalOpen(true);
             }}
             onDelete={(id) => deleteTask(id)}
+            onStatusChange={handleStatusChange}
           />
         )}
 
@@ -278,6 +313,7 @@ export default function Dashboard({ tasks }: DashboardProps) {
               setModalOpen(true);
             }}
             onDelete={(id) => deleteTask(id)}
+            onStatusChange={handleStatusChange}
           />
         )}
       </div>

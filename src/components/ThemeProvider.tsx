@@ -19,8 +19,37 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
       /* ignore */
     }
 
-    if (stored === 'dark' || stored === 'light') {
-      setTheme(stored as 'dark' | 'light');
+    // Accept both legacy values ("dark-theme" / "light-theme") and the simplified form ('dark'|'light')
+    const normalized = (() => {
+      if (!stored) return null;
+      const s = stored.toLowerCase();
+      if (s === 'dark' || s === 'light') return s;
+      if (s === 'dark-theme') return 'dark';
+      if (s === 'light-theme') return 'light';
+      return null;
+    })();
+
+    if (normalized === 'dark' || normalized === 'light') {
+      // restore any persisted daisyUI theme names (optional values stored separately)
+      try {
+        const dl = localStorage.getItem('zenite.daisy.light');
+        const dd = localStorage.getItem('zenite.daisy.dark');
+        // inject persisted values into the zustand store synchronously so setTheme uses them
+        try {
+          const current = useThemeStore.getState();
+          useThemeStore.setState({
+            daisyLight: dl ?? current.daisyLight,
+            daisyDark: dd ?? current.daisyDark,
+          });
+        } catch {
+          // fall back to directly setting the DOM attribute if store mutation fails
+          if (dl) html.setAttribute('data-theme', dl);
+          if (dd && normalized === 'dark') html.setAttribute('data-theme', dd);
+        }
+      } catch {
+        /* ignore */
+      }
+      setTheme(normalized as 'dark' | 'light');
       return;
     }
 

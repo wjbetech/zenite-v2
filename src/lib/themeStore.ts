@@ -33,8 +33,8 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       const appTheme = t === 'dark' ? 'dark-theme' : 'light-theme';
       root.setAttribute('data-app-theme', appTheme);
       try {
-        // persist a cookie so the server or other tools can read the app-level theme
-        document.cookie = `zenite.theme=${appTheme}; path=/; max-age=31536000; SameSite=Lax`;
+        // persist a cookie with the simple value 'dark' or 'light' so the server can read it
+        document.cookie = `zenite.theme=${t}; path=/; max-age=31536000; SameSite=Lax`;
       } catch (e) {
         // surface cookie failures in dev console
         console.error('themeStore: failed to write theme cookie', e);
@@ -42,8 +42,8 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     }
 
     try {
-      if (typeof localStorage !== 'undefined')
-        localStorage.setItem('zenite.theme', t === 'dark' ? 'dark-theme' : 'light-theme');
+      // persist a simple value for client-side reads: 'dark' or 'light'
+      if (typeof localStorage !== 'undefined') localStorage.setItem('zenite.theme', t);
     } catch (e) {
       console.error('themeStore: failed to write localStorage (setTheme)', e);
     }
@@ -80,17 +80,16 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       // expose app theme marker
       root.setAttribute('data-app-theme', next === 'dark' ? 'dark-theme' : 'light-theme');
       try {
-        document.cookie = `zenite.theme=${
-          next === 'dark' ? 'dark-theme' : 'light-theme'
-        }; path=/; max-age=31536000; SameSite=Lax`;
+        // persist a simple cookie value for server reads
+        document.cookie = `zenite.theme=${next}; path=/; max-age=31536000; SameSite=Lax`;
       } catch (e) {
         console.error('themeStore: failed to write theme cookie (toggle)', e);
       }
     }
 
     try {
-      if (typeof localStorage !== 'undefined')
-        localStorage.setItem('zenite.theme', next === 'dark' ? 'dark-theme' : 'light-theme');
+      // persist a simple value for client-side reads: 'dark' or 'light'
+      if (typeof localStorage !== 'undefined') localStorage.setItem('zenite.theme', next);
     } catch (e) {
       console.error('themeStore: failed to write localStorage (toggle)', e);
     }
@@ -118,6 +117,8 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     set({ daisyLight: name });
     try {
       if (typeof localStorage !== 'undefined') localStorage.setItem('zenite.daisy.light', name);
+      // also persist the active daisy theme so the server can render it on first paint
+      document.cookie = `zenite.daisy=${name}; path=/; max-age=31536000; SameSite=Lax`;
     } catch (e) {
       console.error('themeStore: failed to write localStorage (daisyLight)', e);
     }
@@ -174,6 +175,8 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     set({ daisyDark: name });
     try {
       if (typeof localStorage !== 'undefined') localStorage.setItem('zenite.daisy.dark', name);
+      // also persist the active daisy theme so the server can render it on first paint
+      document.cookie = `zenite.daisy=${name}; path=/; max-age=31536000; SameSite=Lax`;
     } catch (e) {
       console.error('themeStore: failed to write localStorage (daisyDark)', e);
     }

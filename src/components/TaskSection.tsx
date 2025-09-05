@@ -11,6 +11,7 @@ type TaskSectionProps = {
   renderRight?: (t: Task) => React.ReactNode;
   onEdit?: (t: Task) => void;
   onDelete?: (id: string) => void;
+  onStatusChange?: (id: string, status: 'none' | 'done' | 'tilde') => void;
   expanded?: boolean;
 };
 
@@ -21,6 +22,7 @@ export default function TaskSection({
   renderRight,
   onEdit,
   onDelete,
+  onStatusChange,
   expanded = false,
 }: TaskSectionProps) {
   return (
@@ -44,6 +46,7 @@ export default function TaskSection({
                 right={renderRight ? renderRight(t) : undefined}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onStatusChange={onStatusChange}
               />
             </li>
           ))}

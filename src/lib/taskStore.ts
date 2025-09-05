@@ -12,6 +12,7 @@ export type Task = {
   recurrence?: string | null;
   createdAt: string;
   completed?: boolean;
+  started?: boolean;
   projectId?: string | null;
   ownerId?: string;
 };
@@ -57,6 +58,7 @@ export const useTaskStore = create<State>((set, get) => ({
       id: nanoid(),
       createdAt: new Date().toISOString(),
       completed: false,
+      started: false,
       ...payload,
     };
     const tasks = [t, ...get().tasks];

@@ -100,7 +100,7 @@ export default function ActivityHeatmap({
   startRange?: RangeKey;
   onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [range, setRange] = useState<RangeKey>(startRange);
 
   // compute date range

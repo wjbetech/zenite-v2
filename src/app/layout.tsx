@@ -1,12 +1,5 @@
 import type { Metadata } from 'next';
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from '@clerk/nextjs';
+import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
 import Script from 'next/script';
 import { Navbar, Sidebar } from '../components';
@@ -43,7 +36,7 @@ export default async function RootLayout({
 
         <body
           className={`font-vend bg-white text-slate-900 dark:bg-gray-900 dark:text-white`}
-          style={{ ['--nav-height' as any]: '72px' } as React.CSSProperties}
+          style={{ ['--nav-height' as string]: '72px' } as React.CSSProperties}
         >
           <Providers>
             <Navbar />

@@ -37,7 +37,24 @@ module.exports = {
       'cupcake',
       'pastel',
       'business',
-      'dim',
+      // provide an explicit custom 'dim' theme so CSS variables are emitted even
+      // if the DaisyUI distribution doesn't include a built-in 'dim' name.
+      {
+        dim: {
+          primary: '#60A5FA',
+          'primary-content': '#F8FAFC',
+          secondary: '#64748B',
+          accent: '#94A3B8',
+          neutral: '#0B1220',
+          'base-100': '#0F1724',
+          'base-200': '#0B1220',
+          'base-300': '#020617',
+          info: '#67E8F9',
+          success: '#86EFAC',
+          warning: '#FBBF24',
+          error: '#F43F5E',
+        },
+      },
     ],
   },
 };

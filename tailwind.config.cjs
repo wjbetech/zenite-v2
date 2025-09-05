@@ -14,6 +14,8 @@ module.exports = {
 
   plugins: [require('daisyui')],
   daisyui: {
+    // Register the custom 'nord' theme plus several built-in DaisyUI themes
+    // so their CSS is emitted during the Tailwind build.
     themes: [
       {
         nord: {
@@ -31,7 +33,11 @@ module.exports = {
           error: '#BF616A',
         },
       },
+      // include common daisyUI themes used by the app so their CSS exists
       'cupcake',
+      'pastel',
+      'business',
+      'dim',
     ],
   },
 };

@@ -129,6 +129,22 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     } catch {
       /* ignore */
     }
+    // defensive reapply: some third-party script may override data-theme shortly after; reapply a couple times
+    try {
+      if (typeof window !== 'undefined') {
+        const apply = () => {
+          try {
+            document.documentElement.setAttribute('data-theme', name);
+          } catch {
+            /* ignore */
+          }
+        };
+        setTimeout(apply, 50);
+        setTimeout(apply, 250);
+      }
+    } catch {
+      /* ignore */
+    }
     // always call setTheme to ensure the app-level theme marker is applied/updated
     try {
       try {
@@ -165,6 +181,22 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     try {
       if (typeof document !== 'undefined') {
         document.documentElement.setAttribute('data-theme', name);
+      }
+    } catch {
+      /* ignore */
+    }
+    // defensive reapply: reapply after short delays to override other scripts
+    try {
+      if (typeof window !== 'undefined') {
+        const apply = () => {
+          try {
+            document.documentElement.setAttribute('data-theme', name);
+          } catch {
+            /* ignore */
+          }
+        };
+        setTimeout(apply, 50);
+        setTimeout(apply, 250);
       }
     } catch {
       /* ignore */

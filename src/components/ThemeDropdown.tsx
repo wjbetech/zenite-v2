@@ -65,6 +65,12 @@ export default function ThemeDropdown() {
               <button
                 key={t}
                 onClick={() => {
+                  try {
+                    if (typeof document !== 'undefined')
+                      document.documentElement.setAttribute('data-theme', t);
+                  } catch {
+                    /* ignore */
+                  }
                   setDaisyLight(t);
                   setAppliedTheme(t);
                   setOpen(false);
@@ -90,6 +96,12 @@ export default function ThemeDropdown() {
               <button
                 key={t}
                 onClick={() => {
+                  try {
+                    if (typeof document !== 'undefined')
+                      document.documentElement.setAttribute('data-theme', t);
+                  } catch {
+                    /* ignore */
+                  }
                   setDaisyDark(t);
                   setAppliedTheme(t);
                   setOpen(false);

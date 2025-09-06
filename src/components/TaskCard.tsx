@@ -28,30 +28,35 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   // default: base (not started)
   if (!isStarted && !isDone) {
     return {
-      wrapper: 'bg-base-300 text-base-content',
+      // subtle neutral card for unstarted tasks
+      wrapper: 'bg-base-100 text-base-content',
       border: 'border-base-200',
+      // status box: transparent background with soft border
       button:
-        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-base-300 bg-transparent text-base-content text-sm cursor-pointer',
+        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-base-300 bg-transparent text-base-content text-sm cursor-pointer transition-colors duration-200',
       icon: 'text-base-content',
     };
   }
 
   if (isStarted && !isDone) {
     return {
-      wrapper: 'bg-secondary text-secondary-content',
+      // stronger secondary tint to indicate in-progress
+      wrapper: 'bg-secondary/20 text-secondary-content ring-1 ring-secondary/20',
       border: 'border-secondary',
+      // status box: filled secondary color for clear affordance
       button:
-        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-secondary bg-secondary text-secondary-content text-sm cursor-pointer',
+        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-secondary bg-secondary text-secondary-content text-sm cursor-pointer transition-colors duration-200',
       icon: 'text-secondary-content',
     };
   }
 
   // done
   return {
-    wrapper: 'bg-base-content text-base-100',
+    // completed tasks get a darker muted background with inverted icon
+    wrapper: 'bg-base-300 text-base-content',
     border: 'border-base-content',
     button:
-      'h-5 w-5 flex items-center justify-center rounded-md border-2 border-base-content bg-base-content text-base-100 text-sm cursor-pointer',
+      'h-5 w-5 flex items-center justify-center rounded-md border-2 border-base-content bg-base-content text-base-100 text-sm cursor-pointer transition-colors duration-200',
     icon: 'text-base-100',
   };
 }
@@ -86,13 +91,19 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
 
   const cardInner = (
     <div
-      className={`${bgClass} relative z-10 rounded-md shadow-sm border ${borderClass} p-2 transition-transform duration-150 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
+      className={`${bgClass} relative z-10 rounded-md shadow-sm border ${borderClass} p-2 transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
-              <div className="text-base md:text-md lg:text-lg font-medium">{task.title}</div>
+              <div
+                className={`text-base md:text-md lg:text-lg font-medium ${
+                  isDone ? 'line-through text-gray-500' : ''
+                }`}
+              >
+                {task.title}
+              </div>
 
               <button
                 type="button"
@@ -125,7 +136,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
                 {isDone ? (
                   <Check className={`h-4 w-4 ${iconClass}`} strokeWidth={2} />
                 ) : isStarted ? (
-                  <span className={`text-sm font-bold ${iconClass}`}>•</span>
+                  <span className={`text-sm font-bold ${iconClass}`}>∼</span>
                 ) : null}
               </button>
             </div>

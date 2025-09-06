@@ -67,10 +67,14 @@ export const useTaskStore = create<State>((set, get) => ({
     return t;
   },
   updateTask(id, patch) {
+    console.log('taskStore.updateTask called', { id, patch });
     const tasks = get().tasks.map((t) => (t.id === id ? { ...t, ...patch } : t));
+    console.log('taskStore.updateTask before set', { tasks });
     set({ tasks });
     save(tasks);
-    return tasks.find((t) => t.id === id);
+    const updated = tasks.find((t) => t.id === id);
+    console.log('taskStore.updateTask updated', { updated });
+    return updated;
   },
   deleteTask(id) {
     const tasks = get().tasks.filter((t) => t.id !== id);

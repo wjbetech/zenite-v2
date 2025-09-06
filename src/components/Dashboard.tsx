@@ -59,6 +59,7 @@ export default function Dashboard({ tasks }: DashboardProps) {
 
   const deleteTask = useTaskStore((s) => s.deleteTask);
   const updateTask = useTaskStore((s) => s.updateTask);
+  const setTasks = useTaskStore((s) => s.setTasks);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Task> | undefined>(undefined);
@@ -153,12 +154,27 @@ export default function Dashboard({ tasks }: DashboardProps) {
 
   const handleStatusChange = (id: string, status: 'none' | 'done' | 'tilde') => {
     console.log('Dashboard: handleStatusChange', { id, status });
-    if (status === 'tilde') {
-      updateTask(id, { started: true, completed: false });
-    } else if (status === 'done') {
-      updateTask(id, { started: false, completed: true });
-    } else {
-      updateTask(id, { started: false, completed: false });
+    const patch =
+      status === 'tilde'
+        ? { started: true, completed: false }
+        : status === 'done'
+        ? { started: false, completed: true }
+        : { started: false, completed: false };
+
+    const updated = updateTask(id, patch);
+    console.log('Dashboard: updated task', updated);
+
+    // If the task wasn't in the store (updateTask returned undefined), fallback
+    // to adding the patched task into the store so UI reflects the change.
+    if (!updated) {
+      const base = mergedById[id];
+      if (base) {
+        const patched = { ...base, ...patch } as Task;
+        // avoid duplicate ids
+        const next = [...storeTasks.filter((t) => t.id !== id), patched];
+        setTasks(next);
+        console.log('Dashboard: fallback setTasks added', patched);
+      }
     }
   };
 

@@ -1,15 +1,23 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import useDaisyThemeStore from '../lib/daisyThemeStore';
+import { themeChange } from 'theme-change';
 
+// Lightweight provider that initializes the theme-change library on the client.
+// theme-change wires up elements with `data-set-theme` to change `data-theme` on
+// the document. We also ensure a sensible default (pastel) if nothing is stored.
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const setDaisyTheme = useDaisyThemeStore((s) => s.setDaisyTheme);
-
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // try cookie first (SSR), then localStorage
+    // initialize theme-change (false = don't watch for auto changes)
+    try {
+      themeChange(false);
+    } catch {
+      // ignore if initialization fails
+    }
+
+    // read cookie first (SSR), then localStorage, otherwise default to pastel
     const readCookie = (name: string) => {
       const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]+)'));
       return m ? decodeURIComponent(m[1]) : null;
@@ -22,17 +30,12 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
       /* ignore */
     }
 
-    if (stored) {
-      setDaisyTheme(stored);
-    } else {
-      // ensure default 'pastel' applied to document
-      try {
-        document.documentElement.setAttribute('data-theme', 'pastel');
-      } catch {
-        /* ignore */
-      }
+    try {
+      document.documentElement.setAttribute('data-theme', stored ?? 'pastel');
+    } catch {
+      /* ignore */
     }
-  }, [setDaisyTheme]);
+  }, []);
 
   return <>{children}</>;
 }

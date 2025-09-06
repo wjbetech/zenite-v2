@@ -28,7 +28,7 @@ export default function TaskSection({
   return (
     <section className="mb-[74px]">
       {title && (
-        <h2 className="text-sm font-medium text-gray-700 mb-6 dark:text-white">
+        <h2 className="text-sm font-medium text-gray-700 mb-6">
           <span className={`inline-block border-b-4 ${accentClass} pb-0.5`}>{title}</span>
         </h2>
       )}

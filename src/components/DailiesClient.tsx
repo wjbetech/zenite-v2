@@ -27,7 +27,7 @@ export default function DailiesClient() {
           <div className="hidden md:block">
             <button
               onClick={() => setTimerOpen((s) => !s)}
-              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-300"
+              className="text-sm text-gray-500 hover:text-gray-700"
               aria-expanded={timerOpen}
             >
               {timerOpen ? 'Hide timer' : 'Show timer'}

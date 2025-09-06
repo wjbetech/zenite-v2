@@ -40,20 +40,20 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
 
   if (isStarted && !isDone) {
     return {
-      // stronger secondary tint to indicate in-progress
-      wrapper: 'bg-secondary/20 text-secondary-content ring-1 ring-secondary/20',
-      border: 'border-secondary',
-      // status box: filled secondary color for clear affordance
+      // stronger primary tint to indicate in-progress
+      wrapper: 'bg-accent text-primary-content ring-1 ring-primary/20',
+      border: 'border-primary',
+      // status box: filled primary color for clear affordance
       button:
-        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-secondary bg-secondary text-secondary-content text-sm cursor-pointer transition-colors duration-200',
-      icon: 'text-secondary-content',
+        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-primary bg-primary text-primary-content text-sm cursor-pointer transition-colors duration-200',
+      icon: 'text-primary-content',
     };
   }
 
   // done
   return {
     // completed tasks get a darker muted background with inverted icon
-    wrapper: 'bg-base-300 text-base-content',
+    wrapper: 'bg-gray-400 text-base-content',
     border: 'border-base-content',
     button:
       'h-5 w-5 flex items-center justify-center rounded-md border-2 border-base-content bg-base-content text-base-100 text-sm cursor-pointer transition-colors duration-200',
@@ -185,7 +185,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
   return (
     <div className="relative">
       {/* Single slab (chunky 3D base / shadow) */}
-      <div className="absolute inset-0 translate-x-2 translate-y-2 rounded-md bg-base-200 dark:bg-base-300 border border-gray-200/20 dark:border-zinc-900 z-0" />
+      <div className="absolute inset-0 translate-x-2 translate-y-2 rounded-md bg-base-200 border border-gray-200/20 z-0" />
 
       {href ? (
         <Link href={href} className="block">

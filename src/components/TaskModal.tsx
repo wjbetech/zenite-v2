@@ -64,11 +64,11 @@ export default function TaskModal({
       <div className="absolute inset-0 bg-black/80" onClick={() => onOpenChange(false)} />
       <form
         onSubmit={submit}
-        className="relative z-10 w-full max-w-2xl bg-base-100 dark:bg-base-200 rounded-lg p-6 shadow-lg border-1"
+        className="relative z-10 w-full max-w-2xl bg-base-100 rounded-lg p-6 shadow-lg border-1"
       >
         <h3 className="text-lg font-medium mb-6">{initial?.id ? 'Edit Task' : 'Add New Task'}</h3>
         <label className="block">
-          <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Title</div>
+          <div className="text-sm text-gray-600 mb-1">Title</div>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -78,11 +78,11 @@ export default function TaskModal({
         </label>
 
         <label className="block mt-5">
-          <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Notes</div>
+          <div className="text-sm text-gray-600 mb-1">Notes</div>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full p-2 rounded-lg border dark:border-slate-700 bg-base-100 dark:bg-base-200"
+            className="w-full p-2 rounded-lg border bg-base-100"
             rows={4}
           />
         </label>
@@ -90,14 +90,14 @@ export default function TaskModal({
         {/* status & priority removed — default unstarted; priorities inferred by due date */}
 
         <label className="block mt-5">
-          <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Due date</div>
+          <div className="text-sm text-gray-600 mb-1">Due date</div>
           <input
             type="date"
             value={dueDate ? dueDate.split('T')[0] : ''}
             onChange={(e) =>
               setDueDate(e.target.value ? new Date(e.target.value).toISOString() : null)
             }
-            className="p-2 rounded-lg border dark:border-slate-700 bg-base-100 dark:bg-base-200"
+            className="p-2 rounded-lg border bg-base-100"
           />
         </label>
 
@@ -105,12 +105,12 @@ export default function TaskModal({
 
         <div className="mt-5 flex flex-col gap-4 md:flex-row md:gap-4">
           <label className="w-full md:w-1/2">
-            <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Recurrence</div>
+            <div className="text-sm text-gray-600 mb-1">Recurrence</div>
             <div className="relative w-full">
               <select
                 value={recurrence ?? 'once'}
                 onChange={(e) => setRecurrence(e.target.value || 'once')}
-                className="p-2 pr-12 appearance-none rounded-lg border dark:border-slate-700 bg-base-100 dark:bg-base-200 w-full"
+                className="p-2 pr-12 appearance-none rounded-lg border bg-base-100 w-full"
               >
                 <option value="once">Only once</option>
                 <option value="daily">Daily</option>
@@ -120,12 +120,12 @@ export default function TaskModal({
           </label>
 
           <label className="w-full md:w-1/2">
-            <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Project</div>
+            <div className="text-sm text-gray-600 mb-1">Project</div>
             <div className="relative w-full">
               <select
                 value={projectId ?? ''}
                 onChange={(e) => setProjectId(e.target.value || null)}
-                className="p-2 pr-12 appearance-none rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-900 w-full"
+                className="p-2 pr-12 appearance-none rounded-lg border bg-white w-full"
               >
                 <option value="">(none)</option>
                 {projects.map((p) => (

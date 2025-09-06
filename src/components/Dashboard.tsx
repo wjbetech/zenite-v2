@@ -214,8 +214,8 @@ export default function Dashboard({ tasks }: DashboardProps) {
               onClick={() => setView('new')}
               className={`w-full text-center cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
                 view === 'new'
-                  ? 'bg-success text-success-content dark:bg-success dark:text-success-content'
-                  : 'bg-transparent text-gray-600 dark:text-gray-200 hover:bg-base-200 dark:hover:bg-base-300'
+                  ? 'bg-success text-success-content'
+                  : 'bg-transparent text-gray-600 hover:bg-base-200'
               }`}
               aria-pressed={view === 'new'}
             >
@@ -226,8 +226,8 @@ export default function Dashboard({ tasks }: DashboardProps) {
               onClick={() => setView('today')}
               className={`w-full text-center cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
                 view === 'today'
-                  ? 'bg-info text-info-content dark:bg-info dark:text-info-content'
-                  : 'bg-transparent text-gray-600 dark:text-gray-200 hover:bg-base-200 dark:hover:bg-base-300'
+                  ? 'bg-info text-info-content'
+                  : 'bg-transparent text-gray-600 hover:bg-base-200'
               }`}
               aria-pressed={view === 'today'}
             >
@@ -238,8 +238,8 @@ export default function Dashboard({ tasks }: DashboardProps) {
               onClick={() => setView('week')}
               className={`w-full text-center cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
                 view === 'week'
-                  ? 'bg-primary text-primary-content dark:bg-primary dark:text-primary-content'
-                  : 'bg-transparent text-gray-600 dark:text-gray-200 hover:bg-base-200 dark:hover:bg-base-300'
+                  ? 'bg-primary text-primary-content'
+                  : 'bg-transparent text-gray-600 hover:bg-base-200'
               }`}
               aria-pressed={view === 'week'}
             >
@@ -250,8 +250,8 @@ export default function Dashboard({ tasks }: DashboardProps) {
               onClick={() => setView('imminent')}
               className={`w-full text-center cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
                 view === 'imminent'
-                  ? 'bg-error text-error-content dark:bg-error dark:text-error-content'
-                  : 'bg-transparent text-gray-600 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  ? 'bg-error text-error-content'
+                  : 'bg-transparent text-gray-600 hover:bg-slate-100'
               }`}
               aria-pressed={view === 'imminent'}
             >

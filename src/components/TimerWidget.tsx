@@ -111,7 +111,7 @@ export default function TimerWidget({
               setOpen(next);
               onOpenChange?.(next);
             }}
-            className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-300"
+            className="text-sm text-gray-500 hover:text-gray-700"
             aria-expanded={open}
           >
             {open ? 'Hide timer' : 'Show timer'}
@@ -126,16 +126,14 @@ export default function TimerWidget({
             : 'max-h-0 opacity-0 -translate-y-1 pointer-events-none'
         }`}
       >
-        <div className="flex flex-col items-stretch bg-base-100 dark:bg-base-200 border border-gray-200 dark:border-slate-700 p-4 rounded-md">
+        <div className="flex flex-col items-stretch bg-base-100 border border-gray-200 p-4 rounded-md">
           {/* top mode selector */}
-          <div className="flex items-center gap-2 mb-3 p-2 rounded-md bg-base-200 dark:bg-base-300/60 w-full">
+          <div className="flex items-center gap-2 mb-3 p-2 rounded-md bg-base-200 w-full">
             <button
               aria-pressed={mode === 'timer'}
               onClick={() => setMode('timer')}
               className={`flex-1 text-center cursor-pointer px-3 py-2 rounded-md text-sm ${
-                mode === 'timer'
-                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-700/30 dark:text-emerald-100'
-                  : 'text-gray-600 dark:text-gray-300'
+                mode === 'timer' ? 'bg-emerald-100 text-emerald-700' : 'text-gray-600'
               }`}
             >
               Timer
@@ -144,9 +142,7 @@ export default function TimerWidget({
               aria-pressed={mode === 'stopwatch'}
               onClick={() => setMode('stopwatch')}
               className={`flex-1 text-center cursor-pointer px-3 py-2 rounded-md text-sm ${
-                mode === 'stopwatch'
-                  ? 'bg-emerald-200 text-emerald-700 dark:bg-emerald-700/30 dark:text-emerald-100'
-                  : 'text-gray-600 dark:text-gray-300'
+                mode === 'stopwatch' ? 'bg-emerald-200 text-emerald-700' : 'text-gray-600'
               }`}
             >
               Stopwatch
@@ -154,7 +150,7 @@ export default function TimerWidget({
           </div>
 
           <div className="flex-1">
-            <div className="text-xs text-gray-500 dark:text-gray-300 mb-2">
+            <div className="text-xs text-gray-500 mb-2">
               {mode === 'timer' ? 'Countdown Timer' : 'Stopwatch'}
             </div>
             <div className="flex items-center justify-between mb-3">
@@ -194,28 +190,16 @@ export default function TimerWidget({
             )}
 
             <div className="flex items-center gap-3">
-              <button
-                onClick={reset}
-                title="Reset"
-                className="p-2 rounded-md hover:bg-base-200 dark:hover:bg-base-300"
-              >
+              <button onClick={reset} title="Reset" className="p-2 rounded-md hover:bg-base-200">
                 <RefreshCw className="w-5 h-5" />
               </button>
 
               {running ? (
-                <button
-                  onClick={stop}
-                  title="Stop"
-                  className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800"
-                >
+                <button onClick={stop} title="Stop" className="p-2 rounded-md hover:bg-gray-100">
                   <Square className="w-5 h-5" />
                 </button>
               ) : (
-                <button
-                  onClick={start}
-                  title="Start"
-                  className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800"
-                >
+                <button onClick={start} title="Start" className="p-2 rounded-md hover:bg-gray-100">
                   <Play className="w-5 h-5" />
                 </button>
               )}

@@ -78,7 +78,7 @@ function colorForCount(count: number) {
 }
 
 function borderForCount(count: number) {
-  if (!count) return 'border-2 border-gray-400 dark:border-zinc-700';
+  if (!count) return 'border-2 border-gray-400';
   const borders = [
     'border-2 border-emerald-100',
     'border-2 border-emerald-200',
@@ -186,7 +186,7 @@ export default function ActivityHeatmap({
           }
           aria-expanded={open}
           aria-label={open ? 'Collapse activity tracker' : 'Expand activity tracker'}
-          className="ml-1 text-lg text-black dark:text-white cursor-pointer flex items-center justify-center"
+          className="ml-1 text-lg text-black cursor-pointer flex items-center justify-center"
           style={{ marginLeft: 6, width: 24, height: 24 }}
         >
           {open ? '−' : '+'}
@@ -204,7 +204,7 @@ export default function ActivityHeatmap({
             <button
               onClick={() => setRange('3m')}
               className={`cursor-pointer border-2 border-gray-400 px-3 py-1 rounded text-sm ${
-                range === '3m' ? 'bg-base-100 dark:bg-base-300 shadow' : ''
+                range === '3m' ? 'bg-base-100 shadow' : ''
               }`}
             >
               3 months
@@ -212,7 +212,7 @@ export default function ActivityHeatmap({
             <button
               onClick={() => setRange('1m')}
               className={`cursor-pointer border-2 border-gray-400 px-3 py-1 rounded text-sm ${
-                range === '1m' ? 'bg-base-100 dark:bg-base-300 shadow' : ''
+                range === '1m' ? 'bg-base-100 shadow' : ''
               }`}
             >
               1 month
@@ -220,14 +220,14 @@ export default function ActivityHeatmap({
             <button
               onClick={() => setRange('1w')}
               className={`cursor-pointer border-2 border-gray-400 px-3 py-1 rounded text-sm ${
-                range === '1w' ? 'bg-base-100 dark:bg-base-300 shadow' : ''
+                range === '1w' ? 'bg-base-100 shadow' : ''
               }`}
             >
               1 week
             </button>
           </div>
 
-          <div className="text-xs text-gray-500 dark:text-gray-300">
+          <div className="text-xs text-gray-500">
             {formatDateISO(startDate)} → {formatDateISO(endDate)}
           </div>
         </div>
@@ -244,10 +244,7 @@ export default function ActivityHeatmap({
                     <>
                       <div className="flex gap-2 items-center mb-2">
                         {week0.map((d, i) => (
-                          <div
-                            key={i}
-                            className="text-xs text-gray-500 dark:text-gray-300 w-8 text-center"
-                          >
+                          <div key={i} className="text-xs text-gray-500 w-8 text-center">
                             {d ? shortDayName(d) : ''}
                           </div>
                         ))}
@@ -288,9 +285,7 @@ export default function ActivityHeatmap({
                       const count = map[key] ?? 0;
                       // if not in the current month, mute the box
                       const color = inMonth ? colorForCount(count) : 'bg-transparent';
-                      const border = inMonth
-                        ? borderForCount(count)
-                        : 'border-2 border-gray-400 dark:border-zinc-700';
+                      const border = inMonth ? borderForCount(count) : 'border-2 border-gray-400';
                       const opacity = inMonth ? '' : 'opacity-50';
                       const title = `${key}: ${count} completed task${count === 1 ? '' : 's'}`;
                       return (
@@ -330,7 +325,7 @@ export default function ActivityHeatmap({
                           );
                         })}
                       </div>
-                      {panelIdx < 2 && <div className="h-px bg-base-200 dark:bg-base-300 mt-2" />}
+                      {panelIdx < 2 && <div className="h-px bg-base-200 mt-2" />}
                     </div>
                   );
                 })}

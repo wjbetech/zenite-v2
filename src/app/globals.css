@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@plugin "daisyui";
 
 /* Root-level defaults for light/dark. These ensure elements default to
    readable backgrounds and text when toggling the html.dark class. */

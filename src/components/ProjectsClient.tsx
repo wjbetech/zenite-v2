@@ -103,26 +103,26 @@ export default function ProjectsClient({ initialProjects }: Props) {
                 ? 'bg-success/25'
                 : status === 'tilde'
                 ? 'bg-warning/25'
-                : 'bg-base-100 dark:bg-base-200';
+                : 'bg-base-100';
 
             const borderClass =
               status === 'done'
-                ? 'border-emerald-600 dark:border-emerald-700'
+                ? 'border-emerald-600'
                 : status === 'tilde'
-                ? 'border-amber-600 dark:border-amber-700'
-                : 'border-gray-100 dark:border-zinc-500';
+                ? 'border-amber-600'
+                : 'border-gray-100';
 
             const buttonClass =
               status === 'done'
-                ? 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-success bg-success/20 dark:bg-success text-sm cursor-pointer'
+                ? 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-success bg-success/20 text-sm cursor-pointer'
                 : status === 'tilde'
-                ? 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-warning bg-warning/20 dark:bg-warning text-sm cursor-pointer'
+                ? 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-warning bg-warning/20 text-sm cursor-pointer'
                 : 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-gray-700 text-sm cursor-pointer';
 
             return (
               <div key={p.id} className="relative cursor-pointer">
                 {/* chunky 3D slab shadow/base under the card */}
-                <div className="absolute inset-0 translate-x-2 translate-y-2 rounded-md bg-base-200 dark:bg-base-300 border border-gray-200/20 dark:border-zinc-900 z-0" />
+                <div className="absolute inset-0 translate-x-2 translate-y-2 rounded-md bg-base-200 border border-gray-200/20 z-0" />
 
                 <div className="relative z-10">
                   <div
@@ -150,14 +150,9 @@ export default function ProjectsClient({ initialProjects }: Props) {
                             }
                           >
                             {status === 'done' ? (
-                              <Check
-                                className="h-4 w-4 text-emerald-800 dark:text-emerald-300"
-                                strokeWidth={2}
-                              />
+                              <Check className="h-4 w-4 text-emerald-800" strokeWidth={2} />
                             ) : status === 'tilde' ? (
-                              <span className="text-sm font-bold text-amber-800 dark:text-amber-300">
-                                ~
-                              </span>
+                              <span className="text-sm font-bold text-amber-800">~</span>
                             ) : null}
                           </button>
                         </div>

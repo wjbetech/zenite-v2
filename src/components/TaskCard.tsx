@@ -29,8 +29,8 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   if (!isStarted && !isDone) {
     return {
       // subtle neutral card for unstarted tasks
-      wrapper: 'bg-white dark:bg-neutral text-neutral-content',
-      border: 'border-neutral-content',
+      wrapper: 'bg-neutral-content text-neutral',
+      border: 'border-neutral',
       // status box: transparent background with soft border
       button:
         'h-5 w-5 flex items-center justify-center rounded-md border-2 border-neutral text-neutral text-sm cursor-pointer transition-colors duration-200',
@@ -41,11 +41,11 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   if (isStarted && !isDone) {
     return {
       // stronger primary tint to indicate in-progress
-      wrapper: 'bg-primary/80 text-primary-content ring-1 ring-primary/20',
+      wrapper: 'bg-primary text-primary-content',
       border: 'border-primary-content',
       // status box: filled primary color for clear affordance
       button:
-        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-primary-content bg-transparent text-primary text-sm cursor-pointer transition-colors duration-200',
+        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-primary-content bg-transparent text-info text-sm cursor-pointer transition-colors duration-200',
       icon: 'text-primary-content',
     };
   }
@@ -53,11 +53,11 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   // done
   return {
     // completed tasks get a darker muted background with inverted icon
-    wrapper: 'bg-gray-600 text-base-content',
-    border: 'border-base-content',
+    wrapper: 'bg-neutral/50 text-neutral-content/50',
+    border: 'border-neutral-content/50',
     button:
-      'h-5 w-5 flex items-center justify-center rounded-md border-2 border-success bg-success text-base-100 text-sm cursor-pointer transition-colors duration-200',
-    icon: 'text-base-100',
+      'h-5 w-5 flex items-center justify-center rounded-md border-2 border-neutral-content/50 bg-neutral/50 text-neutral-content/50 text-sm cursor-pointer transition-colors duration-200',
+    icon: 'text-neutral-content',
   };
 }
 
@@ -99,7 +99,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
             <div className="flex items-center gap-3">
               <div
                 className={`text-base md:text-md lg:text-lg font-medium ${
-                  isDone ? 'line-through text-gray-500' : ''
+                  isDone ? 'line-through' : ''
                 }`}
               >
                 {task.title}
@@ -150,7 +150,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
                     e.preventDefault();
                     onEdit(task);
                   }}
-                  className="cursor-pointer text-emerald-500 hover:text-emerald-500/80"
+                  className="cursor-pointer text-emerald-600 hover:text-emerald-600/80"
                   title="Edit"
                 >
                   <Edit className="h-5 w-5" />
@@ -165,7 +165,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
                     e.preventDefault();
                     onDelete(task.id);
                   }}
-                  className="cursor-pointer text-red-400 hover:text-red-400/80"
+                  className="cursor-pointer text-red-600 hover:text-red-600/80"
                   title="Delete"
                 >
                   <Trash className="h-5 w-5" />

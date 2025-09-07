@@ -29,23 +29,23 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   if (!isStarted && !isDone) {
     return {
       // subtle neutral card for unstarted tasks
-      wrapper: 'bg-neutral text-base-content',
+      wrapper: 'bg-white dark:bg-neutral text-neutral-content',
       border: 'border-neutral-content',
       // status box: transparent background with soft border
       button:
-        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-neutral-content text-base-content text-sm cursor-pointer transition-colors duration-200',
-      icon: 'text-base-content',
+        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-neutral text-neutral text-sm cursor-pointer transition-colors duration-200',
+      icon: 'text-neutral',
     };
   }
 
   if (isStarted && !isDone) {
     return {
       // stronger primary tint to indicate in-progress
-      wrapper: 'bg-secondary text-primary-content ring-1 ring-primary/20',
-      border: 'border-secondary-content',
+      wrapper: 'bg-primary/80 text-primary-content ring-1 ring-primary/20',
+      border: 'border-primary-content',
       // status box: filled primary color for clear affordance
       button:
-        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-secondary-content bg-transparent text-secondary text-sm cursor-pointer transition-colors duration-200',
+        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-primary-content bg-transparent text-primary text-sm cursor-pointer transition-colors duration-200',
       icon: 'text-primary-content',
     };
   }

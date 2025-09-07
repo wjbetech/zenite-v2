@@ -219,7 +219,7 @@ export default function Dashboard({ tasks }: DashboardProps) {
               }`}
               aria-pressed={view === 'new'}
             >
-              New
+              New Tasks
             </button>
 
             <button
@@ -243,7 +243,7 @@ export default function Dashboard({ tasks }: DashboardProps) {
               }`}
               aria-pressed={view === 'week'}
             >
-              This week
+              This Week
             </button>
 
             <button

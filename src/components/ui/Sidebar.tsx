@@ -32,7 +32,7 @@ export function UISidebar({
             <DrawerTrigger asChild>
               <button
                 aria-label="Open sidebar"
-                className="inline-flex items-center gap-2 rounded-md p-2 text-gray-600 hover:bg-gray-100"
+                className="inline-flex items-center gap-2 rounded-md p-2 text-primary-content hover:bg-gray-100"
               >
                 <Menu className="w-5 h-5" />
                 <span className="sr-only">Open sidebar</span>
@@ -47,7 +47,7 @@ export function UISidebar({
                   aria-label="Close sidebar"
                   className="absolute -translate-y-1/2 p-2 rounded hover:bg-gray-100"
                 >
-                  <ArrowLeft className="w-5 h-5 text-gray-600" />
+                  <ArrowLeft className="w-5 h-5 text-primary" />
                 </button>
               </DrawerClose>
               {showHeader && (

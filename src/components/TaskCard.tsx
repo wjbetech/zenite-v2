@@ -29,11 +29,11 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   if (!isStarted && !isDone) {
     return {
       // subtle neutral card for unstarted tasks
-      wrapper: 'bg-base-100 text-base-content',
-      border: 'border-base-200',
+      wrapper: 'bg-neutral text-base-content',
+      border: 'border-neutral-content',
       // status box: transparent background with soft border
       button:
-        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-base-300 bg-transparent text-base-content text-sm cursor-pointer transition-colors duration-200',
+        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-neutral-content text-base-content text-sm cursor-pointer transition-colors duration-200',
       icon: 'text-base-content',
     };
   }
@@ -41,11 +41,11 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   if (isStarted && !isDone) {
     return {
       // stronger primary tint to indicate in-progress
-      wrapper: 'bg-accent text-primary-content ring-1 ring-primary/20',
-      border: 'border-primary',
+      wrapper: 'bg-secondary text-primary-content ring-1 ring-primary/20',
+      border: 'border-secondary-content',
       // status box: filled primary color for clear affordance
       button:
-        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-primary bg-primary text-primary-content text-sm cursor-pointer transition-colors duration-200',
+        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-secondary-content bg-transparent text-secondary text-sm cursor-pointer transition-colors duration-200',
       icon: 'text-primary-content',
     };
   }
@@ -53,10 +53,10 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   // done
   return {
     // completed tasks get a darker muted background with inverted icon
-    wrapper: 'bg-gray-400 text-base-content',
+    wrapper: 'bg-gray-600 text-base-content',
     border: 'border-base-content',
     button:
-      'h-5 w-5 flex items-center justify-center rounded-md border-2 border-base-content bg-base-content text-base-100 text-sm cursor-pointer transition-colors duration-200',
+      'h-5 w-5 flex items-center justify-center rounded-md border-2 border-success bg-success text-base-100 text-sm cursor-pointer transition-colors duration-200',
     icon: 'text-base-100',
   };
 }
@@ -175,7 +175,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
           </div>
 
           <div className="flex items-start mt-1">
-            {right && <div className="text-sm md:text-base text-base-content">{right}</div>}
+            {right && <div className="text-sm md:text-base text-white">{right}</div>}
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
+import Script from 'next/script';
 import { Navbar, Sidebar } from '../components';
 import Providers from '../components/Providers';
 import { cookies } from 'next/headers';
@@ -20,18 +21,21 @@ export default async function RootLayout({
 
   // read cookie at request-time so server-rendered HTML can include the right theme class
   const cookieStore = await cookies();
-  // we no longer track a binary light/dark state. persist only the daisy theme.
-  const daisyCookie = cookieStore.get('zenite.daisy')?.value;
-  const htmlClass = '';
-  const dataTheme = daisyCookie ?? 'pastel';
+  const themeCookie = cookieStore.get('zenite.theme')?.value;
+  const htmlClass = themeCookie === 'dark' ? 'dark' : '';
 
   return (
     <ClerkProvider>
-      <html lang="en" className={htmlClass} data-theme={dataTheme}>
-        <head></head>
+      <html lang="en" className={htmlClass}>
+        <head>
+          {/* Run before React hydration to apply the saved theme immediately */}
+          <Script id="theme-init" strategy="beforeInteractive">
+            {`(function(){try{var t=localStorage.getItem('zenite.theme');if(t==='dark')document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark')}catch(e){} })()`}
+          </Script>
+        </head>
 
         <body
-          className={`font-vend bg-base-100 text-base-content`}
+          className={`font-vend bg-white text-slate-900 dark:bg-gray-900 dark:text-white`}
           style={{ ['--nav-height' as string]: '72px' } as React.CSSProperties}
         >
           <Providers>
@@ -40,8 +44,7 @@ export default async function RootLayout({
             <div style={{ height: 72 }} />
             <div className="flex">
               <Sidebar isLoggedIn={isLoggedIn} />
-              {/* reserve space for fixed sidebar on md+;  w-52 is the default sidebar width */}
-              <main className="flex-1 p-6 md:pl-52">{children}</main>
+              <main className="flex-1 p-6">{children}</main>
             </div>
           </Providers>
         </body>

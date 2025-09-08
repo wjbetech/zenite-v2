@@ -1,12 +1,22 @@
 @import 'tailwindcss';
-@plugin "daisyui" {
-  themes: all;
-}
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* Root-level defaults for light/dark. These ensure elements default to
-   readable backgrounds and text when toggling the html.dark class. */
+	 readable backgrounds and text when toggling the html.dark class. */
 :root {
   color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+  background-color: #0f172a; /* slate-900 */
+  color: #ffffff;
+}
+
+html {
+  background-color: #ffffff;
+  color: #0f172a; /* slate-900 */
 }
 
 /* Keep links inheriting color so dark mode works naturally */
@@ -23,6 +33,29 @@ a {
     transform: translateY(-8px);
   }
   100% {
+    /* Custom scrollbar using the project's emerald accent (emerald-600 = #059669) */
+    /* Chromium-based browsers */
+    ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background-color: #059669; /* emerald-600 */
+      border-radius: 9999px;
+      border: 3px solid transparent; /* creates padding effect */
+      background-clip: padding-box;
+    }
+
+    /* Firefox */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #059669 transparent;
+    }
     transform: translateY(0);
   }
 }
@@ -36,36 +69,6 @@ a {
   100% {
     transform: translateY(0) rotate(0deg);
   }
-}
-
-/* Minimal, unobtrusive scrollbar styling used across the app for overflow areas */
-/* Chromiums: thin trackless scrollbar and small thumb */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent; /* remove track background */
-}
-
-/* Small rounded thumb; uses emerald as accent but subtle */
-::-webkit-scrollbar-thumb {
-  background-color: rgba(5, 150, 105, 0.9); /* emerald-600, slightly opaque */
-  border-radius: 9999px;
-  border: 3px solid transparent; /* creates space between thumb and edge */
-  background-clip: padding-box;
-}
-
-/* Hide scrollbar buttons/arrows on WebKit browsers (if present) */
-::-webkit-scrollbar-button {
-  display: none;
-}
-
-/* Firefox: thin and transparent track */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(5, 150, 105, 0.9) transparent;
 }
 
 /* Gem 3D-like spin keyframes: rotate on multiple axes to imply depth */

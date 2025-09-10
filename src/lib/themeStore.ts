@@ -73,7 +73,7 @@ const useThemeStore = create<ThemeState>((set) => {
   }
 
   return {
-    daisyTheme: 'cupcake',
+    daisyTheme: initial,
     setDaisyTheme: (t: string) => {
       const next = (ALLOWED_THEMES as readonly string[]).includes(t) ? t : 'cupcake';
       set(() => ({ daisyTheme: next }));

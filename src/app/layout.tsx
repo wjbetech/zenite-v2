@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 // ClerkProvider temporarily disabled to debug headers() runtime errors
 import './globals.css';
-// import Script from 'next/script';
+import Script from 'next/script';
 import { Navbar, Sidebar } from '../components';
 import Providers from '../components/Providers';
 import { cookies } from 'next/headers';
@@ -48,37 +48,54 @@ export default async function RootLayout({
       <head>
         {/* DaisyUI theme is applied via data-theme only */}
         {/* Apply DaisyUI theme ASAP. Prefer cookie, then localStorage. */}
-        {/* <Script id="daisy-theme-init" strategy="beforeInteractive">
+        <Script id="daisy-theme-init" strategy="beforeInteractive">
           {`(function(){
   try {
+    var docEl = document.documentElement;
     // ensure Tailwind dark mode class cannot affect DaisyUI
-    document.documentElement.classList.remove('dark');
+    docEl.classList.remove('dark');
 
     var allowed = new Set(['pastel','cupcake','nord','business','dim']);
     var key = 'zenite.daisy';
-    var t = '';
 
-    // 1) cookie takes precedence
-    try {
-      var cookie = document.cookie || '';
-      var match = cookie.split(';').map(function(s){return s.trim();}).find(function(s){return s.indexOf(key + '=')===0;});
-      if (match) {
-        t = decodeURIComponent(match.split('=')[1] || '');
+    function readTheme(){
+      var t = '';
+      // cookie first
+      try {
+        var cookie = document.cookie || '';
+        var match = cookie.split(';').map(function(s){return s.trim();}).find(function(s){return s.indexOf(key + '=')===0;});
+        if (match) t = decodeURIComponent(match.split('=')[1] || '');
+      } catch(e){}
+      // then localStorage
+      if (!t) {
+        try { t = (localStorage.getItem(key) || '').trim(); } catch(e){}
       }
-    } catch (e) {}
-
-    // 2) fallback to localStorage
-    if (!t) {
-      try { t = (localStorage.getItem(key) || '').trim(); } catch(e) {}
+      t = (t || '').toLowerCase();
+      if (t === 'dark' || !allowed.has(t)) t = 'cupcake';
+      return t;
     }
 
-    t = (t || '').toLowerCase();
-    if (t === 'dark' || !allowed.has(t)) { t = 'cupcake'; }
+    var current = readTheme();
+    docEl.setAttribute('data-theme', current);
 
-    document.documentElement.setAttribute('data-theme', t);
+    // Guard against any code flipping data-theme back to 'dark' or an invalid value
+    try {
+      var mo = new MutationObserver(function(muts){
+        for (var i=0;i<muts.length;i++) {
+          var m = muts[i];
+          if (m.type === 'attributes' && m.attributeName === 'data-theme') {
+            var val = (docEl.getAttribute('data-theme') || '').toLowerCase();
+            if (val === 'dark' || !allowed.has(val)) {
+              docEl.setAttribute('data-theme', current);
+            }
+          }
+        }
+      });
+      mo.observe(docEl, { attributes: true, attributeFilter: ['data-theme'] });
+    } catch(e){}
   } catch (e) {}
 })()`}
-        </Script> */}
+        </Script>
       </head>
 
       <body className={`font-vend bg-base-100 text-base-content`}>

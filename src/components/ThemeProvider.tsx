@@ -1,19 +1,8 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { themeChange } from 'theme-change';
+import React from 'react';
 
-// Initializes theme-change so elements with `data-set-theme` work.
-// The actual theme value and persistence are handled by the theme store.
+// Minimal provider: theming is driven by SSR + early script + themeStore. No auto overrides.
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      themeChange(false);
-    } catch {
-      // ignore
-    }
-  }, []);
-
   return <>{children}</>;
 }

@@ -1,6 +1,12 @@
 @import 'tailwindcss';
 @plugin "daisyui" {
-  themes: all;
+  themes: 'cupcake', 'pastel', 'nord', 'business', 'dim';
+  darktheme: 'cupcake';
+  themeroot: 'html';
+  base: true;
+  styled: true;
+  utils: true;
+  logs: false;
 }
 
 a {

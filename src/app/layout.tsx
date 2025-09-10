@@ -19,10 +19,11 @@ export default async function RootLayout({
   // TODO: replace with real auth logic
   const isLoggedIn = false;
 
-  // read cookies at request-time so server-rendered HTML can include the right theme class
+  // read cookies at request-time
   const cookieStore = await cookies();
-  const themeCookie = cookieStore.get('zenite.theme')?.value;
-  const htmlClass = themeCookie === 'dark' ? 'dark' : '';
+  // DaisyUI theme cookie for SSR
+  const daisyThemeCookie = cookieStore.get('zenite.daisy')?.value;
+  const ssrDaisyTheme = daisyThemeCookie || 'pastel';
   // read sidebar collapsed cookie so SSR can set an initial sidebar width and avoid layout flicker
   const sidebarCollapsed = cookieStore.get('zenite.sidebarCollapsed')?.value === 'true';
   const initialSidebarWidth = sidebarCollapsed ? '64px' : '208px';
@@ -30,7 +31,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={htmlClass}
+      data-theme={ssrDaisyTheme}
       style={
         {
           ['--nav-height' as string]: '72px',
@@ -39,13 +40,14 @@ export default async function RootLayout({
       }
     >
       <head>
-        {/* Run before React hydration to apply the saved theme immediately */}
-        <Script id="theme-init" strategy="beforeInteractive">
-          {`(function(){try{var t=localStorage.getItem('zenite.theme');if(t==='dark')document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark')}catch(e){} })()`}
+        {/* DaisyUI theme is applied via data-theme only */}
+        {/* Apply DaisyUI theme from localStorage ASAP if present (overrides cookie) */}
+        <Script id="daisy-theme-init" strategy="beforeInteractive">
+          {`(function(){try{var t=localStorage.getItem('zenite.daisy');if(t){document.documentElement.setAttribute('data-theme', t);}}catch(e){}})()`}
         </Script>
       </head>
 
-      <body className={`font-vend bg-white text-slate-900 dark:bg-gray-900 dark:text-white`}>
+      <body className={`font-vend bg-base-100 text-base-content`}>
         <Providers>
           <Navbar />
           {/* spacer for fixed navbar height (kept for layout), use CSS var '--nav-height' for precise centering */}

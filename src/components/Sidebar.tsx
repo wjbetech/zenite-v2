@@ -82,7 +82,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
     >
       {/* sync the visible sidebar width to the document root so layout can read it */}
       <SyncSidebarWidth width={sidebarWidth} />
-      <div className="flex flex-col h-full text-base-content">
+      <div className="flex flex-col h-full text-primary">
         {/* header / collapse toggle */}
         <div className="flex items-center justify-start pl-1 py-2">
           <button

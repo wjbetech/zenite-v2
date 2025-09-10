@@ -11,7 +11,7 @@ export default function Navbar() {
   const { user } = useUser();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex w-full bg-base-200 backdrop-blur-sm border-b border-gray-200 h-[72px]">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex w-full bg-primary backdrop-blur-sm border-b border-gray-200 h-[72px]">
       <div className="mx-auto px-4 py-3 flex items-center w-full justify-between">
         {/* Left: logo + links */}
         <div className="flex items-center gap-4">
@@ -20,7 +20,7 @@ export default function Navbar() {
             className="flex items-center gap-3 text-2xl md:text-3xl font-extrabold text-emerald-600"
           >
             <DiamondLogo className="w-7 h-7 inline-block transform translate-y-0.5" />
-            <span>Zenite</span>
+            <span className="text-success">Zenite</span>
           </Link>
         </div>
 

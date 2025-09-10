@@ -11,10 +11,6 @@ import TaskModal from './TaskModal';
 import { useState } from 'react';
 import { useEffect } from 'react';
 
-type DashboardProps = {
-  tasks?: Task[];
-};
-
 function daysUntil(date?: string | null) {
   if (!date) return Infinity;
   const d = new Date(date);
@@ -24,7 +20,7 @@ function daysUntil(date?: string | null) {
   return diff;
 }
 
-export default function Dashboard({ tasks }: DashboardProps) {
+export default function Dashboard() {
   const storeTasks = useTaskStore((s) => s.tasks);
   const loadRemote = useTaskStore(
     (s) => (s as unknown as { loadRemote?: () => Promise<void> }).loadRemote,
@@ -65,38 +61,9 @@ export default function Dashboard({ tasks }: DashboardProps) {
   const [editing, setEditing] = useState<Partial<Task> | undefined>(undefined);
   const [view, setView] = useState<'imminent' | 'new' | 'today' | 'week'>('new');
 
-  const sample: Task[] = [
-    {
-      id: '1',
-      title: 'Finish project brief',
-      notes: 'Summarize scope and deliverables',
-      dueDate: new Date(Date.now() + 86400000).toISOString(),
-      createdAt: new Date(Date.now() - 7200000).toISOString(),
-    },
-    {
-      id: '2',
-      title: 'Daily standup notes',
-      dueDate: new Date().toISOString(),
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-    {
-      id: '3',
-      title: 'Plan dailies',
-      notes: 'Create recurring tasks for morning routine',
-      dueDate: null,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: '4',
-      title: 'Respond to client',
-      dueDate: new Date(Date.now() + 1000 * 60 * 60 * 5).toISOString(),
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 10).toISOString(),
-    },
-  ];
-
   // merge sample and store tasks by id (store overrides sample)
   const mergedById: Record<string, Task> = {};
-  [...(tasks ?? sample), ...storeTasks].forEach((t) => {
+  [...storeTasks].forEach((t) => {
     mergedById[t.id] = t;
   });
   const all = Object.values(mergedById).slice(0, 50);

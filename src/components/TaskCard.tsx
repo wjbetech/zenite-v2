@@ -29,7 +29,7 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   if (!isStarted && !isDone) {
     return {
       // subtle neutral card for unstarted tasks
-      wrapper: 'bg-neutral-content text-neutral',
+      wrapper: 'bg-content-neutral text-neutral',
       border: 'border-neutral',
       // status box: transparent background with soft border
       button:
@@ -41,7 +41,7 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   if (isStarted && !isDone) {
     return {
       // stronger primary tint to indicate in-progress
-      wrapper: 'bg-primary text-primary-content',
+      wrapper: 'bg-secondary text-primary-content',
       border: 'border-primary-content',
       // status box: filled primary color for clear affordance
       button:

@@ -71,7 +71,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
 
   return (
     <aside
-      className={`sidebar fixed left-0 z-40 bg-content`}
+      className={`sidebar fixed left-0 z-40 bg-base-200`}
       style={{
         top: 'var(--nav-height)',
         height: 'calc(100vh - var(--nav-height))',
@@ -82,24 +82,24 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
     >
       {/* sync the visible sidebar width to the document root so layout can read it */}
       <SyncSidebarWidth width={sidebarWidth} />
-      <div className="flex flex-col h-full text-primary">
+      <div className="flex flex-col h-full text-primary-content">
         {/* header / collapse toggle */}
-        <div className="flex items-center justify-start pl-1 py-2">
+        <div className="flex items-center justify-start p-2">
           <button
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             onClick={() => setCollapsed((s) => !s)}
             className="btn btn-square btn-ghost"
           >
             {collapsed ? (
-              <ChevronRight className="w-4 h-4 text-base-content" />
+              <ChevronRight className="w-4 h-4 text-primary-content" />
             ) : (
-              <ChevronLeft className="w-4 h-4 text-base-content" />
+              <ChevronLeft className="w-4 h-4 text-primary-content" />
             )}
           </button>
         </div>
 
         {/* nav area: vertically centered container but left-aligned items */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col p-2">
           <nav className="flex flex-col gap-2 items-start w-full">
             {nav.map((item) => {
               const Icon = item.icon;
@@ -114,7 +114,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                       isActive ? 'bg-primary-content/20' : 'hover:bg-base-100'
                     } ${collapsed ? 'justify-center w-full' : 'w-full'}`}
                   >
-                    <div className="w-6 h-6 flex items-center justify-center text-base-content">
+                    <div className="w-6 h-6 flex items-center justify-center text-primary-content">
                       <Icon className="w-5 h-5" />
                     </div>
                     {!collapsed && <span>{item.label}</span>}
@@ -129,11 +129,11 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                   role="link"
                   aria-disabled="true"
                   tabIndex={-1}
-                  className={`flex items-center gap-3 rounded px-2 py-2 text-base-content cursor-not-allowed ${
+                  className={`flex items-center gap-3 rounded px-2 py-2 text-primary-content cursor-not-allowed ${
                     collapsed ? 'justify-center w-full' : 'w-full'
                   }`}
                 >
-                  <div className="w-6 h-6 flex items-center justify-center text-base-content">
+                  <div className="w-6 h-6 flex items-center justify-center text-primary-content">
                     <Icon className="w-5 h-5" />
                   </div>
                   {!collapsed && <span>{item.label}</span>}

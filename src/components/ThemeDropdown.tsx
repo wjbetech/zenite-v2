@@ -20,7 +20,6 @@ export default function ThemeDropdown() {
       onChange={onChange}
       className="text-sm px-2 py-1 border rounded"
     >
-      <option value="">Theme</option>
       {THEMES.map((t) => (
         <option key={t} value={t}>
           {t}

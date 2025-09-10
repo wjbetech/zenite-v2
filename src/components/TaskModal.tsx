@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button } from './ui/Button';
-import { Input } from './ui/input';
+// ...existing code...
+// import { Input } from './ui/input';
 import useTaskStore, { Task } from '../lib/taskStore';
 import useProjectStore from '../lib/projectStore';
 import ChevronDown from './icons/ChevronDown';
@@ -69,11 +69,11 @@ export default function TaskModal({
         <h3 className="text-lg font-medium mb-6">{initial?.id ? 'Edit Task' : 'Add New Task'}</h3>
         <label className="block">
           <div className="text-sm text-gray-600 mb-1">Title</div>
-          <Input
+          <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            className="w-full rounded-lg border-slate-800"
+            className="input w-full rounded-lg border-slate-800"
           />
         </label>
 
@@ -140,12 +140,12 @@ export default function TaskModal({
         </div>
 
         <div className="mt-4 flex justify-end gap-2">
-          <Button variant="default" onClick={() => onOpenChange(false)} type="button">
+          <button className="btn" onClick={() => onOpenChange(false)} type="button">
             Cancel
-          </Button>
-          <Button type="submit" variant="primary">
+          </button>
+          <button className="btn btn-primary" type="submit">
             {initial?.id ? 'Save' : 'Create'}
-          </Button>
+          </button>
         </div>
       </form>
     </div>

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ClerkProvider } from '@clerk/nextjs';
+// ClerkProvider temporarily disabled to debug headers() runtime errors
 import './globals.css';
 import Script from 'next/script';
 import { Navbar, Sidebar } from '../components';
@@ -25,30 +25,28 @@ export default async function RootLayout({
   const htmlClass = themeCookie === 'dark' ? 'dark' : '';
 
   return (
-    <ClerkProvider>
-      <html lang="en" className={htmlClass}>
-        <head>
-          {/* Run before React hydration to apply the saved theme immediately */}
-          <Script id="theme-init" strategy="beforeInteractive">
-            {`(function(){try{var t=localStorage.getItem('zenite.theme');if(t==='dark')document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark')}catch(e){} })()`}
-          </Script>
-        </head>
+    <html lang="en" className={htmlClass}>
+      <head>
+        {/* Run before React hydration to apply the saved theme immediately */}
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`(function(){try{var t=localStorage.getItem('zenite.theme');if(t==='dark')document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark')}catch(e){} })()`}
+        </Script>
+      </head>
 
-        <body
-          className={`font-vend bg-white text-slate-900 dark:bg-gray-900 dark:text-white`}
-          style={{ ['--nav-height' as string]: '72px' } as React.CSSProperties}
-        >
-          <Providers>
-            <Navbar />
-            {/* spacer for fixed navbar height (kept for layout), use CSS var '--nav-height' for precise centering */}
-            <div style={{ height: 72 }} />
-            <div className="flex">
-              <Sidebar isLoggedIn={isLoggedIn} />
-              <main className="flex-1 p-6">{children}</main>
-            </div>
-          </Providers>
-        </body>
-      </html>
-    </ClerkProvider>
+      <body
+        className={`font-vend bg-white text-slate-900 dark:bg-gray-900 dark:text-white`}
+        style={{ ['--nav-height' as string]: '72px' } as React.CSSProperties}
+      >
+        <Providers>
+          <Navbar />
+          {/* spacer for fixed navbar height (kept for layout), use CSS var '--nav-height' for precise centering */}
+          <div style={{ height: 72 }} />
+          <div className="flex">
+            <Sidebar isLoggedIn={isLoggedIn} />
+            <main className="flex-1 p-6">{children}</main>
+          </div>
+        </Providers>
+      </body>
+    </html>
   );
 }

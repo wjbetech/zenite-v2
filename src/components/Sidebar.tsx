@@ -4,8 +4,8 @@ import React from 'react';
 import { useUser } from '@clerk/nextjs';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import UISidebar from './ui/Sidebar';
-// Button intentionally not used here yet
+// import UISidebar from './ui/Sidebar';
+// ...existing code...
 import {
   ChevronLeft,
   ChevronRight,
@@ -64,19 +64,20 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
     { href: '/settings', label: 'Settings', icon: Settings },
   ];
 
-  const hideHeader = collapsed && !isLoggedIn;
-
   if (!showSidebar) return null;
 
   return (
-    <UISidebar width={collapsed ? 'w-16' : 'w-52'} showHeader={!hideHeader}>
+    <aside
+      className={`sidebar ${collapsed ? 'w-16' : 'w-52'} fixed left-0 z-40 bg-content`}
+      style={{ top: 'var(--nav-height)', height: 'calc(100vh - var(--nav-height))' }}
+    >
       <div className="flex flex-col h-full text-base-content">
         {/* header / collapse toggle */}
         <div className="flex items-center justify-start pl-1 py-2">
           <button
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             onClick={() => setCollapsed((s) => !s)}
-            className="p-1 rounded hover:bg-base-100 cursor-pointer"
+            className="btn btn-square btn-ghost"
           >
             {collapsed ? (
               <ChevronRight className="w-4 h-4 text-base-content" />
@@ -131,6 +132,6 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
           </nav>
         </div>
       </div>
-    </UISidebar>
+    </aside>
   );
 }

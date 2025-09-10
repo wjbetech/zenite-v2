@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Button } from './ui/Button';
+// ...existing code...
 // ThemeToggle removed; theme selection is done in Settings via ThemeDropdown
 import React from 'react';
 import DiamondLogo from './DiamondLogo';
@@ -31,15 +31,15 @@ export default function Navbar() {
               {user?.fullName ?? user?.primaryEmailAddress?.emailAddress}
             </div>
             <SignOutButton>
-              <Button variant="ghost">Sign out</Button>
+              <button className="btn btn-ghost">Sign out</button>
             </SignOutButton>
           </SignedIn>
           <SignedOut>
             <SignInButton mode="modal">
-              <Button variant="ghost">Login</Button>
+              <button className="btn btn-ghost">Login</button>
             </SignInButton>
             <SignInButton mode="modal">
-              <Button variant="primary">Sign up</Button>
+              <button className="btn btn-primary">Sign up</button>
             </SignInButton>
           </SignedOut>
         </div>

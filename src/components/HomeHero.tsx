@@ -2,7 +2,7 @@
 import React from 'react';
 import Gem from './Gem';
 import Gem3D from './Gem3D';
-import { Button } from './ui/Button';
+// ...existing code...
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 
@@ -38,15 +38,14 @@ export default function HomeHero() {
           {/* Absolutely positioned button so it doesn't move page content when adjusted. */}
           {isSignedIn && (
             <div className="absolute left-1/2 transform -translate-x-1/2 bottom-8 sm:bottom-16">
-              <Button
-                variant="primary"
-                className="px-4 py-2"
+              <button
+                className="btn btn-primary px-4 py-2"
                 onClick={() => {
                   router.push('/dashboard');
                 }}
               >
-                To Dashboard →
-              </Button>
+                To Dashboard 
+              </button>
             </div>
           )}
         </div>

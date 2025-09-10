@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Button } from './ui/Button';
+// ...existing code...
 import { Plus } from 'lucide-react';
 import TaskSection from './TaskSection';
 import ActivityHeatmap from './ActivityHeatmap';
@@ -188,9 +188,9 @@ export default function Dashboard({ tasks }: DashboardProps) {
       {loading && <div className="text-sm text-gray-500">Loading remote tasks…</div>}
       <div className="flex items-center justify-between mb-10">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <Button
-          variant="primary"
-          className="pr-3"
+        <button
+          className="btn btn-primary pr-3 flex items-center"
+          type="button"
           onClick={() => {
             setEditing(undefined);
             setModalOpen(true);
@@ -198,7 +198,7 @@ export default function Dashboard({ tasks }: DashboardProps) {
         >
           <Plus className="mr-2 h-4 w-4" />
           New Task
-        </Button>
+        </button>
       </div>
 
       {/* Activity heatmap under the title */}
@@ -210,29 +210,33 @@ export default function Dashboard({ tasks }: DashboardProps) {
       <div className="pl-4">
         <div className="mb-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <button
-              onClick={() => setView('new')}
-              className={`w-full text-center cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
-                view === 'new'
-                  ? 'bg-success text-success-content'
-                  : 'bg-transparent text-gray-600 hover:bg-base-200'
-              }`}
-              aria-pressed={view === 'new'}
-            >
-              New Tasks
-            </button>
-
-            <button
-              onClick={() => setView('today')}
-              className={`w-full text-center cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
-                view === 'today'
-                  ? 'bg-info text-info-content'
-                  : 'bg-transparent text-gray-600 hover:bg-base-200'
-              }`}
-              aria-pressed={view === 'today'}
-            >
-              Today
-            </button>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => setView('new')}
+                className={`w-full text-center cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
+                  view === 'new'
+                    ? 'bg-success text-success-content'
+                    : 'bg-transparent text-gray-600 hover:bg-base-200'
+                }`}
+                aria-pressed={view === 'new'}
+              >
+                New Tasks
+                <span className="block">Today</span>
+              </button>
+              <button
+                className="btn btn-outline w-full"
+                onClick={() => {
+                  setEditing(undefined);
+                  setModalOpen(true);
+                }}
+                type="button"
+              >
+                <span className="flex items-center gap-2">
+                  <span>New Project</span>
+                  <span className="text-lg">+</span>
+                </span>
+              </button>
+            </div>
 
             <button
               onClick={() => setView('week')}

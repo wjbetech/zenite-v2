@@ -1,6 +1,15 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-export default clerkMiddleware();
+// Temporarily disable Clerk middleware while debugging headers() sync errors
+// import { clerkMiddleware } from '@clerk/nextjs/server';
+
+// export default clerkMiddleware();
+
+/** A minimal pass-through middleware to satisfy Next.js while debugging. */
+export function middleware(_req: NextRequest) {
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [

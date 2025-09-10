@@ -1,7 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+
 module.exports = {
-  // Use class strategy so toggling `document.documentElement.classList` to 'dark'
-  // enables Tailwind's `dark:` utilities.
   darkMode: 'class',
   content: [
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
@@ -11,6 +10,5 @@ module.exports = {
   theme: {
     extend: {},
   },
-
-  plugins: [],
+  // Using Tailwind v4 CSS plugin registration via `@plugin 'daisyui';` in globals.css
 };

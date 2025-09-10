@@ -31,7 +31,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     }
 
     try {
-      document.documentElement.setAttribute('data-theme', stored ?? 'pastel');
+      document.documentElement.setAttribute('data-theme', stored ?? 'cupcake');
     } catch {
       /* ignore */
     }

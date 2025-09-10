@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import useProjectStore, { Project } from '../lib/projectStore';
-import { Input } from './ui/input';
-import { Button } from './ui/Button';
+// import { Input } from './ui/input';
+// ...existing code...
 import { Check, Trash, Plus } from 'lucide-react';
 
 type Status = 'none' | 'tilde' | 'done';
@@ -69,20 +69,19 @@ export default function ProjectsClient({ initialProjects }: Props) {
       <h1 className="text-2xl font-semibold mb-4">Projects</h1>
 
       <div className="mb-4 flex items-center gap-2">
-        <Input
+        <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="New project name"
-          className="mr-2"
+          className="input mr-2"
         />
-        <Button
-          variant="primary"
+        <button
           onClick={create}
-          className="pl-1 py-3 flex items-center gap-2 w-[90px]"
+          className="btn btn-primary pl-1 py-3 flex items-center gap-2 w-[90px]"
         >
           <Plus className="h-4 w-4" />
           <span className="leading-none">Create</span>
-        </Button>
+        </button>
       </div>
 
       <div className="grid gap-4">

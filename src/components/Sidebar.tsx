@@ -14,6 +14,7 @@ import {
   Settings,
   Repeat2,
 } from 'lucide-react';
+import { useEffect } from 'react';
 
 const SIDEBAR_KEY = 'zenite.sidebarCollapsed';
 
@@ -66,11 +67,21 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
 
   if (!showSidebar) return null;
 
+  const sidebarWidth = collapsed ? '64px' : '208px';
+
   return (
     <aside
-      className={`sidebar ${collapsed ? 'w-16' : 'w-52'} fixed left-0 z-40 bg-content`}
-      style={{ top: 'var(--nav-height)', height: 'calc(100vh - var(--nav-height))' }}
+      className={`sidebar fixed left-0 z-40 bg-content`}
+      style={{
+        top: 'var(--nav-height)',
+        height: 'calc(100vh - var(--nav-height))',
+        width: sidebarWidth,
+        // expose variable so layout can adapt
+        ...({ ['--sidebar-width']: sidebarWidth } as React.CSSProperties),
+      }}
     >
+      {/* sync the visible sidebar width to the document root so layout can read it */}
+      <SyncSidebarWidth width={sidebarWidth} />
       <div className="flex flex-col h-full text-base-content">
         {/* header / collapse toggle */}
         <div className="flex items-center justify-start pl-1 py-2">
@@ -134,4 +145,18 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
       </div>
     </aside>
   );
+}
+
+function SyncSidebarWidth({ width }: { width: string }) {
+  useEffect(() => {
+    try {
+      document.documentElement.style.setProperty('--sidebar-width', width);
+      return () => {
+        document.documentElement.style.removeProperty('--sidebar-width');
+      };
+    } catch {
+      // ignore
+    }
+  }, [width]);
+  return null;
 }

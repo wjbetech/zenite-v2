@@ -11,7 +11,7 @@ export default function Navbar() {
   const { user } = useUser();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex w-full bg-primary backdrop-blur-sm border-b border-gray-200 h-[72px]">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex w-full bg-base-200 backdrop-blur-sm border-b border-accent h-[72px]">
       <div className="mx-auto px-4 py-3 flex items-center w-full justify-between">
         {/* Left: logo + links */}
         <div className="flex items-center gap-4">
@@ -31,7 +31,7 @@ export default function Navbar() {
               {user?.fullName ?? user?.primaryEmailAddress?.emailAddress}
             </div>
             <SignOutButton>
-              <button className="btn btn-ghost">Sign out</button>
+              <button className="btn btn- btn-accent">Sign out</button>
             </SignOutButton>
           </SignedIn>
           <SignedOut>
@@ -39,7 +39,7 @@ export default function Navbar() {
               <button className="btn btn-ghost">Login</button>
             </SignInButton>
             <SignInButton mode="modal">
-              <button className="btn btn-primary">Sign up</button>
+              <button className="btn btn-md  btn-warning">Sign up</button>
             </SignInButton>
           </SignedOut>
         </div>

@@ -7,8 +7,9 @@ import type { NextRequest } from 'next/server';
 // export default clerkMiddleware();
 
 /** A minimal pass-through middleware to satisfy Next.js while debugging. */
-export function middleware(_req: NextRequest) {
-  return NextResponse.next();
+export function middleware(req: NextRequest) {
+  // Forward request headers to mark the parameter as used (no behavior change)
+  return NextResponse.next({ request: { headers: req.headers } });
 }
 
 export const config = {

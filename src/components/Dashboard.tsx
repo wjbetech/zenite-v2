@@ -188,17 +188,30 @@ export default function Dashboard({ tasks }: DashboardProps) {
       {loading && <div className="text-sm text-gray-500">Loading remote tasks…</div>}
       <div className="flex items-center justify-between mb-10">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <button
-          className="btn btn-primary pr-3 flex items-center"
-          type="button"
-          onClick={() => {
-            setEditing(undefined);
-            setModalOpen(true);
-          }}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          New Task
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            className="btn btn-outline btn-success flex items-center"
+            type="button"
+            onClick={() => {
+              setEditing(undefined);
+              setModalOpen(true);
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            New Task
+          </button>
+          <button
+            className="btn btn-outline btn-success flex items-center"
+            type="button"
+            onClick={() => {
+              setEditing(undefined);
+              setModalOpen(true);
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            New Project
+          </button>
+        </div>
       </div>
 
       {/* Activity heatmap under the title */}
@@ -222,19 +235,6 @@ export default function Dashboard({ tasks }: DashboardProps) {
               >
                 New Tasks
                 <span className="block">Today</span>
-              </button>
-              <button
-                className="btn btn-outline w-full"
-                onClick={() => {
-                  setEditing(undefined);
-                  setModalOpen(true);
-                }}
-                type="button"
-              >
-                <span className="flex items-center gap-2">
-                  <span>New Project</span>
-                  <span className="text-lg">+</span>
-                </span>
               </button>
             </div>
 

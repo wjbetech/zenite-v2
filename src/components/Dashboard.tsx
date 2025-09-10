@@ -223,20 +223,29 @@ export default function Dashboard({ tasks }: DashboardProps) {
       <div className="pl-4">
         <div className="mb-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => setView('new')}
-                className={`w-full text-center cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
-                  view === 'new'
-                    ? 'bg-success text-success-content'
-                    : 'bg-transparent text-gray-600 hover:bg-base-200'
-                }`}
-                aria-pressed={view === 'new'}
-              >
-                New Tasks
-                <span className="block">Today</span>
-              </button>
-            </div>
+            <button
+              onClick={() => setView('new')}
+              className={`w-full text-center cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
+                view === 'new'
+                  ? 'bg-success text-success-content'
+                  : 'bg-transparent text-gray-600 hover:bg-base-200'
+              }`}
+              aria-pressed={view === 'new'}
+            >
+              New Tasks
+            </button>
+
+            <button
+              onClick={() => setView('today')}
+              className={`w-full text-center cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
+                view === 'today'
+                  ? 'bg-info text-info-content'
+                  : 'bg-transparent text-gray-600 hover:bg-base-200'
+              }`}
+              aria-pressed={view === 'today'}
+            >
+              Today
+            </button>
 
             <button
               onClick={() => setView('week')}

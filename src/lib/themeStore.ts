@@ -8,27 +8,40 @@ type ThemeState = {
 };
 
 const COOKIE_KEY = 'zenite.daisy';
+const ALLOWED_THEMES = ['pastel', 'cupcake', 'nord', 'business', 'dim'] as const;
+type AllowedTheme = (typeof ALLOWED_THEMES)[number];
 
-function readInitial(): string | null {
+function readInitial(): AllowedTheme | null {
   try {
     const fromLs = localStorage.getItem(COOKIE_KEY);
-    if (fromLs) return fromLs;
+    if (fromLs && (ALLOWED_THEMES as readonly string[]).includes(fromLs))
+      return fromLs as AllowedTheme;
+    // scrub invalid
+    if (fromLs && !(ALLOWED_THEMES as readonly string[]).includes(fromLs)) {
+      localStorage.removeItem(COOKIE_KEY);
+    }
   } catch {}
   try {
     const match = (document.cookie || '')
       .split(';')
       .map((s) => s.trim())
       .find((s) => s.startsWith(COOKIE_KEY + '='));
-    if (match) return decodeURIComponent(match.split('=')[1] || '');
+    if (match) {
+      const v = decodeURIComponent(match.split('=')[1] || '');
+      if ((ALLOWED_THEMES as readonly string[]).includes(v)) return v as AllowedTheme;
+      // scrub invalid cookie
+      document.cookie = `${COOKIE_KEY}=; path=/; max-age=0`;
+    }
   } catch {}
   try {
     const attr = document.documentElement.getAttribute('data-theme');
-    if (attr) return attr;
+    if (attr && (ALLOWED_THEMES as readonly string[]).includes(attr)) return attr as AllowedTheme;
   } catch {}
   return null;
 }
 
 function persist(t: string) {
+  if (!(ALLOWED_THEMES as readonly string[]).includes(t)) return; // ignore invalid
   try {
     localStorage.setItem(COOKIE_KEY, t);
   } catch {}
@@ -40,7 +53,7 @@ function persist(t: string) {
 }
 
 const useThemeStore = create<ThemeState>((set) => {
-  const initial = (typeof window !== 'undefined' && readInitial()) || 'pastel';
+  const initial = (typeof window !== 'undefined' && readInitial()) || 'cupcake';
 
   // Ensure document reflects initial theme and initialize theme-change on client
   if (typeof window !== 'undefined') {
@@ -60,13 +73,14 @@ const useThemeStore = create<ThemeState>((set) => {
   }
 
   return {
-    daisyTheme: initial,
+    daisyTheme: 'cupcake',
     setDaisyTheme: (t: string) => {
-      set(() => ({ daisyTheme: t }));
+      const next = (ALLOWED_THEMES as readonly string[]).includes(t) ? t : 'cupcake';
+      set(() => ({ daisyTheme: next }));
       try {
-        document.documentElement.setAttribute('data-theme', t);
+        document.documentElement.setAttribute('data-theme', next);
       } catch {}
-      persist(t);
+      persist(next);
     },
   };
 });

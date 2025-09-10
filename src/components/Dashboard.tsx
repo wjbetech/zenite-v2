@@ -186,7 +186,7 @@ export default function Dashboard({ tasks }: DashboardProps) {
   return (
     <div className="space-y-6">
       {loading && <div className="text-sm text-gray-500">Loading remote tasks…</div>}
-      <div className="flex items-center justify-between mb-10">
+      <div className="flex items-center justify-between mb-10 pl-4 pr-4">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
         <div className="flex items-center gap-2">
           <button

@@ -173,7 +173,7 @@ export default function ActivityHeatmap({
   }, []);
 
   return (
-    <div className="w-full border-l-4 border-emerald-500 px-4">
+    <div className="w-full pl-4">
       <div className="flex items-center mb-2">
         <h5 className="font-semibold">Activity Tracker</h5>
         <button

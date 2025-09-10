@@ -91,7 +91,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
 
   const cardInner = (
     <div
-      className={`${bgClass} relative z-10 rounded-md shadow-sm border ${borderClass} p-2 transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
+      className={`${bgClass} relative z-10 rounded-md shadow-sm border ${borderClass} p-2 xl:p-4 transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
@@ -177,6 +177,11 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
           <div className="flex items-start mt-1">
             {right && <div className="text-sm md:text-base text-white">{right}</div>}
           </div>
+
+          {/* Show description/notes at xl+ */}
+          {task.notes && (
+            <div className="hidden xl:block text-sm text-gray-600 mt-3">{task.notes}</div>
+          )}
         </div>
       </div>
     </div>

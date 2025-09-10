@@ -36,7 +36,7 @@ export default function TaskSection({
         className={`overflow-y-auto transition-all duration-300 ease-in-out pt-4 pl-4 pr-4 pb-2`}
         style={{ maxHeight: expanded ? 'calc(100vh - 10rem)' : undefined }}
       >
-        <ul className="space-y-6 md:space-y-7 perspective-[1000px]">
+        <ul className="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6 perspective-[1000px]">
           {tasks.length === 0 && <li className="text-sm text-gray-400">No items.</li>}
           {tasks.map((t) => (
             <li key={t.id}>

@@ -326,6 +326,7 @@ export default function Dashboard() {
           if (!v) setEditing(undefined);
         }}
         initial={editing}
+        allowCreateProject={true}
       />
     </div>
   );

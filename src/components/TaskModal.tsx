@@ -195,7 +195,7 @@ export default function TaskModal({
           </label>
         </div>
 
-  {/* project creation moved above title; Create button removed per request */}
+        {/* project creation moved above title; Create button removed per request */}
 
         <div className="mt-4 flex justify-end gap-2">
           <button className="btn" onClick={() => onOpenChange(false)} type="button">

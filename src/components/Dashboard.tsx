@@ -207,7 +207,7 @@ export default function Dashboard() {
               className={`w-full text-center cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
                 view === 'today'
                   ? 'bg-info text-info-content'
-                  : 'bg-transparent text-gray-600 hover:bg-base-200'
+                  : 'bg-transparent text-gray-600 hover:bg-info hover:text-info-content'
               }`}
               aria-pressed={view === 'today'}
             >
@@ -219,7 +219,7 @@ export default function Dashboard() {
               className={`w-full text-center cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
                 view === 'week'
                   ? 'bg-primary text-primary-content'
-                  : 'bg-transparent text-gray-600 hover:bg-base-200'
+                  : 'bg-transparent text-gray-600 hover:bg-primary hover:text-primary-content'
               }`}
               aria-pressed={view === 'week'}
             >
@@ -231,7 +231,7 @@ export default function Dashboard() {
               className={`w-full text-center cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
                 view === 'imminent'
                   ? 'bg-error text-error-content'
-                  : 'bg-transparent text-gray-600 hover:bg-slate-100'
+                  : 'bg-transparent text-gray-600 hover:bg-error hover:text-error-content'
               }`}
               aria-pressed={view === 'imminent'}
             >
@@ -250,7 +250,7 @@ export default function Dashboard() {
             renderRight={(t: Task) => {
               const days = daysUntil(t.dueDate);
               const dueLabel = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days}d`;
-              return <span className="text-xs text-gray-500">{dueLabel}</span>;
+              return <span className="text-xs text-gray-100">{dueLabel}</span>;
             }}
             onEdit={(t) => {
               setEditing(t);
@@ -267,7 +267,7 @@ export default function Dashboard() {
             accentClass="border-emerald-400"
             tasks={newTasks}
             renderRight={(t: Task) => (
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-white">
                 {new Date(t.createdAt).toLocaleDateString()}
               </span>
             )}
@@ -285,7 +285,7 @@ export default function Dashboard() {
             expanded={!heatmapOpen}
             accentClass="border-sky-500"
             tasks={today}
-            renderRight={() => <span className="text-xs text-gray-400">Due today</span>}
+            renderRight={() => <span className="text-xs text-gray-100">Due today</span>}
             onEdit={(t) => {
               setEditing(t);
               setModalOpen(true);
@@ -303,7 +303,7 @@ export default function Dashboard() {
             renderRight={(t: Task) => {
               const days = daysUntil(t.dueDate);
               const dueLabel = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days}d`;
-              return <span className="text-xs text-gray-500">{dueLabel}</span>;
+              return <span className="text-xs text-gray-100">{dueLabel}</span>;
             }}
             onEdit={(t) => {
               setEditing(t);

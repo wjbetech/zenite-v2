@@ -186,7 +186,7 @@ export default function ActivityHeatmap({
           }
           aria-expanded={open}
           aria-label={open ? 'Collapse activity tracker' : 'Expand activity tracker'}
-          className="ml-1 text-lg text-black cursor-pointer flex items-center justify-center"
+          className="ml-1 text-lg cursor-pointer flex items-center justify-center"
           style={{ marginLeft: 6, width: 24, height: 24 }}
         >
           {open ? '−' : '+'}

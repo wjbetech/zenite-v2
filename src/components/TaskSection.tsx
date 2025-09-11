@@ -37,7 +37,7 @@ export default function TaskSection({
         style={{ maxHeight: expanded ? 'calc(100vh - 10rem)' : undefined }}
       >
         <ul className="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6 perspective-[1000px]">
-          {tasks.length === 0 && <li className="text-sm text-gray-400">No items.</li>}
+          {tasks.length === 0 && <li className="text-sm text-neutral-content">No items.</li>}
           {tasks.map((t) => (
             <li key={t.id}>
               <TaskCard

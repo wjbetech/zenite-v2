@@ -29,7 +29,7 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   if (!isStarted && !isDone) {
     return {
       // subtle neutral card for unstarted tasks
-      wrapper: 'bg-neutral-content text-neutral',
+      wrapper: 'bg-gray-300 text-neutral',
       border: 'border-neutral-content',
       // status box: transparent background with soft border
       button:

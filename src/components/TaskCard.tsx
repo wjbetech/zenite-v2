@@ -29,7 +29,7 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   if (!isStarted && !isDone) {
     return {
       // subtle neutral card for unstarted tasks
-      wrapper: 'bg-content-neutral text-neutral',
+      wrapper: 'bg-base-300 text-neutral',
       border: 'border-neutral',
       // status box: transparent background with soft border
       button:
@@ -41,12 +41,12 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   if (isStarted && !isDone) {
     return {
       // stronger primary tint to indicate in-progress
-      wrapper: 'bg-secondary text-primary-content',
-      border: 'border-primary-content',
+      wrapper: 'bg-accent text-accent-content',
+      border: 'border-accent-content',
       // status box: filled primary color for clear affordance
       button:
-        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-primary-content bg-transparent text-info text-sm cursor-pointer transition-colors duration-200',
-      icon: 'text-primary-content',
+        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-accent-content bg-transparent text-info text-sm cursor-pointer transition-colors duration-200',
+      icon: 'text-accent-content',
     };
   }
 
@@ -56,7 +56,7 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
     wrapper: 'bg-neutral/50 text-neutral-content/50',
     border: 'border-neutral-content/50',
     button:
-      'h-5 w-5 flex items-center justify-center rounded-md border-2 border-neutral-content/50 bg-neutral/50 text-neutral-content/50 text-sm cursor-pointer transition-colors duration-200',
+      'h-5 w-5 flex items-center justify-center rounded-md border-2 border-neutral-content/80 bg-neutral/80 text-neutral-content/80 text-sm cursor-pointer transition-colors duration-200',
     icon: 'text-neutral-content',
   };
 }

@@ -82,7 +82,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
     >
       {/* sync the visible sidebar width to the document root so layout can read it */}
       <SyncSidebarWidth width={sidebarWidth} />
-      <div className="flex flex-col h-full text-success-content">
+      <div className="flex flex-col h-full text-neutral">
         {/* header / collapse toggle */}
         <div className="flex items-center justify-start p-2">
           <button
@@ -91,9 +91,9 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
             className="btn btn-square btn-ghost"
           >
             {collapsed ? (
-              <ChevronRight className="w-4 h-4 text-success-content" />
+              <ChevronRight className="w-4 h-4 text-neutral" />
             ) : (
-              <ChevronLeft className="w-4 h-4 text-success-content" />
+              <ChevronLeft className="w-4 h-4 text-neutral" />
             )}
           </button>
         </div>
@@ -114,7 +114,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                       isActive ? 'bg-success-content/20' : 'hover:bg-base-300'
                     } ${collapsed ? 'justify-center w-full' : 'w-full'}`}
                   >
-                    <div className="w-6 h-6 flex items-center justify-center text-success-content">
+                    <div className="w-6 h-6 flex items-center justify-center text-neutral">
                       <Icon className="w-5 h-5" />
                     </div>
                     {!collapsed && <span>{item.label}</span>}
@@ -129,11 +129,11 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                   role="link"
                   aria-disabled="true"
                   tabIndex={-1}
-                  className={`flex items-center gap-3 rounded px-2 py-2 text-success-content cursor-not-allowed ${
+                  className={`flex items-center gap-3 rounded px-2 py-2 text-neutral cursor-not-allowed ${
                     collapsed ? 'justify-center w-full' : 'w-full'
                   }`}
                 >
-                  <div className="w-6 h-6 flex items-center justify-center text-success-content">
+                  <div className="w-6 h-6 flex items-center justify-center text-neutral">
                     <Icon className="w-5 h-5" />
                   </div>
                   {!collapsed && <span>{item.label}</span>}

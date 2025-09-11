@@ -29,8 +29,8 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   if (!isStarted && !isDone) {
     return {
       // subtle neutral card for unstarted tasks
-      wrapper: 'bg-base-300 text-neutral',
-      border: 'border-neutral',
+      wrapper: 'bg-neutral-content text-neutral',
+      border: 'border-neutral-content',
       // status box: transparent background with soft border
       button:
         'h-5 w-5 flex items-center justify-center rounded-md border-2 border-neutral text-neutral text-sm cursor-pointer transition-colors duration-200',
@@ -42,7 +42,7 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
     return {
       // stronger primary tint to indicate in-progress
       wrapper: 'bg-accent text-accent-content',
-      border: 'border-accent-content',
+      border: 'border-neutral-content',
       // status box: filled primary color for clear affordance
       button:
         'h-5 w-5 flex items-center justify-center rounded-md border-2 border-accent-content bg-transparent text-info text-sm cursor-pointer transition-colors duration-200',
@@ -53,8 +53,8 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   // done
   return {
     // completed tasks get a darker muted background with inverted icon
-    wrapper: 'bg-neutral/50 text-neutral-content/50',
-    border: 'border-neutral-content/50',
+    wrapper: 'bg-gray-500/70 text-gray-500',
+    border: 'border-neutral-content',
     button:
       'h-5 w-5 flex items-center justify-center rounded-md border-2 border-neutral-content/80 bg-neutral/80 text-neutral-content/80 text-sm cursor-pointer transition-colors duration-200',
     icon: 'text-neutral-content',
@@ -174,14 +174,12 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
             </div>
           </div>
 
-          <div className="flex items-start mt-1">
-            {right && <div className="text-sm md:text-base text-white">{right}</div>}
+          <div className="flex items-start mt-1 ">
+            {right && <div className="text-sm">{right}</div>}
           </div>
 
           {/* Show description/notes at xl+ */}
-          {task.notes && (
-            <div className="hidden xl:block text-sm text-gray-600 mt-3">{task.notes}</div>
-          )}
+          {task.notes && <div className="hidden xl:block text-sm  mt-3">{task.notes}</div>}
         </div>
       </div>
     </div>

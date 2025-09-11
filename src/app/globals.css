@@ -117,3 +117,21 @@ a {
   scrollbar-width: thin;
   scrollbar-color: #059669 transparent;
 }
+
+/* Remove default focus outline/box-shadow on interactive form controls across the app
+   (per user request). This targets native elements and the DaisyUI `.input` utility.
+   Note: removing focus styles can harm keyboard accessibility; consider replacing
+   with a visible focus style for keyboard users (e.g. using :focus-visible) if needed. */
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible,
+.input:focus,
+.input:focus-visible,
+button:focus,
+button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}

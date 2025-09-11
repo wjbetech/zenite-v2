@@ -108,7 +108,7 @@ export default function TaskModal({
         <h3 className="text-lg font-medium mb-6">{initial?.id ? 'Edit Task' : 'Add New Task'}</h3>
         {allowCreateProject && (
           <div className="mb-4">
-            <div className="text-sm text-gray-600 mb-1">New project</div>
+            <label className="text-sm">New project</label>
             <input
               value={newProjectName}
               onChange={(e) => setNewProjectName(e.target.value)}
@@ -118,42 +118,38 @@ export default function TaskModal({
                   handleCreateProject();
                 }
               }}
-              placeholder="New project name"
-              className="input w-full mb-2"
+              className="input w-full mb-2 rounded-lg border-2"
             />
           </div>
         )}
-        <label className="block">
-          <div className="text-sm text-gray-600 mb-1">Title</div>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            className="input w-full rounded-lg border-slate-800"
-          />
-        </label>
+        <label className="block mb-1">Title</label>
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+          className="input w-full rounded-lg"
+        />
 
-        <label className="block mt-5">
-          <div className="text-sm text-gray-600 mb-1">Notes</div>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="w-full p-2 rounded-lg border bg-base-100"
-            rows={4}
-          />
-        </label>
+        <label className="block mt-5 mb-1">Notes</label>
+
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          className="w-full p-2 rounded-lg border-content border-2 bg-base-100 focus:border-content"
+          rows={4}
+        />
 
         {/* status & priority removed — default unstarted; priorities inferred by due date */}
 
         <label className="block mt-5">
-          <div className="text-sm text-gray-600 mb-1">Due date</div>
+          <div className="text-sm">Due date</div>
           <input
             type="date"
             value={dueDate ? dueDate.split('T')[0] : ''}
             onChange={(e) =>
               setDueDate(e.target.value ? new Date(e.target.value).toISOString() : null)
             }
-            className="p-2 rounded-lg border bg-base-100"
+            className="p-2 rounded-lg border-content border-2 bg-base-100 focus:border-content"
           />
         </label>
 
@@ -161,12 +157,12 @@ export default function TaskModal({
 
         <div className="mt-5 flex flex-col gap-4 md:flex-row md:gap-4">
           <label className="w-full md:w-1/2">
-            <div className="text-sm text-gray-600 mb-1">Recurrence</div>
+            <div className="text-sm">Recurrence</div>
             <div className="relative w-full">
               <select
                 value={recurrence ?? 'once'}
                 onChange={(e) => setRecurrence(e.target.value || 'once')}
-                className="p-2 pr-12 appearance-none rounded-lg border bg-base-100 w-full"
+                className="p-2 pr-12 appearance-none rounded-lg border-content border-2 bg-base-100 w-full focus:border-content"
               >
                 <option value="once">Only once</option>
                 <option value="daily">Daily</option>
@@ -176,12 +172,12 @@ export default function TaskModal({
           </label>
 
           <label className="w-full md:w-1/2">
-            <div className="text-sm text-gray-600 mb-1">Project</div>
+            <div className="text-sm">Project</div>
             <div className="relative w-full">
               <select
                 value={projectId ?? ''}
                 onChange={(e) => setProjectId(e.target.value || null)}
-                className="p-2 pr-12 appearance-none rounded-lg border bg-white w-full"
+                className="p-2 pr-12 appearance-none rounded-lg border-content border-2  w-full focus:border-content"
               >
                 <option value="">(none)</option>
                 {projects.map((p) => (
@@ -198,10 +194,10 @@ export default function TaskModal({
         {/* project creation moved above title; Create button removed per request */}
 
         <div className="mt-4 flex justify-end gap-2">
-          <button className="btn" onClick={() => onOpenChange(false)} type="button">
+          <button className="btn btn-error" onClick={() => onOpenChange(false)} type="button">
             Cancel
           </button>
-          <button className="btn btn-primary" type="submit">
+          <button className="btn btn-success" type="submit">
             {initial?.id ? 'Save' : 'Create'}
           </button>
         </div>

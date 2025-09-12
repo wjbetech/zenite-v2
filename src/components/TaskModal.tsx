@@ -108,7 +108,7 @@ export default function TaskModal({
         <h3 className="text-lg font-medium mb-6">{initial?.id ? 'Edit Task' : 'Add New Task'}</h3>
         {allowCreateProject && (
           <div className="mb-4">
-            <label className="text-sm">New project</label>
+            <label className="block mb-2">New project</label>
             <input
               value={newProjectName}
               onChange={(e) => setNewProjectName(e.target.value)}
@@ -127,7 +127,7 @@ export default function TaskModal({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
-          className="input w-full rounded-lg"
+          className="input w-full rounded-lg border-content border-2 focus:border-content"
         />
 
         <label className="block mt-5 mb-1">Notes</label>
@@ -149,35 +149,35 @@ export default function TaskModal({
             onChange={(e) =>
               setDueDate(e.target.value ? new Date(e.target.value).toISOString() : null)
             }
-            className="p-2 rounded-lg border-content border-2 bg-base-100 focus:border-content"
+            className="p-2 rounded-lg border-2 bg-base-100 focus:border-content"
           />
         </label>
 
         {/* starts/completed/estimate/time spent removed per simplified schema */}
 
         <div className="mt-5 flex flex-col gap-4 md:flex-row md:gap-4">
-          <label className="w-full md:w-1/2">
-            <div className="text-sm">Recurrence</div>
+          <div className="w-full md:w-1/2">
+            <label className="block mb-2">Recurrence</label>
             <div className="relative w-full">
               <select
                 value={recurrence ?? 'once'}
                 onChange={(e) => setRecurrence(e.target.value || 'once')}
-                className="p-2 pr-12 appearance-none rounded-lg border-content border-2 bg-base-100 w-full focus:border-content"
+                className="p-2 pr-12 appearance-none rounded-lg border-2 bg-base-100 w-full focus:border-content"
               >
                 <option value="once">Only once</option>
                 <option value="daily">Daily</option>
               </select>
               <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
             </div>
-          </label>
+          </div>
 
-          <label className="w-full md:w-1/2">
-            <div className="text-sm">Project</div>
+          <div className="w-full md:w-1/2">
+            <label className="block mb-2">Project</label>
             <div className="relative w-full">
               <select
                 value={projectId ?? ''}
                 onChange={(e) => setProjectId(e.target.value || null)}
-                className="p-2 pr-12 appearance-none rounded-lg border-content border-2  w-full focus:border-content"
+                className="p-2 pr-12 appearance-none rounded-lg border-2 w-full focus:border-content"
               >
                 <option value="">(none)</option>
                 {projects.map((p) => (
@@ -188,7 +188,7 @@ export default function TaskModal({
               </select>
               <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
             </div>
-          </label>
+          </div>
         </div>
 
         {/* project creation moved above title; Create button removed per request */}

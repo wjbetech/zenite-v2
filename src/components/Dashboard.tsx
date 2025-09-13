@@ -59,6 +59,7 @@ export default function Dashboard() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Task> | undefined>(undefined);
+  const [modalMode, setModalMode] = useState<'task' | 'project'>('task');
   const [view, setView] = useState<'imminent' | 'new' | 'today' | 'week'>('new');
 
   // merge sample and store tasks by id (store overrides sample)
@@ -161,6 +162,7 @@ export default function Dashboard() {
             type="button"
             onClick={() => {
               setEditing(undefined);
+              setModalMode('task');
               setModalOpen(true);
             }}
           >
@@ -172,6 +174,7 @@ export default function Dashboard() {
             type="button"
             onClick={() => {
               setEditing(undefined);
+              setModalMode('project');
               setModalOpen(true);
             }}
           >
@@ -326,7 +329,7 @@ export default function Dashboard() {
           if (!v) setEditing(undefined);
         }}
         initial={editing}
-        allowCreateProject={true}
+        allowCreateProject={modalMode === 'project'}
       />
     </div>
   );

@@ -24,11 +24,12 @@ export default function ProjectsClient({ initialProjects }: Props) {
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
   const [statuses, setStatuses] = useState<Record<string, Status>>({});
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
+    // Defer setting the project store until we're on the client to avoid hydration mismatch.
     if (initialProjects && initialProjects.length > 0) {
-      setProjects(initialProjects as Project[]);
+      // we'll set the store on mount below
     }
 
     async function start() {
@@ -45,8 +46,17 @@ export default function ProjectsClient({ initialProjects }: Props) {
     }
     start();
     return () => {
-      mounted = false;
+      /* cleanup */
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    // mark mounted and initialize client store with server-provided projects once
+    setMounted(true);
+    if (initialProjects && initialProjects.length > 0) {
+      setProjects(initialProjects as Project[]);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -89,12 +99,12 @@ export default function ProjectsClient({ initialProjects }: Props) {
           <div className="min-h-[60vh] flex items-center justify-center">
             <div className="text-lg md:text-xl text-gray-500">Loading projects…</div>
           </div>
-        ) : projects.length === 0 ? (
+        ) : (mounted ? projects.length === 0 : (initialProjects?.length ?? 0) === 0) ? (
           <div className="min-h-[60vh] flex items-center justify-center">
             <div className="text-lg md:text-xl text-gray-500">- No projects yet! -</div>
           </div>
         ) : (
-          projects.map((p) => {
+          (mounted ? projects : initialProjects).map((p) => {
             const status = statuses[p.id] ?? 'none';
 
             const bgClass =

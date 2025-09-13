@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 // import { Input } from './ui/input';
 import useTaskStore, { Task } from '../lib/taskStore';
 import useProjectStore from '../lib/projectStore';
+import api from '../lib/api';
 import ChevronDown from './icons/ChevronDown';
 
 export default function TaskModal({
@@ -28,6 +29,7 @@ export default function TaskModal({
   const [projectId, setProjectId] = useState<string | null>(initial?.projectId ?? null);
   const projects = useProjectStore((s) => s.projects);
   const createProject = useProjectStore((s) => s.createProject);
+  const setProjects = useProjectStore((s) => s.setProjects);
 
   useEffect(() => {
     setTitle(initial?.title ?? '');
@@ -39,6 +41,7 @@ export default function TaskModal({
 
   // local state for creating a project from this modal
   const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectLoading, setNewProjectLoading] = useState(false);
   const [toast, setToast] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
 
   useEffect(() => {
@@ -50,39 +53,136 @@ export default function TaskModal({
   function submit(e?: React.FormEvent) {
     e?.preventDefault();
     if (!title.trim()) return;
+    // If user typed a new project name but didn't press Enter to create it,
+    // create the project first so the task can reference it.
+    const tryCreateProjectBeforeTask = async () => {
+      if (allowCreateProject && newProjectName.trim() && !projectId) {
+        await createAndSelectProject(newProjectName.trim());
+      }
+    };
+
+    // we call the async flow synchronously here by awaiting below
     if (initial?.id) {
-      updateTask(initial.id, {
-        title: title.trim(),
-        notes: notes.trim(),
-        dueDate,
-        projectId,
-        recurrence: recurrence ?? undefined,
-      });
+      const id = initial.id;
+      (async () => {
+        await tryCreateProjectBeforeTask();
+        updateTask(id, {
+          title: title.trim(),
+          notes: notes.trim(),
+          dueDate,
+          projectId,
+          recurrence: recurrence ?? undefined,
+        });
+      })();
     } else {
-      createTask({
-        title: title.trim(),
-        notes: notes.trim(),
-        dueDate,
-        projectId,
-        recurrence: recurrence ?? undefined,
-      });
+      (async () => {
+        await tryCreateProjectBeforeTask();
+        createTask({
+          title: title.trim(),
+          notes: notes.trim(),
+          dueDate,
+          projectId,
+          recurrence: recurrence ?? undefined,
+        });
+      })();
     }
     onOpenChange(false);
   }
 
-  function handleCreateProject() {
-    const name = (newProjectName || '').trim();
-    if (!name) return;
-    // background duplicate check (case-insensitive)
+  async function createAndSelectProject(name: string) {
+    // avoid duplicate checks if already exist
     const exists = projects.some((p) => p.name.trim().toLowerCase() === name.toLowerCase());
     if (exists) {
-      setToast({ type: 'error', message: 'A project with that name already exists.' });
+      const existing = projects.find((p) => p.name.trim().toLowerCase() === name.toLowerCase());
+      if (existing) setProjectId(existing.id);
       return;
     }
-    const p = createProject(name);
-    setProjectId(p.id);
-    setNewProjectName('');
-    setToast({ type: 'success', message: 'Project created and selected.' });
+
+    setNewProjectLoading(true);
+    try {
+      if (process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true') {
+        const created = (await api.createProject({ name })) as {
+          id: string;
+          name: string;
+          description?: string;
+          createdAt?: string;
+        };
+        setProjects([
+          {
+            id: created.id,
+            name: created.name,
+            description: created.description,
+            createdAt: created.createdAt || new Date().toISOString(),
+          },
+          ...projects,
+        ]);
+        setProjectId(created.id);
+      } else {
+        const p = createProject(name);
+        setProjectId(p.id);
+        setProjects([p, ...projects]);
+      }
+      setNewProjectName('');
+      setToast({ type: 'success', message: 'Project created and selected.' });
+    } catch (err) {
+      console.error('createAndSelectProject failed', err);
+      const message = err instanceof Error ? err.message : String(err);
+      setToast({ type: 'error', message: message || 'Failed to create project' });
+    } finally {
+      setNewProjectLoading(false);
+    }
+  }
+
+  function handleCreateProject() {
+    (async () => {
+      const name = (newProjectName || '').trim();
+      if (!name) return;
+      // background duplicate check (case-insensitive)
+      const exists = projects.some((p) => p.name.trim().toLowerCase() === name.toLowerCase());
+      if (exists) {
+        setToast({ type: 'error', message: 'A project with that name already exists.' });
+        return;
+      }
+
+      // If remote DB is enabled, call backend API; otherwise fall back to local store
+      if (process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true') {
+        try {
+          setNewProjectLoading(true);
+          const created = (await api.createProject({ name })) as {
+            id: string;
+            name: string;
+            description?: string;
+            createdAt?: string;
+            updatedAt?: string;
+          };
+          if (!created || !created.id) throw new Error('invalid response from server');
+          // prepend to local store so UI reflects remote
+          setProjects([
+            {
+              id: created.id,
+              name: created.name,
+              description: created.description,
+              createdAt: created.createdAt || new Date().toISOString(),
+            },
+            ...projects,
+          ]);
+          setProjectId(created.id);
+          setNewProjectName('');
+          setToast({ type: 'success', message: 'Project created and selected.' });
+        } catch (err: unknown) {
+          console.error('create project failed', err);
+          const message = err instanceof Error ? err.message : String(err);
+          setToast({ type: 'error', message: message || 'Failed to create project' });
+        } finally {
+          setNewProjectLoading(false);
+        }
+      } else {
+        const p = createProject(name);
+        setProjectId(p.id);
+        setNewProjectName('');
+        setToast({ type: 'success', message: 'Project created and selected.' });
+      }
+    })();
   }
 
   if (!open) return null;
@@ -119,6 +219,7 @@ export default function TaskModal({
                 }
               }}
               className="input w-full mb-2 rounded-lg"
+              disabled={newProjectLoading}
             />
           </div>
         )}

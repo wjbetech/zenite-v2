@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import useTaskStore, { Task } from '../lib/taskStore';
 import useProjectStore from '../lib/projectStore';
 import api from '../lib/api';
+import { toast } from 'react-toastify';
 import ChevronDown from './icons/ChevronDown';
 
 export default function TaskModal({
@@ -42,60 +43,75 @@ export default function TaskModal({
   // local state for creating a project from this modal
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectLoading, setNewProjectLoading] = useState(false);
-  const [toast, setToast] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
+  const [localToast, setLocalToast] = useState<{
+    type: 'error' | 'success';
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
-    if (!toast) return;
-    const id = setTimeout(() => setToast(null), 3000);
+    if (!localToast) return;
+    const id = setTimeout(() => setLocalToast(null), 3000);
     return () => clearTimeout(id);
-  }, [toast]);
+  }, [localToast]);
 
-  function submit(e?: React.FormEvent) {
+  async function submit(e?: React.FormEvent) {
     e?.preventDefault();
     if (!title.trim()) return;
+
     // If user typed a new project name but didn't press Enter to create it,
     // create the project first so the task can reference it.
-    const tryCreateProjectBeforeTask = async () => {
+    const tryCreateProjectBeforeTask = async (): Promise<string | null> => {
       if (allowCreateProject && newProjectName.trim() && !projectId) {
-        await createAndSelectProject(newProjectName.trim());
+        return await createAndSelectProject(newProjectName.trim());
       }
+      return null;
     };
 
-    // we call the async flow synchronously here by awaiting below
+    let createdProjectName: string | null = null;
+
     if (initial?.id) {
       const id = initial.id;
-      (async () => {
-        await tryCreateProjectBeforeTask();
+      await tryCreateProjectBeforeTask().then(() =>
         updateTask(id, {
           title: title.trim(),
           notes: notes.trim(),
           dueDate,
           projectId,
           recurrence: recurrence ?? undefined,
-        });
-      })();
+        }),
+      );
     } else {
-      (async () => {
-        await tryCreateProjectBeforeTask();
-        createTask({
-          title: title.trim(),
-          notes: notes.trim(),
-          dueDate,
-          projectId,
-          recurrence: recurrence ?? undefined,
-        });
-      })();
+      createdProjectName = await tryCreateProjectBeforeTask();
+
+      createTask({
+        title: title.trim(),
+        notes: notes.trim(),
+        dueDate,
+        projectId,
+        recurrence: recurrence ?? undefined,
+      });
     }
+
     onOpenChange(false);
+
+    // show a single global toast if a new project was created during submit
+    if (createdProjectName) {
+      // ensure any existing toasts are cleared so only one is visible
+      toast.dismiss();
+      toast.success(`New project was created: ${createdProjectName}`, {
+        autoClose: 4000,
+        position: 'top-center',
+      });
+    }
   }
 
-  async function createAndSelectProject(name: string) {
+  async function createAndSelectProject(name: string): Promise<string | null> {
     // avoid duplicate checks if already exist
     const exists = projects.some((p) => p.name.trim().toLowerCase() === name.toLowerCase());
     if (exists) {
       const existing = projects.find((p) => p.name.trim().toLowerCase() === name.toLowerCase());
       if (existing) setProjectId(existing.id);
-      return;
+      return existing?.name ?? null;
     }
 
     setNewProjectLoading(true);
@@ -123,11 +139,13 @@ export default function TaskModal({
         setProjects([p, ...projects]);
       }
       setNewProjectName('');
-      setToast({ type: 'success', message: 'Project created and selected.' });
+      // do NOT show a toast here; callers will display a single standardized toast
+      return name;
     } catch (err) {
       console.error('createAndSelectProject failed', err);
       const message = err instanceof Error ? err.message : String(err);
-      setToast({ type: 'error', message: message || 'Failed to create project' });
+      setLocalToast({ type: 'error', message: message || 'Failed to create project' });
+      return null;
     } finally {
       setNewProjectLoading(false);
     }
@@ -140,48 +158,11 @@ export default function TaskModal({
       // background duplicate check (case-insensitive)
       const exists = projects.some((p) => p.name.trim().toLowerCase() === name.toLowerCase());
       if (exists) {
-        setToast({ type: 'error', message: 'A project with that name already exists.' });
+        setLocalToast({ type: 'error', message: 'A project with that name already exists.' });
         return;
       }
 
-      // If remote DB is enabled, call backend API; otherwise fall back to local store
-      if (process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true') {
-        try {
-          setNewProjectLoading(true);
-          const created = (await api.createProject({ name })) as {
-            id: string;
-            name: string;
-            description?: string;
-            createdAt?: string;
-            updatedAt?: string;
-          };
-          if (!created || !created.id) throw new Error('invalid response from server');
-          // prepend to local store so UI reflects remote
-          setProjects([
-            {
-              id: created.id,
-              name: created.name,
-              description: created.description,
-              createdAt: created.createdAt || new Date().toISOString(),
-            },
-            ...projects,
-          ]);
-          setProjectId(created.id);
-          setNewProjectName('');
-          setToast({ type: 'success', message: 'Project created and selected.' });
-        } catch (err: unknown) {
-          console.error('create project failed', err);
-          const message = err instanceof Error ? err.message : String(err);
-          setToast({ type: 'error', message: message || 'Failed to create project' });
-        } finally {
-          setNewProjectLoading(false);
-        }
-      } else {
-        const p = createProject(name);
-        setProjectId(p.id);
-        setNewProjectName('');
-        setToast({ type: 'success', message: 'Project created and selected.' });
-      }
+      await createAndSelectProject(name);
     })();
   }
 
@@ -189,14 +170,14 @@ export default function TaskModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {toast && (
+      {localToast && (
         <div className="fixed right-4 top-4 z-50">
           <div
             className={`px-4 py-2 rounded shadow-lg text-sm ${
-              toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'
+              localToast.type === 'error' ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'
             }`}
           >
-            {toast.message}
+            {localToast.message}
           </div>
         </div>
       )}

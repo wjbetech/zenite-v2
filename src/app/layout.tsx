@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 // ClerkProvider temporarily disabled to debug headers() runtime errors
+import 'react-toastify/dist/ReactToastify.css';
 import './globals.css';
 import Script from 'next/script';
 import { Navbar, Sidebar } from '../components';

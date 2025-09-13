@@ -2,34 +2,51 @@ const API_BASE = '/api';
 
 async function safeJson<T = unknown>(res: Response): Promise<T> {
   const data = await res.json().catch(() => ({} as T));
-  if (!res.ok) throw data;
+  if (!res.ok) {
+    const obj = data as unknown as Record<string, unknown>;
+    const message =
+      obj && typeof obj === 'object' && 'message' in obj
+        ? String(obj['message'])
+        : `Request failed with status ${res.status}`;
+    const err = new Error(message) as Error & { status?: number; data?: unknown };
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
   return data as T;
 }
 
+async function request<T = unknown>(input: RequestInfo, init?: RequestInit): Promise<T> {
+  try {
+    const res = await fetch(input, init);
+    return await safeJson<T>(res);
+  } catch (e) {
+    // Normalize any thrown value into an Error instance
+    if (e instanceof Error) throw e;
+    const err = new Error(String(e ?? 'Unknown network error')) as Error & { original?: unknown };
+    err.original = e;
+    throw err;
+  }
+}
+
 export async function fetchProjects() {
-  const res = await fetch(`${API_BASE}/projects`);
-  return safeJson(res);
+  return request(`${API_BASE}/projects`);
 }
 
 export async function createProject(payload: { name: string; description?: string }) {
-  const res = await fetch(`${API_BASE}/projects`, {
+  return request(`${API_BASE}/projects`, {
     method: 'POST',
     body: JSON.stringify(payload),
     headers: { 'Content-Type': 'application/json' },
   });
-  return safeJson(res);
 }
 
 export async function deleteProject(id: string) {
-  const res = await fetch(`${API_BASE}/projects?id=${encodeURIComponent(id)}`, {
-    method: 'DELETE',
-  });
-  return safeJson(res);
+  return request(`${API_BASE}/projects?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
 export async function fetchTasks() {
-  const res = await fetch(`${API_BASE}/tasks`);
-  return safeJson(res);
+  return request(`${API_BASE}/tasks`);
 }
 
 export type CreateTaskPayload = {
@@ -40,17 +57,15 @@ export type CreateTaskPayload = {
 };
 
 export async function createTask(payload: CreateTaskPayload) {
-  const res = await fetch(`${API_BASE}/tasks`, {
+  return request(`${API_BASE}/tasks`, {
     method: 'POST',
     body: JSON.stringify(payload),
     headers: { 'Content-Type': 'application/json' },
   });
-  return safeJson(res);
 }
 
 export async function deleteTask(id: string) {
-  const res = await fetch(`${API_BASE}/tasks?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
-  return safeJson(res);
+  return request(`${API_BASE}/tasks?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
 const api = { fetchProjects, createProject, deleteProject, fetchTasks, createTask, deleteTask };

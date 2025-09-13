@@ -118,7 +118,7 @@ export default function TaskModal({
                   handleCreateProject();
                 }
               }}
-              className="input w-full mb-2 rounded-lg border-2"
+              className="input w-full mb-2 rounded-lg"
             />
           </div>
         )}
@@ -127,15 +127,14 @@ export default function TaskModal({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
-          className="input w-full rounded-lg border-content border-2 focus:border-content"
+          className="input w-full rounded-lg focus:border-content"
         />
 
         <label className="block mt-5 mb-1">Notes</label>
-
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="w-full p-2 rounded-lg border-content border-2 bg-base-100 focus:border-content"
+          className="w-full p-2 rounded-lg textarea bg-base-100 focus:border-content"
           rows={4}
         />
 
@@ -149,7 +148,7 @@ export default function TaskModal({
             onChange={(e) =>
               setDueDate(e.target.value ? new Date(e.target.value).toISOString() : null)
             }
-            className="p-2 rounded-lg border-2 bg-base-100 focus:border-content"
+            className="pika-single p-2 rounded-lg bg-base-100"
           />
         </label>
 
@@ -162,7 +161,7 @@ export default function TaskModal({
               <select
                 value={recurrence ?? 'once'}
                 onChange={(e) => setRecurrence(e.target.value || 'once')}
-                className="p-2 pr-12 appearance-none rounded-lg border-2 bg-base-100 w-full focus:border-content"
+                className="dropdown p-2 pr-12 appearance-none rounded-lg bg-base-100 w-full"
               >
                 <option value="once">Only once</option>
                 <option value="daily">Daily</option>
@@ -177,7 +176,7 @@ export default function TaskModal({
               <select
                 value={projectId ?? ''}
                 onChange={(e) => setProjectId(e.target.value || null)}
-                className="p-2 pr-12 appearance-none rounded-lg border-2 w-full focus:border-content"
+                className="dropdown p-2 pr-12 appearance-none rounded-lg w-full"
               >
                 <option value="">(none)</option>
                 {projects.map((p) => (

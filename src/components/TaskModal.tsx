@@ -161,7 +161,7 @@ export default function TaskModal({
               <select
                 value={recurrence ?? 'once'}
                 onChange={(e) => setRecurrence(e.target.value || 'once')}
-                className="dropdown p-2 pr-12 appearance-none rounded-lg bg-base-100 w-full"
+                className="select select-bordered p-2 pr-12 appearance-none rounded-lg bg-base-100 w-full"
               >
                 <option value="once">Only once</option>
                 <option value="daily">Daily</option>
@@ -176,7 +176,7 @@ export default function TaskModal({
               <select
                 value={projectId ?? ''}
                 onChange={(e) => setProjectId(e.target.value || null)}
-                className="dropdown p-2 pr-12 appearance-none rounded-lg w-full"
+                className="select select-bordered p-2 pr-12 appearance-none rounded-lg bg-base-100 w-full"
               >
                 <option value="">(none)</option>
                 {projects.map((p) => (

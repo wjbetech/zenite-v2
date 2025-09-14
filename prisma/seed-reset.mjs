@@ -1,5 +1,9 @@
-// Safe reset + dev seed for local development only (ESM).
+// Safe reset + dev seed for local development only.
+// This script will DELETE projects and tasks in the local dev DB and create
+// several dummy projects and tasks with staggered due dates.
+
 import { PrismaClient } from '@prisma/client';
+
 const prisma = new PrismaClient();
 
 function assertLocal() {
@@ -20,13 +24,16 @@ function assertLocal() {
   }
 }
 
+/**
+ * @param {number} n
+ */
 function daysFromNow(n) {
   const d = new Date();
   d.setDate(d.getDate() + n);
   return d;
 }
 
-export default async function run() {
+async function main() {
   assertLocal();
 
   console.log('Running dev reset seed (destructive): deleting projects & tasks...');
@@ -53,6 +60,7 @@ export default async function run() {
   for (let i = 0; i < projects.length; i++) {
     const p = await prisma.project.create({ data: projects[i] });
 
+    /** @type {any[]} */
     const tasks = [
       {
         title: `${p.name} — Critical: Fix bug #${i + 1}`,
@@ -92,18 +100,25 @@ export default async function run() {
       },
     ];
 
-    await prisma.task.createMany({ data: tasks });
+    // Create tasks one-by-one to avoid typing comments and keep this file plain ESM JS.
+    // create tasks sequentially in dev seed
+    for (const t of tasks) {
+      // Prisma will accept JS Date objects for DateTime fields.
+      await prisma.task.create({ data: t });
+    }
+
     console.log(`Created project ${p.name} with ${tasks.length} tasks`);
   }
 
   console.log('Dev reset + seed complete.');
-  await prisma.$disconnect();
 }
 
-// If run directly with `node prisma/seed-reset.mjs`, call run()
-if (process.argv[1] && process.argv[1].endsWith('seed-reset.mjs')) {
-  run().catch((e) => {
+main()
+  .catch((e) => {
     console.error(e);
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });
-}
+// (duplicate content removed)

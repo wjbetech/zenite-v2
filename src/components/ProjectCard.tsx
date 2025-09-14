@@ -15,7 +15,7 @@ export default function ProjectCard({ project, onDelete, href }: Props) {
     <div
       className={`bg-base-200 relative z-10 rounded-md shadow-sm border border-info p-4 xl:p-5 min-h-[6rem] transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md cursor-pointer`}
     >
-      <div className="flex items-center justify-between h-full">
+      <div className="mt-1 flex items-center justify-between h-full">
         <div className="flex-1">
           <div className="flex items-center gap-3">
             {/* make folder icon flat (no bg/border) and same visual weight as trash */}

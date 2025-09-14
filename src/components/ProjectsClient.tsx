@@ -90,18 +90,18 @@ export default function ProjectsClient({ initialProjects }: Props) {
         </button>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
         {loading ? (
-          <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="col-span-full min-h-[60vh] flex items-center justify-center">
             <div className="text-lg md:text-xl text-gray-500">Loading projects…</div>
           </div>
         ) : (mounted ? projects.length === 0 : (initialProjects?.length ?? 0) === 0) ? (
-          <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="col-span-full min-h-[60vh] flex items-center justify-center">
             <div className="text-lg md:text-xl text-gray-500">- No projects yet! -</div>
           </div>
         ) : (
           (mounted ? projects : initialProjects).map((p) => (
-            <div key={p.id}>
+            <div key={p.id} className="h-full">
               <ProjectCard
                 project={p}
                 onDelete={(id) => {

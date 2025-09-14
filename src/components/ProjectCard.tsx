@@ -13,14 +13,13 @@ type Props = {
 export default function ProjectCard({ project, onDelete, href }: Props) {
   const cardInner = (
     <div
-      className={`bg-base-100 relative z-10 rounded-md shadow-sm border border-gray-100 p-3 xl:p-4 transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md cursor-pointer`}
+      className={`bg-base-200 relative z-10 rounded-md shadow-sm border border-info p-4 xl:p-5 min-h-[6rem] transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md cursor-pointer`}
     >
-      <div className="flex items-stretch justify-between">
+      <div className="flex items-center justify-between h-full">
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <div className="p-1 rounded bg-base-200">
-              <Folder className="h-5 w-5 text-gray-600" />
-            </div>
+            {/* make folder icon flat (no bg/border) and same visual weight as trash */}
+            <Folder className="h-6 w-6 text-info" />
             <div className="text-lg font-medium">{project.name}</div>
           </div>
 

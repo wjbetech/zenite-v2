@@ -14,7 +14,8 @@ import {
   Settings,
   Repeat2,
 } from 'lucide-react';
-import ProjectSidebar from './ProjectSidebar';
+import useProjectStore from '../lib/projectStore';
+import { Star } from 'lucide-react';
 import { useEffect } from 'react';
 
 const SIDEBAR_KEY = 'zenite.sidebarCollapsed';
@@ -40,6 +41,9 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
   // on a server-provided boolean prop.
   const { user } = useUser();
   const effectiveLoggedIn = isLoggedIn || Boolean(user?.id);
+
+  const projects = useProjectStore((s) => s.projects);
+  const updateProject = useProjectStore((s) => s.updateProject);
 
   React.useEffect(() => {
     try {
@@ -108,18 +112,64 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                 !!pathname && (pathname === item.href || pathname.startsWith(item.href + '/'));
               if (effectiveLoggedIn) {
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center gap-3 rounded px-2 py-2 ${
-                      isActive ? 'bg-success-content/20' : 'hover:bg-base-300'
-                    } ${collapsed ? 'justify-center w-full' : 'w-full'}`}
-                  >
-                    <div className="w-6 h-6 flex items-center justify-center text-neutral">
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    {!collapsed && <span>{item.label}</span>}
-                  </Link>
+                  <React.Fragment key={item.href}>
+                    <Link
+                      href={item.href}
+                      className={`flex items-center gap-3 rounded px-2 py-2 ${
+                        isActive ? 'bg-success-content/20' : 'hover:bg-base-300'
+                      } ${collapsed ? 'justify-center w-full' : 'w-full'}`}
+                    >
+                      <div className="w-6 h-6 flex items-center justify-center text-neutral">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      {!collapsed && <span>{item.label}</span>}
+                    </Link>
+
+                    {/* If this is the Projects nav item, render the nested project links */}
+                    {item.href === '/projects' && !collapsed && (
+                      <div className="ml-4 mt-1 w-full pr-3">
+                        <div
+                          className="flex flex-col gap-1 overflow-auto"
+                          style={{ maxHeight: '20rem' }}
+                        >
+                          {projects.length === 0 && (
+                            <div className="text-xs text-gray-500">No projects yet</div>
+                          )}
+                          {projects
+                            .slice()
+                            .sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0))
+                            .map((p) => (
+                              <div
+                                key={p.id}
+                                className="flex items-center justify-between gap-2 px-1 py-1"
+                              >
+                                <Link
+                                  href={`/projects/${p.id}`}
+                                  className="text-sm truncate hover:underline pr-3"
+                                >
+                                  {p.name}
+                                </Link>
+                                <button
+                                  aria-pressed={!!p.starred}
+                                  onClick={() => updateProject(p.id, { starred: !p.starred })}
+                                  className={`btn btn-ghost btn-xs btn-square ${
+                                    p.starred ? 'text-yellow-400' : 'text-neutral'
+                                  }`}
+                                  title={p.starred ? 'Unstar project' : 'Star project'}
+                                >
+                                  <Star
+                                    className="w-4 h-4"
+                                    fill={p.starred ? 'currentColor' : 'none'}
+                                    aria-hidden
+                                  />
+                                </button>
+                              </div>
+                            ))}
+                        </div>
+                        {/* removed Manage projects link per design request */}
+                      </div>
+                    )}
+                  </React.Fragment>
                 );
               }
 
@@ -142,12 +192,6 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
               );
             })}
           </nav>
-          {/* show the projects list below the nav when expanded */}
-          {!collapsed && effectiveLoggedIn && (
-            <div className="mt-2 px-1">
-              <ProjectSidebar className="w-full" />
-            </div>
-          )}
         </div>
       </div>
     </aside>

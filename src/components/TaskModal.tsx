@@ -186,7 +186,9 @@ export default function TaskModal({
         onSubmit={submit}
         className="relative z-10 w-full max-w-2xl bg-base-100 rounded-lg p-6 shadow-lg border-1"
       >
-        <h3 className="text-lg font-medium mb-6">{initial?.id ? 'Edit Task' : 'Add New Task'}</h3>
+        <h3 className="text-lg font-medium mb-6">
+          {initial?.id ? 'Edit Task' : allowCreateProject ? 'Add New Project' : 'Add New Task'}
+        </h3>
         {allowCreateProject && (
           <div className="mb-4">
             <label className="block mb-2">New project</label>

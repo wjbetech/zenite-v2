@@ -32,6 +32,7 @@ export default function TaskModal({
   const createProject = useProjectStore((s) => s.createProject);
   const setProjects = useProjectStore((s) => s.setProjects);
   const [newProjectCreated, setNewProjectCreated] = useState(false);
+  const [showTaskInputs, setShowTaskInputs] = useState(true);
 
   useEffect(() => {
     setTitle(initial?.title ?? '');
@@ -41,7 +42,9 @@ export default function TaskModal({
     setProjectId(initial?.projectId ?? null);
     // reset the 'new project created' subheader when modal opens or initial changes
     setNewProjectCreated(false);
-  }, [initial, open]);
+    // default: when opened as New Project (and not editing) hide task inputs
+    setShowTaskInputs(!(allowCreateProject && !initial?.id));
+  }, [initial, open, allowCreateProject]);
 
   // local state for creating a project from this modal
   const [newProjectName, setNewProjectName] = useState('');
@@ -214,77 +217,92 @@ export default function TaskModal({
           </div>
         )}
         {(allowCreateProject || newProjectCreated) && !initial?.id && (
-          <div className="text-muted mb-3">
+          <div className="flex items-center justify-between text-muted mb-3">
             <h4 className="text-lg font-semibold">New Task</h4>
+            <label className="flex items-center gap-2 text-sm">
+              <span className="text-xs">Create task</span>
+              <input
+                type="checkbox"
+                className="toggle toggle-sm"
+                checked={showTaskInputs}
+                onChange={(e) => setShowTaskInputs(e.target.checked)}
+              />
+            </label>
           </div>
         )}
-        <label className="block mb-1">Title</label>
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-          className="input w-full rounded-lg focus:border-content"
-        />
 
-        <label className="block mt-5 mb-1">Notes</label>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          className="w-full p-2 rounded-lg textarea bg-base-100 focus:border-content"
-          rows={4}
-        />
+        {/* Task inputs are conditional: show when editing or when the toggle is on */}
+        {(initial?.id || showTaskInputs) && (
+          <>
+            <label className="block mb-1">Title</label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              className="input w-full rounded-lg focus:border-content"
+            />
 
-        {/* status & priority removed — default unstarted; priorities inferred by due date */}
+            <label className="block mt-5 mb-1">Notes</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full p-2 rounded-lg textarea bg-base-100 focus:border-content"
+              rows={4}
+            />
 
-        <label className="block mt-5">
-          <div className="text-sm">Due date</div>
-          <input
-            type="date"
-            value={dueDate ? dueDate.split('T')[0] : ''}
-            onChange={(e) =>
-              setDueDate(e.target.value ? new Date(e.target.value).toISOString() : null)
-            }
-            className="pika-single p-2 rounded-lg bg-base-100"
-          />
-        </label>
+            {/* status & priority removed — default unstarted; priorities inferred by due date */}
 
-        {/* starts/completed/estimate/time spent removed per simplified schema */}
+            <label className="block mt-5">
+              <div className="text-sm">Due date</div>
+              <input
+                type="date"
+                value={dueDate ? dueDate.split('T')[0] : ''}
+                onChange={(e) =>
+                  setDueDate(e.target.value ? new Date(e.target.value).toISOString() : null)
+                }
+                className="pika-single p-2 rounded-lg bg-base-100"
+              />
+            </label>
 
-        <div className="mt-5 flex flex-col gap-4 md:flex-row md:gap-4">
-          <div className="w-full md:w-1/2">
-            <label className="block mb-2">Recurrence</label>
-            <div className="relative w-full">
-              <select
-                value={recurrence ?? 'once'}
-                onChange={(e) => setRecurrence(e.target.value || 'once')}
-                className="select select-bordered p-2 pr-12 appearance-none rounded-lg bg-base-100 w-full"
-              >
-                <option value="once">Only once</option>
-                <option value="daily">Daily</option>
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
+            {/* starts/completed/estimate/time spent removed per simplified schema */}
+
+            <div className="mt-5 flex flex-col gap-4 md:flex-row md:gap-4">
+              <div className="w-full md:w-1/2">
+                <label className="block mb-2">Recurrence</label>
+                <div className="relative w-full">
+                  <select
+                    value={recurrence ?? 'once'}
+                    onChange={(e) => setRecurrence(e.target.value || 'once')}
+                    className="select select-bordered p-2 pr-12 appearance-none rounded-lg bg-base-100 w-full"
+                  >
+                    <option value="once">Only once</option>
+                    <option value="daily">Daily</option>
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
+                </div>
+              </div>
+
+              <div className="w-full md:w-1/2">
+                <label className="block mb-2">Project</label>
+                <div className="relative w-full">
+                  <select
+                    value={projectId ?? ''}
+                    onChange={(e) => setProjectId(e.target.value || null)}
+                    className="select select-bordered p-2 pr-12 appearance-none rounded-lg bg-base-100 w-full"
+                  >
+                    <option value="">(none)</option>
+                    {projects.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
+                </div>
+              </div>
             </div>
-          </div>
-
-          <div className="w-full md:w-1/2">
-            <label className="block mb-2">Project</label>
-            <div className="relative w-full">
-              <select
-                value={projectId ?? ''}
-                onChange={(e) => setProjectId(e.target.value || null)}
-                className="select select-bordered p-2 pr-12 appearance-none rounded-lg bg-base-100 w-full"
-              >
-                <option value="">(none)</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
-            </div>
-          </div>
-        </div>
+          </>
+        )}
 
         {/* project creation moved above title; Create button removed per request */}
 

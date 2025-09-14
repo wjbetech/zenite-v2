@@ -31,6 +31,7 @@ export default function TaskModal({
   const projects = useProjectStore((s) => s.projects);
   const createProject = useProjectStore((s) => s.createProject);
   const setProjects = useProjectStore((s) => s.setProjects);
+  const [newProjectCreated, setNewProjectCreated] = useState(false);
 
   useEffect(() => {
     setTitle(initial?.title ?? '');
@@ -38,6 +39,8 @@ export default function TaskModal({
     setDueDate(initial?.dueDate ?? null);
     setRecurrence(initial?.recurrence ?? 'once');
     setProjectId(initial?.projectId ?? null);
+    // reset the 'new project created' subheader when modal opens or initial changes
+    setNewProjectCreated(false);
   }, [initial, open]);
 
   // local state for creating a project from this modal
@@ -139,6 +142,8 @@ export default function TaskModal({
         setProjects([p, ...projects]);
       }
       setNewProjectName('');
+      // mark that we created a new project from this modal so we can show the 'New Task' subheader
+      setNewProjectCreated(true);
       // do NOT show a toast here; callers will display a single standardized toast
       return name;
     } catch (err) {
@@ -186,11 +191,13 @@ export default function TaskModal({
         onSubmit={submit}
         className="relative z-10 w-full max-w-2xl bg-base-100 rounded-lg p-6 shadow-lg border-1"
       >
-        <h3 className="text-lg font-medium mb-6">
+        <h3 className="text-lg font-medium mb-3">
           {initial?.id ? 'Edit Task' : allowCreateProject ? 'Add New Project' : 'Add New Task'}
         </h3>
+        {/* Secondary subheader: show 'New Task' when opened for creating a project or when a project was just created from this modal */}
+
         {allowCreateProject && (
-          <div className="mb-4">
+          <div className="mb-8">
             <label className="block mb-2">New project</label>
             <input
               value={newProjectName}
@@ -204,6 +211,11 @@ export default function TaskModal({
               className="input w-full mb-2 rounded-lg"
               disabled={newProjectLoading}
             />
+          </div>
+        )}
+        {(allowCreateProject || newProjectCreated) && !initial?.id && (
+          <div className="text-muted mb-3">
+            <h4 className="text-lg font-semibold">New Task</h4>
           </div>
         )}
         <label className="block mb-1">Title</label>

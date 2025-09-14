@@ -41,7 +41,7 @@ export default function ConfirmModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
       <div className="absolute inset-0 bg-black/60" onClick={onCancel} />
-      <div className="relative z-10 w-full max-w-md sm:max-w-lg bg-red-300 border border-error rounded-lg p-6 shadow-lg">
+      <div className="relative z-10 w-full max-w-md sm:max-w-lg bg-red-200 border border-error rounded-lg p-6 shadow-lg">
         <h3 id="confirm-title" className="text-lg font-medium mb-2">
           {title ?? 'Delete Project?'}
         </h3>
@@ -51,7 +51,7 @@ export default function ConfirmModal({
         </div>
         <div className="flex justify-end gap-2">
           <button
-            className="btn bg-success border-success-content text-neutral-content"
+            className="btn border-success-content text-neutral"
             onClick={onCancel}
             type="button"
             disabled={!!loading}

@@ -15,7 +15,7 @@ export default function ProjectCard({ project, onDelete, href }: Props) {
     <div
       className={`bg-base-100 relative z-10 rounded-md shadow-sm border border-gray-100 p-3 xl:p-4 transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md cursor-pointer`}
     >
-      <div className="flex items-start justify-between">
+      <div className="flex items-stretch justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <div className="p-1 rounded bg-base-200">
@@ -29,7 +29,7 @@ export default function ProjectCard({ project, onDelete, href }: Props) {
           )}
         </div>
 
-        <div className="flex items-start gap-3">
+        <div className="flex items-center">
           {onDelete && (
             <button
               aria-label="Delete project"
@@ -38,10 +38,10 @@ export default function ProjectCard({ project, onDelete, href }: Props) {
                 e.preventDefault();
                 onDelete(project.id);
               }}
-              className="text-red-400 hover:text-red-500 p-1 rounded cursor-pointer"
+              className="text-red-400 hover:text-red-500 p-3 md:p-2 rounded-md cursor-pointer h-full flex items-center justify-center"
               title="Delete project"
             >
-              <Trash className="h-4 w-4" />
+              <Trash className="h-6 w-6" />
             </button>
           )}
         </div>

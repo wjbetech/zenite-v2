@@ -10,6 +10,7 @@ export type Project = {
   description?: string;
   createdAt: string;
   view?: 'list' | 'kanban' | 'grouped';
+  starred?: boolean;
 };
 
 type State = {
@@ -49,7 +50,13 @@ const useProjectStore = create<State>((set, get) => ({
     save(projects);
   },
   createProject(name) {
-    const p: Project = { id: nanoid(), name, createdAt: new Date().toISOString(), view: 'list' };
+    const p: Project = {
+      id: nanoid(),
+      name,
+      createdAt: new Date().toISOString(),
+      view: 'list',
+      starred: false,
+    };
     const projects = [p, ...get().projects];
     set({ projects });
     save(projects);

@@ -14,6 +14,7 @@ import {
   Settings,
   Repeat2,
 } from 'lucide-react';
+import ProjectSidebar from './ProjectSidebar';
 import { useEffect } from 'react';
 
 const SIDEBAR_KEY = 'zenite.sidebarCollapsed';
@@ -141,6 +142,12 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
               );
             })}
           </nav>
+          {/* show the projects list below the nav when expanded */}
+          {!collapsed && effectiveLoggedIn && (
+            <div className="mt-2 px-1">
+              <ProjectSidebar className="w-full" />
+            </div>
+          )}
         </div>
       </div>
     </aside>

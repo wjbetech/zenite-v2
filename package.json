@@ -16,6 +16,7 @@
     "prisma:migrate:dev": "prisma migrate dev --name init",
     "prisma:db:push": "prisma db push",
     "seed:dev": "node prisma/seed.js",
+    "seed:reset": "node prisma/seed-reset.mjs",
     "db:start": "docker compose up -d db",
     "db:stop": "docker compose down",
     "tailwind:build": "npx tailwindcss -c tailwind.config.cjs -i ./src/app/globals.css -o ./public/tailwind.css",

@@ -78,9 +78,12 @@ Design principles:
 - [ ] Task Card
   - [ ] Task View
 - [ ] Project Sidebar
+  - NOTE: Sidebar should include a Projects dropdown that shows current tasks. The dropdown opens when Projects tab is active, closes when inactive, uses `framer-motion` for transitions, shows up to 10 tasks (5 visible, rest scrollable), and supports starring one task to pin it to the top.
+  - Project cards should be restyled to match `TaskCard.tsx` visuals, use a folder icon, no progress checkbox, and support a delete action that triggers a reusable `ConfirmModal`.
 - [ ] Add/Edit Task Modal
   - [O] Add
   - [ ] Edit
+  - NOTE: The `TaskModal` has been extended to support creating projects and optionally creating a task alongside the project. A toggle controls whether task inputs are shown when opening the modal via the New Project flow.
 - [O] Navbar
 - [ ] Settings Page
 - [ ] Login/Register Page

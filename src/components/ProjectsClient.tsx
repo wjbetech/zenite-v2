@@ -4,9 +4,9 @@ import React, { useEffect, useState } from 'react';
 import useProjectStore, { Project } from '../lib/projectStore';
 // import { Input } from './ui/input';
 // ...existing code...
-import { Check, Trash, Plus } from 'lucide-react';
-
-type Status = 'none' | 'tilde' | 'done';
+import { Plus } from 'lucide-react';
+import ProjectCard from './ProjectCard';
+import ConfirmModal from './ConfirmModal';
 
 type Props = {
   initialProjects: Project[];
@@ -23,8 +23,9 @@ export default function ProjectsClient({ initialProjects }: Props) {
 
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
-  const [statuses, setStatuses] = useState<Record<string, Status>>({});
   const [mounted, setMounted] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     // Defer setting the project store until we're on the client to avoid hydration mismatch.
@@ -66,14 +67,6 @@ export default function ProjectsClient({ initialProjects }: Props) {
     setName('');
   };
 
-  const cycleStatus = (id: string) => {
-    setStatuses((s) => {
-      const curr = s[id] ?? 'none';
-      const next: Status = curr === 'none' ? 'tilde' : curr === 'tilde' ? 'done' : 'none';
-      return { ...s, [id]: next };
-    });
-  };
-
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold mb-4">Projects</h1>
@@ -104,95 +97,33 @@ export default function ProjectsClient({ initialProjects }: Props) {
             <div className="text-lg md:text-xl text-gray-500">- No projects yet! -</div>
           </div>
         ) : (
-          (mounted ? projects : initialProjects).map((p) => {
-            const status = statuses[p.id] ?? 'none';
-
-            const bgClass =
-              status === 'done'
-                ? 'bg-success/25'
-                : status === 'tilde'
-                ? 'bg-warning/25'
-                : 'bg-base-100';
-
-            const borderClass =
-              status === 'done'
-                ? 'border-emerald-600'
-                : status === 'tilde'
-                ? 'border-amber-600'
-                : 'border-gray-100';
-
-            const buttonClass =
-              status === 'done'
-                ? 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-success bg-success/20 text-sm cursor-pointer'
-                : status === 'tilde'
-                ? 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-warning bg-warning/20 text-sm cursor-pointer'
-                : 'h-5 w-5 flex items-center justify-center rounded-md border-2 border-gray-700 text-sm cursor-pointer';
-
-            return (
-              <div key={p.id} className="relative cursor-pointer">
-                {/* chunky 3D slab shadow/base under the card */}
-                <div className="absolute inset-0 translate-x-2 translate-y-2 rounded-md bg-base-200 border border-gray-200/20 z-0" />
-
-                <div className="relative z-10">
-                  <div
-                    className={`${bgClass} p-3 pb-6 rounded border ${borderClass} transition-transform duration-150 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <div className="text-lg font-medium">{p.name}</div>
-
-                          <button
-                            aria-label="Toggle project status"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              e.preventDefault();
-                              cycleStatus(p.id);
-                            }}
-                            className={buttonClass}
-                            title={
-                              status === 'none'
-                                ? 'Mark in progress'
-                                : status === 'tilde'
-                                ? 'Mark done'
-                                : 'Clear status'
-                            }
-                          >
-                            {status === 'done' ? (
-                              <Check className="h-4 w-4 text-emerald-800" strokeWidth={2} />
-                            ) : status === 'tilde' ? (
-                              <span className="text-sm font-bold text-amber-800">~</span>
-                            ) : null}
-                          </button>
-                        </div>
-
-                        <div className="text-sm text-gray-500 mt-1">
-                          {p.description ?? 'No description'}
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <button
-                          aria-label="Delete project"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            deleteProject(p.id);
-                          }}
-                          className="text-red-400 hover:text-red-500 p-1 rounded"
-                          title="Delete project"
-                        >
-                          <Trash className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })
+          (mounted ? projects : initialProjects).map((p) => (
+            <div key={p.id}>
+              <ProjectCard
+                project={p}
+                onDelete={(id) => {
+                  setPendingDeleteId(id);
+                  setConfirmOpen(true);
+                }}
+              />
+            </div>
+          ))
         )}
       </div>
+      <ConfirmModal
+        open={confirmOpen}
+        title="Delete project"
+        message="Are you sure you want to delete this project? This cannot be undone."
+        onCancel={() => {
+          setConfirmOpen(false);
+          setPendingDeleteId(null);
+        }}
+        onConfirm={() => {
+          if (pendingDeleteId) deleteProject(pendingDeleteId);
+          setConfirmOpen(false);
+          setPendingDeleteId(null);
+        }}
+      />
     </div>
   );
 }

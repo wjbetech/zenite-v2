@@ -5,6 +5,8 @@ import useProjectStore, { Project } from '../lib/projectStore';
 // import { Input } from './ui/input';
 // ...existing code...
 import { Plus } from 'lucide-react';
+import api from '../lib/api';
+import { toast } from 'react-toastify';
 import ProjectCard from './ProjectCard';
 import ConfirmModal from './ConfirmModal';
 
@@ -26,6 +28,7 @@ export default function ProjectsClient({ initialProjects }: Props) {
   const [mounted, setMounted] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     // Defer setting the project store until we're on the client to avoid hydration mismatch.
@@ -112,16 +115,34 @@ export default function ProjectsClient({ initialProjects }: Props) {
       </div>
       <ConfirmModal
         open={confirmOpen}
-        title="Delete project"
-        message="Are you sure you want to delete this project? This cannot be undone."
+        title="Delete Project?"
+        message="This will permanently remove the project and its tasks. Are you sure?"
         onCancel={() => {
           setConfirmOpen(false);
           setPendingDeleteId(null);
         }}
-        onConfirm={() => {
-          if (pendingDeleteId) deleteProject(pendingDeleteId);
-          setConfirmOpen(false);
-          setPendingDeleteId(null);
+        loading={deleting}
+        confirmLabel="Delete Project"
+        onConfirm={async () => {
+          if (!pendingDeleteId) return;
+          setDeleting(true);
+          try {
+            if (process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true') {
+              await api.deleteProject(pendingDeleteId);
+            }
+            // always update local store to keep UI in sync
+            deleteProject(pendingDeleteId);
+            // show styled toast like new-project toast
+            toast.dismiss();
+            toast.success('Project has been deleted', { autoClose: 4000, position: 'top-center' });
+          } catch (err) {
+            console.error('failed to delete project', err);
+            toast.error(`Failed to delete project: ${String((err as Error).message ?? err)}`);
+          } finally {
+            setDeleting(false);
+            setConfirmOpen(false);
+            setPendingDeleteId(null);
+          }
         }}
       />
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 export default function ConfirmModal({
   open,
@@ -8,27 +8,66 @@ export default function ConfirmModal({
   message,
   onCancel,
   onConfirm,
+  loading,
+  confirmLabel,
 }: {
   open: boolean;
   title?: string;
   message?: string;
   onCancel: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
+  loading?: boolean;
+  confirmLabel?: string;
 }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onCancel();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onCancel]);
+
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      ref={containerRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    >
       <div className="absolute inset-0 bg-black/60" onClick={onCancel} />
-      <div className="relative z-10 w-full max-w-md bg-base-100 rounded-lg p-6 shadow-lg">
-        <h3 className="text-lg font-medium mb-2">{title ?? 'Confirm'}</h3>
-        <div className="text-sm text-gray-600 mb-4">{message ?? 'Are you sure?'}</div>
+      <div className="relative z-10 w-full max-w-md sm:max-w-lg bg-red-300 border border-error rounded-lg p-6 shadow-lg">
+        <h3 id="confirm-title" className="text-lg font-medium mb-2">
+          {title ?? 'Delete Project?'}
+        </h3>
+        <div className="text-lg font-semibold text-error mb-2">Warning!</div>
+        <div className=" text-neutral mb-4">
+          {message ?? 'This will permanently remove the project and its tasks. Are you sure?'}
+        </div>
         <div className="flex justify-end gap-2">
-          <button className="btn btn-ghost" onClick={onCancel} type="button">
+          <button
+            className="btn bg-success border-success-content text-neutral-content"
+            onClick={onCancel}
+            type="button"
+            disabled={!!loading}
+          >
             Cancel
           </button>
-          <button className="btn btn-error" onClick={onConfirm} type="button">
-            Delete
+          <button
+            className="btn btn-error border-error-content text-neutral-content"
+            onClick={onConfirm}
+            type="button"
+            disabled={!!loading}
+            aria-busy={!!loading}
+          >
+            {loading
+              ? `${confirmLabel ?? 'Deleting Project'}...`
+              : confirmLabel ?? 'Delete Project'}
           </button>
         </div>
       </div>

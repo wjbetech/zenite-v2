@@ -9,8 +9,10 @@ import Link from 'next/link';
 import {
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   LayoutDashboard,
   Folder,
+  FolderOpen,
   Settings,
   Repeat2,
 } from 'lucide-react';
@@ -35,6 +37,9 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
   );
 
   const [collapsed, setCollapsed] = React.useState<boolean>(false);
+  const [projectsOpen, setProjectsOpen] = React.useState<boolean>(
+    Boolean(pathname && pathname.startsWith('/projects')),
+  );
 
   // prefer Clerk user state when available (client-side). This lets the
   // sidebar enable items immediately after Clerk hydration without relying
@@ -76,7 +81,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
 
   return (
     <aside
-      className={`sidebar fixed left-0 z-40 bg-base-200`}
+      className={`sidebar fixed left-0 z-40 bg-base-200 overflow-x-hidden`}
       style={{
         top: 'var(--nav-height)',
         height: 'calc(100vh - var(--nav-height))',
@@ -113,23 +118,53 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
               if (effectiveLoggedIn) {
                 return (
                   <React.Fragment key={item.href}>
-                    <Link
-                      href={item.href}
+                    <div
                       className={`flex items-center gap-3 rounded px-2 py-2 ${
                         isActive ? 'bg-success-content/20' : 'hover:bg-base-300'
-                      } ${collapsed ? 'justify-center w-full' : 'w-full'}`}
+                      } ${collapsed ? 'justify-center w-full' : 'justify-between w-full'}`}
                     >
-                      <div className="w-6 h-6 flex items-center justify-center text-neutral">
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      {!collapsed && <span>{item.label}</span>}
-                    </Link>
+                      <Link
+                        href={item.href}
+                        className={`flex items-center gap-3 ${
+                          collapsed ? 'justify-center w-full' : 'flex-1 min-w-0'
+                        }`}
+                      >
+                        <div className="w-6 h-6 flex items-center justify-center text-neutral">
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        {!collapsed && <span>{item.label}</span>}
+                      </Link>
+
+                      {/* Projects toggle chevron */}
+                      {item.href === '/projects' && !collapsed && (
+                        <button
+                          aria-expanded={projectsOpen}
+                          aria-controls="sidebar-projects"
+                          onClick={() => setProjectsOpen((s) => !s)}
+                          className="btn btn-ghost btn-square btn-xs"
+                          title={projectsOpen ? 'Collapse projects' : 'Expand projects'}
+                        >
+                          <ChevronDown
+                            className={`w-4 h-4 transition-transform ${
+                              projectsOpen ? 'rotate-180' : ''
+                            }`}
+                          />
+                        </button>
+                      )}
+                    </div>
 
                     {/* If this is the Projects nav item, render the nested project links */}
                     {item.href === '/projects' && !collapsed && (
-                      <div className="ml-4 mt-1 w-full pr-3">
+                      <div
+                        id="sidebar-projects"
+                        className={`ml-3 mt-1 w-full pr-3 overflow-hidden origin-top transition-[max-height,opacity,transform] duration-200 ease-out ${
+                          projectsOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0'
+                        }`}
+                        style={{ maxHeight: projectsOpen ? '20rem' : 0 }}
+                        aria-hidden={!projectsOpen}
+                      >
                         <div
-                          className="flex flex-col gap-1 overflow-auto"
+                          className="flex flex-col gap-1 overflow-auto w-full"
                           style={{ maxHeight: '20rem' }}
                         >
                           {projects.length === 0 && (
@@ -141,13 +176,20 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                             .map((p) => (
                               <div
                                 key={p.id}
-                                className="flex items-center justify-between gap-2 px-1 py-1"
+                                className={`flex items-center justify-between gap-2 px-2 py-2 rounded ${
+                                  pathname === `/projects/${p.id}`
+                                    ? 'bg-success-content/20'
+                                    : 'hover:bg-base-300'
+                                }`}
                               >
                                 <Link
                                   href={`/projects/${p.id}`}
-                                  className="text-sm truncate hover:underline pr-3"
+                                  className="text-sm truncate pr-2 flex-1 min-w-0"
                                 >
-                                  {p.name}
+                                  <span className="inline-flex items-center gap-2">
+                                    <FolderOpen className="w-4 h-4" />
+                                    <span className="truncate">{p.name}</span>
+                                  </span>
                                 </Link>
                                 <button
                                   aria-pressed={!!p.starred}
@@ -166,7 +208,6 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                               </div>
                             ))}
                         </div>
-                        {/* removed Manage projects link per design request */}
                       </div>
                     )}
                   </React.Fragment>

@@ -90,7 +90,7 @@ export default function ProjectsClient({ initialProjects }: Props) {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
         {loading ? (
           <div className="col-span-full min-h-[60vh] flex items-center justify-center">
             <div className="text-lg md:text-xl text-gray-500">Loading projects…</div>

@@ -15,6 +15,21 @@ export async function POST(request: Request) {
   return NextResponse.json(project, { status: 201 });
 }
 
+export async function PATCH(request: Request) {
+  const body = await request.json();
+  const { id, name, description } = body || {};
+  if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
+  if (!name && !description)
+    return NextResponse.json({ error: 'no update fields provided' }, { status: 400 });
+
+  const data: Partial<{ name: string; description: string }> = {};
+  if (name) data.name = name;
+  if (description) data.description = description;
+
+  const updated = await prisma.project.update({ where: { id }, data });
+  return NextResponse.json(updated);
+}
+
 export async function DELETE(request: Request) {
   const url = new URL(request.url);
   const id = url.searchParams.get('id');

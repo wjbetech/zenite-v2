@@ -7,6 +7,14 @@ jest.mock('next/navigation', () => ({
   usePathname: () => '/projects',
 }));
 
+// Mock next/link to render a plain anchor in tests so href attributes are present
+jest.mock('next/link', () => ({
+  __esModule: true,
+  default: ({ href, children }: { href: string; children: React.ReactNode }) => {
+    return <a href={href}>{children}</a>;
+  },
+}));
+
 // Mock Clerk's useUser to report a logged-in user
 jest.mock('@clerk/nextjs', () => ({
   useUser: () => ({ user: { id: 'u1' } }),
@@ -82,5 +90,47 @@ describe('Sidebar behavior', () => {
     const nested = document.getElementById('sidebar-projects');
     expect(nested).toBeTruthy();
     expect(nested).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('top-level nav links have correct hrefs and nested project links point to project pages', () => {
+    render(<Sidebar isLoggedIn />);
+
+    // Top-level links (Dashboard, Dailies, Projects, Settings) should have correct hrefs
+    const dashboardLink = screen.getByRole('link', { name: /dashboard/i });
+    const dailiesLink = screen.getByRole('link', { name: /dailies/i });
+    const projectsLink = screen.getByRole('link', { name: /projects/i });
+    const settingsLink = screen.getByRole('link', { name: /settings/i });
+
+    expect(dashboardLink).toBeTruthy();
+    expect(dailiesLink).toBeTruthy();
+    expect(projectsLink).toBeTruthy();
+    expect(settingsLink).toBeTruthy();
+
+    // href in jsdom will be absolute; just assert it ends with the expected path
+    expect(dashboardLink.getAttribute('href') || (dashboardLink as HTMLAnchorElement).href).toMatch(
+      /\/dashboard$/,
+    );
+    expect(dailiesLink.getAttribute('href') || (dailiesLink as HTMLAnchorElement).href).toMatch(
+      /\/dailies$/,
+    );
+    expect(projectsLink.getAttribute('href') || (projectsLink as HTMLAnchorElement).href).toMatch(
+      /\/projects$/,
+    );
+    expect(settingsLink.getAttribute('href') || (settingsLink as HTMLAnchorElement).href).toMatch(
+      /\/settings$/,
+    );
+
+    // Ensure nested project links exist and point to /projects/:id when the projects dropdown is open
+    // The mock pathname is '/projects' so projectsOpen is true by default
+    const nestedLink1 = screen.getByRole('link', { name: /one/i });
+    const nestedLink2 = screen.getByRole('link', { name: /two/i });
+    expect(nestedLink1).toBeTruthy();
+    expect(nestedLink2).toBeTruthy();
+    expect(nestedLink1.getAttribute('href') || (nestedLink1 as HTMLAnchorElement).href).toMatch(
+      /\/projects\/p1$/,
+    );
+    expect(nestedLink2.getAttribute('href') || (nestedLink2 as HTMLAnchorElement).href).toMatch(
+      /\/projects\/p2$/,
+    );
   });
 });

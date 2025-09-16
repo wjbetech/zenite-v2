@@ -1,7 +1,7 @@
 // Mock next/server to avoid depending on Next's Response implementation in tests
 jest.mock('next/server', () => ({
   NextResponse: {
-    json: (body: any, init?: any) => {
+    json: (body: unknown, init?: { status?: number; [key: string]: unknown }) => {
       return {
         json: async () => body,
         status: init?.status ?? 200,

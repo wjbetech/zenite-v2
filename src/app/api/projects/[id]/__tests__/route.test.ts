@@ -80,4 +80,67 @@ describe('API: /api/projects/[id]', () => {
     });
     expect(body).toEqual({ ok: true });
   });
+
+  test('GET returns 400 when id missing', async () => {
+    const req = new Request('http://localhost/api/projects/');
+    const res = await handlers.GET(req as unknown as Request);
+    const body = await res.json();
+    expect(body).toHaveProperty('error', 'id required');
+  });
+
+  test('PATCH returns 400 for invalid body (empty update)', async () => {
+    // Ensure update is not called when validation fails
+    const req = new Request('http://localhost/api/projects/00000000-0000-0000-0000-000000000001', {
+      method: 'PATCH',
+      body: JSON.stringify({}),
+      headers: { 'content-type': 'application/json' },
+    });
+    const res = await handlers.PATCH(req as unknown as Request);
+    const body = await res.json();
+    expect(body).toHaveProperty('error', 'validation failed');
+    expect(prisma.project.update).not.toHaveBeenCalled();
+  });
+
+  test('PATCH returns 400 for invalid id format', async () => {
+    const req = new Request('http://localhost/api/projects/not-a-uuid', {
+      method: 'PATCH',
+      body: JSON.stringify({ name: 'New name' }),
+      headers: { 'content-type': 'application/json' },
+    });
+    const res = await handlers.PATCH(req as unknown as Request);
+    const body = await res.json();
+    expect(body).toHaveProperty('error', 'validation failed');
+    expect(prisma.project.update).not.toHaveBeenCalled();
+  });
+
+  test('PATCH returns 404 when project not found (P2025)', async () => {
+    prisma.project.update.mockRejectedValue({ code: 'P2025' });
+    const req = new Request('http://localhost/api/projects/00000000-0000-0000-0000-000000000009', {
+      method: 'PATCH',
+      body: JSON.stringify({ name: 'Does not exist' }),
+      headers: { 'content-type': 'application/json' },
+    });
+    const res = await handlers.PATCH(req as unknown as Request);
+    const body = await res.json();
+    expect(body).toHaveProperty('error', 'Project not found');
+  });
+
+  test('DELETE returns 400 when id missing', async () => {
+    const req = new Request('http://localhost/api/projects/', {
+      method: 'DELETE',
+    });
+    const res = await handlers.DELETE(req as unknown as Request);
+    const body = await res.json();
+    expect(body).toHaveProperty('error', 'id required');
+  });
+
+  test('DELETE returns 404 when project not found (P2025)', async () => {
+    prisma.project.delete.mockRejectedValue({ code: 'P2025' });
+    const req = new Request('http://localhost/api/projects/00000000-0000-0000-0000-000000000009', {
+      method: 'DELETE',
+    });
+    const res = await handlers.DELETE(req as unknown as Request);
+    const body = await res.json();
+    expect(body).toHaveProperty('error', 'Project not found');
+  });
 });

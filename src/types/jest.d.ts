@@ -1,4 +1,4 @@
 declare module 'src/*' {
-  const whatever: any;
+  const whatever: unknown;
   export default whatever;
 }

@@ -43,27 +43,47 @@ async function main() {
     await prisma.tag.upsert({ where: { name: t }, update: {}, create: { name: t } });
   }
 
-  // Create example tasks if none exist
-  const count = await prisma.task.count();
-  if (count === 0) {
-    await prisma.task.createMany({
-      data: [
-        {
-          title: 'Welcome to Zenite (local dev)',
-          description: 'This is a seeded task. Edit or delete it.',
+  // Create multiple example projects and ensure each has 3-4 tasks (idempotent)
+  const projectDefs = [
+    { name: 'Getting Started', description: 'A demo project for local development', target: 4 },
+    { name: 'Personal', description: 'Personal tasks and routines', target: 3 },
+    { name: 'Work', description: 'Work-related tasks and projects', target: 4 },
+    { name: 'Backlog', description: 'Ideas and backlog items', target: 3 },
+    { name: 'Chores', description: 'Household and maintenance tasks', target: 3 },
+  ];
+
+  const createdProjects = [];
+  for (const pd of projectDefs) {
+    let p = await prisma.project.findFirst({ where: { name: pd.name } });
+    if (!p) {
+      p = await prisma.project.create({ data: { name: pd.name, description: pd.description } });
+    }
+    createdProjects.push(p);
+
+    // Ensure the project has the target number of tasks
+    const existingCount = await prisma.task.count({ where: { projectId: p.id } });
+    const missing = pd.target - existingCount;
+    if (missing > 0) {
+      const toCreate = [];
+      for (let i = 0; i < missing; i++) {
+        const idx = existingCount + i + 1;
+        toCreate.push({
+          title: `${pd.name} — Task ${idx}`,
+          description: `Auto-generated task ${idx} for project ${pd.name}`,
           status: 'TODO',
           priority: 'MEDIUM',
           ownerId: user.id,
-        },
-        {
-          title: 'Explore Projects',
-          description: 'Create projects and assign tasks to them.',
-          status: 'TODO',
-          priority: 'LOW',
-          ownerId: user.id,
-        },
-      ],
-    });
+          projectId: p.id,
+        });
+      }
+      await prisma.task.createMany({ data: toCreate });
+    }
+  }
+
+  // Attach any remaining unassigned tasks to Getting Started as a fallback
+  const gs = createdProjects.find((x) => x.name === 'Getting Started');
+  if (gs) {
+    await prisma.task.updateMany({ where: { projectId: null }, data: { projectId: gs.id } });
   }
 
   console.log('Seeding complete.');

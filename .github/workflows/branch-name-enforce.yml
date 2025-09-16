@@ -1,0 +1,32 @@
+name: Enforce branch naming
+
+on:
+  push: {}
+  pull_request: {}
+
+jobs:
+  enforce-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Validate branch name
+        run: |
+          echo "Branch ref: $GITHUB_REF"
+          ref=${GITHUB_REF#refs/heads/}
+          pr_ref=""
+          if [ -n "$GITHUB_HEAD_REF" ]; then
+            ref=$GITHUB_HEAD_REF
+          fi
+          echo "Evaluating branch: $ref"
+
+          # Allowed patterns: main, master, release/*, feature/*, fix/*, chore/*, refactor/*, hotfix/*, docs/*, test/*
+          if [[ "$ref" =~ ^(main|master)$ ]] || \
+             [[ "$ref" =~ ^(release/.+|feature/.+|fix/.+|chore/.+|refactor/.+|hotfix/.+|docs/.+|test/.+)$ ]]; then
+            echo "Branch name OK: $ref"
+            exit 0
+          else
+            echo "ERROR: Branch name '$ref' does not match allowed patterns. Allowed: main, master, release/*, feature/*, fix/*, chore/*, refactor/*, hotfix/*, docs/*, test/*"
+            exit 1
+          fi

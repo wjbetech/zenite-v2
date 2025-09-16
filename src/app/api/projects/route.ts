@@ -43,9 +43,20 @@ export async function PATCH(request: Request) {
 
     const updated = await prisma.project.update({ where: { id }, data });
     return NextResponse.json(updated);
-  } catch (err: any) {
-    if (err.code === 'P2025') {
+  } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === 'object' &&
+      'code' in err &&
+      (err as { code: string }).code === 'P2025'
+    ) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    }
+    if (err instanceof Error) {
+      return NextResponse.json(
+        { error: 'Failed to update project', details: err.message },
+        { status: 500 },
+      );
     }
     return NextResponse.json(
       { error: 'Failed to update project', details: String(err) },
@@ -62,9 +73,20 @@ export async function DELETE(request: Request) {
 
     await prisma.project.delete({ where: { id } });
     return NextResponse.json({ ok: true });
-  } catch (err: any) {
-    if (err.code === 'P2025') {
+  } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === 'object' &&
+      'code' in err &&
+      (err as { code: string }).code === 'P2025'
+    ) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    }
+    if (err instanceof Error) {
+      return NextResponse.json(
+        { error: 'Failed to delete project', details: err.message },
+        { status: 500 },
+      );
     }
     return NextResponse.json(
       { error: 'Failed to delete project', details: String(err) },

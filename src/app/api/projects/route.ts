@@ -6,7 +6,10 @@ export async function GET() {
     const projects = await prisma.project.findMany({ orderBy: { createdAt: 'desc' } });
     return NextResponse.json(projects);
   } catch (err) {
-    return NextResponse.json({ error: 'Failed to fetch projects', details: String(err) }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch projects', details: String(err) },
+      { status: 500 },
+    );
   }
 }
 
@@ -19,7 +22,10 @@ export async function POST(request: Request) {
     const project = await prisma.project.create({ data: { name, description } });
     return NextResponse.json(project, { status: 201 });
   } catch (err) {
-    return NextResponse.json({ error: 'Failed to create project', details: String(err) }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to create project', details: String(err) },
+      { status: 500 },
+    );
   }
 }
 
@@ -41,7 +47,10 @@ export async function PATCH(request: Request) {
     if (err.code === 'P2025') {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
-    return NextResponse.json({ error: 'Failed to update project', details: String(err) }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to update project', details: String(err) },
+      { status: 500 },
+    );
   }
 }
 
@@ -57,6 +66,9 @@ export async function DELETE(request: Request) {
     if (err.code === 'P2025') {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
-    return NextResponse.json({ error: 'Failed to delete project', details: String(err) }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to delete project', details: String(err) },
+      { status: 500 },
+    );
   }
 }

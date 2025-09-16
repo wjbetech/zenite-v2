@@ -74,7 +74,7 @@ export default function ProjectsClient({ initialProjects }: Props) {
     <div className="p-6">
       <h1 className="text-2xl font-semibold mb-4">Projects</h1>
 
-      <div className="mb-4 flex items-center gap-2">
+      <div className="mb-8 flex items-center gap-2">
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -83,14 +83,14 @@ export default function ProjectsClient({ initialProjects }: Props) {
         />
         <button
           onClick={create}
-          className="btn btn-primary pl-1 py-3 flex items-center gap-2 w-[90px]"
+          className="btn btn-success py-3 flex items-center gap-2 border-neutral"
         >
           <Plus className="h-4 w-4" />
           <span className="leading-none">Create</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
         {loading ? (
           <div className="col-span-full min-h-[60vh] flex items-center justify-center">
             <div className="text-lg md:text-xl text-gray-500">Loading projects…</div>

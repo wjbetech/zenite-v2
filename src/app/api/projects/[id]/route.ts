@@ -1,23 +1,33 @@
 import { NextResponse } from 'next/server';
-import prisma from '../../../../src/lib/prisma';
-import { createProjectSchema, updateProjectSchema } from '../../../lib/validators/projects';
+import prisma from '../../../../../src/lib/prisma';
+import { updateProjectSchema } from '../../../../lib/validators/projects';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const projects = await prisma.project.findMany({ orderBy: { createdAt: 'desc' } });
-    return NextResponse.json(projects);
+    const url = new URL(request.url);
+    const id = url.pathname.split('/').pop();
+    if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
+
+    const project = await prisma.project.findUnique({ where: { id }, include: { tasks: true } });
+    if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    return NextResponse.json(project);
   } catch (err) {
     return NextResponse.json(
-      { error: 'Failed to fetch projects', details: String(err) },
+      { error: 'Failed to fetch project', details: String(err) },
       { status: 500 },
     );
   }
 }
 
-export async function POST(request: Request) {
+export async function PATCH(request: Request) {
   try {
+    const url = new URL(request.url);
+    const id = url.pathname.split('/').pop();
+    if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
+
     const body = await request.json();
-    const parsed = createProjectSchema.safeParse(body);
+    // merge id into body for validation
+    const parsed = updateProjectSchema.safeParse({ ...body, id });
     if (!parsed.success) {
       return NextResponse.json(
         { error: 'validation failed', details: parsed.error.flatten() },
@@ -26,28 +36,6 @@ export async function POST(request: Request) {
     }
 
     const { name, description } = parsed.data;
-    const project = await prisma.project.create({ data: { name, description } });
-    return NextResponse.json(project, { status: 201 });
-  } catch (err) {
-    return NextResponse.json(
-      { error: 'Failed to create project', details: String(err) },
-      { status: 500 },
-    );
-  }
-}
-
-export async function PATCH(request: Request) {
-  try {
-    const body = await request.json();
-    const parsed = updateProjectSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'validation failed', details: parsed.error.flatten() },
-        { status: 400 },
-      );
-    }
-
-    const { id, name, description } = parsed.data;
     const data: Partial<{ name: string; description: string }> = {};
     if (name) data.name = name;
     if (description) data.description = description;
@@ -79,7 +67,7 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const url = new URL(request.url);
-    const id = url.searchParams.get('id');
+    const id = url.pathname.split('/').pop();
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
 
     await prisma.project.delete({ where: { id } });

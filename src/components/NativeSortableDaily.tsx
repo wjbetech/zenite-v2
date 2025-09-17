@@ -27,6 +27,7 @@ export default function NativeSortableDaily<T extends Item>({
     originalIndex: 0,
     placeholderIndex: 0,
     positions: [] as Array<{ id: string; top: number; height: number }>,
+    pointerId: -1,
   });
 
   // keep a stable original order when a drag starts
@@ -43,7 +44,8 @@ export default function NativeSortableDaily<T extends Item>({
       const el = itemRefs.current.get(it.id);
       if (!el) return;
       const r = el.getBoundingClientRect();
-      positions.push({ id: it.id, top: r.top + window.scrollY - contTop, height: r.height });
+      // top relative to container's top in viewport coordinates
+      positions.push({ id: it.id, top: r.top - contTop, height: r.height });
     });
     return positions;
   };
@@ -53,7 +55,10 @@ export default function NativeSortableDaily<T extends Item>({
   const handlePointerDown = (e: React.PointerEvent, id: string, index: number) => {
     // only left click or touch
     if (e.button && e.button !== 0) return;
-    (e.target as Element).setPointerCapture?.(e.pointerId);
+    // capture pointer on the element that has the listener so we continue to get move/up events
+    try {
+      (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+    } catch {}
     e.currentTarget.classList.add("dragging");
     const positions = measure();
     const el = itemRefs.current.get(id)!;
@@ -63,6 +68,7 @@ export default function NativeSortableDaily<T extends Item>({
       originalIndex: index,
       placeholderIndex: index,
       positions,
+      pointerId: e.pointerId,
     };
     setDraggingId(id);
   };
@@ -76,9 +82,10 @@ export default function NativeSortableDaily<T extends Item>({
     const draggedCenter = s.positions[s.originalIndex].top + s.draggedHeight / 2 + delta;
     // find new placeholder index
     let newIndex = s.positions.length - 1;
+    const HYSTERESIS = Math.min(12, s.draggedHeight * 0.15); // avoid tiny, jittery changes
     for (let i = 0; i < s.positions.length; i++) {
       const mid = s.positions[i].top + s.positions[i].height / 2;
-      if (draggedCenter < mid) {
+      if (draggedCenter < mid - HYSTERESIS) {
         newIndex = i;
         break;
       }
@@ -113,10 +120,16 @@ export default function NativeSortableDaily<T extends Item>({
     // cleanup styles
     const draggedEl = itemRefs.current.get(draggingId);
     if (draggedEl) {
+      try {
+        // release pointer capture if we set it
+        if (s.pointerId && s.pointerId !== -1) (draggedEl as Element).releasePointerCapture?.(s.pointerId as number);
+      } catch {}
       draggedEl.style.transform = '';
       draggedEl.style.zIndex = '';
       draggedEl.style.transition = '';
       draggedEl.style.boxShadow = '';
+      // remove dragging class from element
+      draggedEl.classList.remove('dragging');
     }
     setDraggingId(null);
     setRenderKey((k) => k + 1);

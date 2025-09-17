@@ -1,49 +1,52 @@
 'use client';
 
 import React from 'react';
+import useProjectStore, { Project } from '../lib/projectStore';
+import useTaskStore from '../lib/taskStore';
+
 import type { Task } from '../lib/taskStore';
-import useProjectStore from '../lib/projectStore';
 
 type Props = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  task: Task | null;
-  onSave: (id: string, patch: Partial<Task>) => void;
+  onCreated?: (t: Task) => void;
 };
 
-export default function EditTaskModal({ open, onOpenChange, task, onSave }: Props) {
+export default function CreateDailyModal({ open, onOpenChange, onCreated }: Props) {
+  const projects = useProjectStore((s) => s.projects) as Project[];
+  const createTask = useTaskStore((s) => s.createTask);
+
   const [title, setTitle] = React.useState('');
   const [notes, setNotes] = React.useState('');
   const [projectId, setProjectId] = React.useState<string | 'none'>('none');
-  const projects = useProjectStore((s) => s.projects);
 
   React.useEffect(() => {
-    if (task) {
-      setTitle(task.title ?? '');
-      setNotes(task.notes ?? '');
-      setProjectId(task.projectId ?? 'none');
-    } else {
+    if (!open) {
       setTitle('');
       setNotes('');
+      setProjectId('none');
     }
-  }, [task]);
+  }, [open]);
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!task) return;
-    const patch: Partial<Task> = {
-      title: title.trim(),
+    const payload = {
+      title: (title || 'Untitled Daily').trim(),
       notes: notes.trim() || undefined,
+      recurrence: 'daily',
       projectId: projectId === 'none' ? null : projectId,
     };
-    onSave(task.id, patch);
+    const t = createTask(payload);
+    onCreated?.(t);
     onOpenChange(false);
   };
 
+  if (!open) return null;
+
   return (
-    <div className={open ? 'modal modal-open' : 'modal'} aria-hidden={!open}>
-      <div className="modal-box w-11/12 max-w-xl">
-        <h3 className="font-bold text-lg">Edit task</h3>
+    <div className="modal modal-open" aria-hidden={!open} role="dialog" aria-modal="true">
+      <div className="modal-box w-11/12 max-w-md">
+        <h3 className="font-bold text-lg">Create daily task</h3>
         <form onSubmit={submit} className="mt-4">
           <label className="label">
             <span className="label-text">Title</span>
@@ -52,23 +55,24 @@ export default function EditTaskModal({ open, onOpenChange, task, onSave }: Prop
             className="input input-bordered rounded-md w-full"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            aria-label="Task title"
+            aria-label="Daily task title"
+            placeholder="e.g. Workout"
             required
           />
 
           <label className="label mt-3">
-            <span className="label-text">Notes</span>
+            <span className="label-text">Notes (optional)</span>
           </label>
           <textarea
             className="textarea textarea-bordered rounded-md w-full"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            aria-label="Task notes"
-            rows={4}
+            aria-label="Daily task notes"
+            rows={3}
           />
 
           <label className="label mt-3">
-            <span className="label-text">Project (optional)</span>
+            <span className="label-text">Connect to project (optional)</span>
           </label>
           <select
             className="select select-bordered w-full"
@@ -85,11 +89,11 @@ export default function EditTaskModal({ open, onOpenChange, task, onSave }: Prop
           </select>
 
           <div className="modal-action mt-4">
-            <button type="button" className="btn btn-error" onClick={() => onOpenChange(false)}>
+            <button type="button" className="btn" onClick={() => onOpenChange(false)}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary">
-              Save
+            <button type="submit" className="btn btn-success">
+              Create Daily
             </button>
           </div>
         </form>

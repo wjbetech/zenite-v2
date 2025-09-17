@@ -9,6 +9,33 @@
   logs: false;
 }
 
+/* light theme styles for 'pastel' theme */
+
+[data-theme='pastel'] {
+  .text-accent {
+    color: #2e51b1;
+  }
+  .bg-accent {
+    background-color: #a5c2dd;
+  }
+  .ring-accent {
+    --tw-ring-color: rgba(28, 78, 216);
+  }
+}
+
+/* light theme styles for 'cupcake' theme */
+[data-theme='cupcake'] {
+  .text-accent {
+    color: #b9a031;
+  }
+  .bg-accent {
+    background-color: #dfdbc6;
+  }
+  .ring-accent {
+    --tw-ring-color: #b9a031;
+  }
+}
+
 /* dark theme styles for 'business' theme */
 [data-theme='business'] {
   .text-neutral {
@@ -25,6 +52,15 @@
   }
   .text-neutral-content {
     color: #f3f4f6;
+  }
+  .text-accent {
+    color: #e47c27;
+  }
+  .bg-accent {
+    background-color: #ffb326;
+  }
+  .ring-accent {
+    --tw-ring-color: #e47c27;
   }
 }
 

@@ -2,17 +2,23 @@
 
 import React from 'react';
 import useTaskStore, { Task } from '../lib/taskStore';
+import useProjectStore from '../lib/projectStore';
 import TimerWidget from './TimerWidget';
 import DailyTaskCard from './DailyTaskCard';
 import EditTaskModal from './EditTaskModal';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
+import CreateDailyModal from './CreateDailyModal';
 
 export default function DailiesClient() {
   const tasks = useTaskStore((s) => s.tasks) as Task[];
   const deleteTask = useTaskStore((s) => s.deleteTask);
   const updateTask = useTaskStore((s) => s.updateTask);
+  const projects = useProjectStore((s) => s.projects);
   const resetIfNeeded = useTaskStore((s) => s.resetDailiesIfNeeded);
   const resetNow = useTaskStore((s) => s.resetDailiesNow);
   const [editing, setEditing] = React.useState<Task | null>(null);
+  const [deleting, setDeleting] = React.useState<Task | null>(null);
+  const [creating, setCreating] = React.useState(false);
   const edit = (t: Partial<Task> | string) => {
     // accept either a Task-like object or an id string
     const id = typeof t === 'string' ? t : t?.id;
@@ -85,10 +91,7 @@ export default function DailiesClient() {
     setEditing(null);
   };
 
-  const handleDelete = (id: string) => {
-    deleteTask(id);
-    setEditing(null);
-  };
+  // deletion is handled from the task card directly; modal no longer supports delete
 
   return (
     <main className="p-6">
@@ -98,13 +101,33 @@ export default function DailiesClient() {
           <h1 className="text-3xl md:text-2xl font-semibold mb-0 text-center md:text-left md:pl-4 w-full md:w-auto">
             Dailies
           </h1>
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center gap-3">
             <button
               onClick={() => setTimerOpen((s) => !s)}
               className="text-sm text-gray-500 hover:text-gray-700"
               aria-expanded={timerOpen}
             >
               {timerOpen ? 'Hide timer' : 'Show timer'}
+            </button>
+            <button
+              onClick={() => {
+                // open create modal; after creation we'll allow editing
+                setCreating(true);
+              }}
+              className="btn btn-success btn-sm"
+              aria-label="Add daily task"
+            >
+              + Add Daily Task
+            </button>
+          </div>
+          {/* mobile add button - small and visible on md:hidden */}
+          <div className="flex md:hidden items-center gap-3">
+            <button
+              onClick={() => setCreating(true)}
+              className="btn btn-ghost btn-sm"
+              aria-label="Add daily task"
+            >
+              + Add
             </button>
           </div>
         </div>
@@ -132,10 +155,15 @@ export default function DailiesClient() {
                           notes: t.notes,
                           started: !!t.started,
                           completed: !!t.completed,
+                          href: undefined,
+                          projectName: projects.find((p) => p.id === t.projectId)?.name,
                         }}
                         onToggle={toggle}
                         onEdit={edit}
-                        onDelete={deleteTask}
+                        onDelete={(id: string) => {
+                          const found = tasks.find((x) => x.id === id) ?? null;
+                          setDeleting(found);
+                        }}
                       />
                     </li>
                   ))}
@@ -150,7 +178,17 @@ export default function DailiesClient() {
         onOpenChange={(v) => !v && setEditing(null)}
         task={editing}
         onSave={handleSave}
-        onDelete={handleDelete}
+      />
+      <CreateDailyModal open={creating} onOpenChange={(v) => setCreating(v)} />
+      <ConfirmDeleteModal
+        open={!!deleting}
+        onCancel={() => setDeleting(null)}
+        itemTitle={deleting?.title}
+        onConfirm={() => {
+          if (!deleting) return;
+          deleteTask(deleting.id);
+          setDeleting(null);
+        }}
       />
     </main>
   );

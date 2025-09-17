@@ -11,6 +11,7 @@ export type DailyTask = {
   completed?: boolean;
   started?: boolean;
   href?: string;
+  projectName?: string;
 };
 
 type Props = {
@@ -83,7 +84,9 @@ export default function DailyTaskCard({ task, onToggle, onEdit, onDelete }: Prop
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-3">
-          <div className={`truncate font-medium ${classes.text}`}>{task.title}</div>
+          <div className={`truncate font-medium ${classes.text}`}>
+            {task.projectName ? `${task.title} - (${task.projectName})` : task.title}
+          </div>
           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             {onEdit && (
               <button

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React from "react";
+import React from 'react';
 
 type Item = { id: string } & Record<string, unknown>;
 
@@ -28,6 +28,7 @@ export default function NativeSortableDaily<T extends Item>({
     placeholderIndex: 0,
     positions: [] as Array<{ id: string; top: number; height: number }>,
     pointerId: -1,
+    capturedEl: null as Element | null,
   });
 
   // keep a stable original order when a drag starts
@@ -58,8 +59,9 @@ export default function NativeSortableDaily<T extends Item>({
     // capture pointer on the element that has the listener so we continue to get move/up events
     try {
       (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+      dragState.current.capturedEl = e.currentTarget as Element;
     } catch {}
-    e.currentTarget.classList.add("dragging");
+    e.currentTarget.classList.add('dragging');
     const positions = measure();
     const el = itemRefs.current.get(id)!;
     dragState.current = {
@@ -69,6 +71,7 @@ export default function NativeSortableDaily<T extends Item>({
       placeholderIndex: index,
       positions,
       pointerId: e.pointerId,
+      capturedEl: dragState.current.capturedEl,
     };
     setDraggingId(id);
   };
@@ -117,20 +120,25 @@ export default function NativeSortableDaily<T extends Item>({
     const movedIndex = next.findIndex((n) => n.id === draggingId);
     const [moved] = next.splice(movedIndex, 1);
     next.splice(to, 0, moved);
-    // cleanup styles
-    const draggedEl = itemRefs.current.get(draggingId);
-    if (draggedEl) {
+    // release pointer capture from the captured element (if any)
+    try {
+      if (s.capturedEl && s.pointerId && s.pointerId !== -1) {
+        (s.capturedEl as Element).releasePointerCapture?.(s.pointerId as number);
+      }
+    } catch {}
+
+    // clear styles/classes for all tracked item elements to avoid stuck state
+    itemRefs.current.forEach((el) => {
       try {
-        // release pointer capture if we set it
-        if (s.pointerId && s.pointerId !== -1) (draggedEl as Element).releasePointerCapture?.(s.pointerId as number);
+        (el as HTMLElement).style.transform = '';
+        (el as HTMLElement).style.zIndex = '';
+        (el as HTMLElement).style.transition = '';
+        (el as HTMLElement).style.boxShadow = '';
+        el.classList.remove('dragging');
       } catch {}
-      draggedEl.style.transform = '';
-      draggedEl.style.zIndex = '';
-      draggedEl.style.transition = '';
-      draggedEl.style.boxShadow = '';
-      // remove dragging class from element
-      draggedEl.classList.remove('dragging');
-    }
+    });
+
+    // reset drag state and re-render
     setDraggingId(null);
     setRenderKey((k) => k + 1);
     onReorder(next);
@@ -168,10 +176,10 @@ export default function NativeSortableDaily<T extends Item>({
   };
 
   return (
-  <div key={renderKey} ref={containerRef} className={containerClassName}>
+    <div key={renderKey} ref={containerRef} className={containerClassName}>
       {items.map((it, idx) => {
         const isDragging = draggingId === it.id;
-  const transform = getTransformFor(it.id);
+        const transform = getTransformFor(it.id);
         return (
           <div
             key={it.id}

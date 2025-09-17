@@ -156,3 +156,27 @@ Design principles:
 - Consider use of `use-immer` with Zustand for deep state
 - Consider optimistic updates with React Query for faster UI
 - Think about "focus mode" — only show one task at a time
+
+---
+
+## ✅ Completed tasks
+
+The following items were completed and moved from `TODO.md` on 2025-09-17 to keep the todo list focused on next actionable work.
+
+- Implement Projects table & migration (Prisma)
+
+  - Added `Project` model to `prisma/schema.prisma`, created & applied migration, and ran `prisma generate`.
+
+- Add Projects API (tRPC router)
+
+  - Created a `projects` router with `createProject`, `listProjects`, and `getProject` endpoints. Input validated with Zod and duplicate checks added.
+
+- Wire TaskModal 'New Project' flow to backend
+
+  - `src/components/TaskModal.tsx` now calls project creation (via API or local store), performs optimistic updates, and selects the created project. It supports creating a task alongside the project via a toggle.
+
+- Change the Projects View
+
+  - Project cards restyled and behavior updated (folder icon, project-only directories, delete via reusable `ConfirmModal`, responsive grid layout). Sidebar Projects dropdown added as specified (shows current tasks, opens when active, uses `framer-motion`).
+
+If you prefer a different date or more granular notes per task, I can expand these entries.

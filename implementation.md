@@ -156,3 +156,39 @@ Design principles:
 - Consider use of `use-immer` with Zustand for deep state
 - Consider optimistic updates with React Query for faster UI
 - Think about "focus mode" — only show one task at a time
+
+---
+
+## ✅ Completed tasks
+
+The following items were completed and moved from `TODO.md` on 2025-09-17 to keep the todo list focused on next actionable work.
+
+- Implement Projects table & migration (Prisma)
+
+  - Added `Project` model to `prisma/schema.prisma`, created & applied migration, and ran `prisma generate`.
+
+- Add Projects API (tRPC router)
+
+  - Created a `projects` router with `createProject`, `listProjects`, and `getProject` endpoints. Input validated with Zod and duplicate checks added.
+
+- Wire TaskModal 'New Project' flow to backend
+
+  - `src/components/TaskModal.tsx` now calls project creation (via API or local store), performs optimistic updates, and selects the created project. It supports creating a task alongside the project via a toggle.
+
+- Change the Projects View
+
+  - Project cards restyled and behavior updated (folder icon, project-only directories, delete via reusable `ConfirmModal`, responsive grid layout). Sidebar Projects dropdown added as specified (shows current tasks, opens when active, uses `framer-motion`).
+
+If you prefer a different date or more granular notes per task, I can expand these entries.
+
+---
+
+## 🛠 Development process (team policy)
+
+This repository follows a small, repeatable process to keep work focused and production-ready. Documented here so collaborators and CI checks can reference it.
+
+1. Prioritize the next work in this order: UI/UX development for immediate features → key backend functionality required for production → polish, accessibility, and maintenance.
+2. Use `TODO.md` as the single source of current tasks. Keep it up to date: every push should only include changes that preserve or update `TODO.md` to reflect current priorities (add, complete, reorder). Small commits still update `TODO.md`.
+3. When tasks are finished, mark them completed in `TODO.md` and move the completed checklist items into `implementation.md` under "Completed tasks" with a short date/note.
+
+Follow these rules during development and in pull requests. If you'd like, I can add a lightweight Git commit hook or GitHub Action to remind authors to update `TODO.md` on PR creation.

@@ -5,6 +5,7 @@ import useTaskStore, { Task } from '../lib/taskStore';
 import useProjectStore from '../lib/projectStore';
 import TimerWidget from './TimerWidget';
 import DailyTaskCard from './DailyTaskCard';
+import NativeSortableDaily from './NativeSortableDaily';
 import EditTaskModal from './EditTaskModal';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 import CreateDailyModal from './CreateDailyModal';
@@ -142,32 +143,44 @@ export default function DailiesClient() {
           <div className="mt-4">
             <section className="mb-[74px]">
               <div className="overflow-y-auto transition-all duration-300 ease-in-out pt-4 pl-4 pr-4 pb-2">
-                <ul className="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6">
-                  {daily.length === 0 && (
-                    <li className="text-sm text-neutral-content">No items.</li>
-                  )}
-                  {daily.map((t) => (
-                    <li key={t.id}>
-                      <DailyTaskCard
-                        task={{
-                          id: t.id,
-                          title: t.title,
-                          notes: t.notes,
-                          started: !!t.started,
-                          completed: !!t.completed,
-                          href: undefined,
-                          projectName: projects.find((p) => p.id === t.projectId)?.name,
-                        }}
-                        onToggle={toggle}
-                        onEdit={edit}
-                        onDelete={(id: string) => {
-                          const found = tasks.find((x) => x.id === id) ?? null;
-                          setDeleting(found);
-                        }}
-                      />
-                    </li>
-                  ))}
-                </ul>
+                {daily.length === 0 ? (
+                  <div className="text-sm text-neutral-content">No items.</div>
+                ) : (
+                  <NativeSortableDaily
+                    items={daily.map((t) => ({
+                      id: t.id,
+                      title: t.title,
+                      notes: t.notes,
+                      started: !!t.started,
+                      completed: !!t.completed,
+                      href: undefined,
+                      projectName: projects.find((p) => p.id === t.projectId)?.name,
+                    }))}
+                    onReorder={(next) => {
+                      // next is array of DailyTask-like objects in new order; map back to Task order
+                      const idOrder = next.map((n) => n.id);
+                      const reordered = idOrder
+                        .map((id) => tasks.find((t) => t.id === id))
+                        .filter(Boolean) as typeof tasks;
+                      // persist ordering in store
+                      useTaskStore.getState().setTasks(reordered);
+                    }}
+                    renderItem={(t) => (
+                      <div className="mb-6" key={t.id}>
+                        <DailyTaskCard
+                          task={t}
+                          onToggle={toggle}
+                          onEdit={edit}
+                          onDelete={(id: string) => {
+                            const found = tasks.find((x) => x.id === id) ?? null;
+                            setDeleting(found);
+                          }}
+                        />
+                      </div>
+                    )}
+                    containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
+                  />
+                )}
               </div>
             </section>
           </div>

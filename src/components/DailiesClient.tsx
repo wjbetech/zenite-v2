@@ -1,18 +1,30 @@
 'use client';
 
 import React from 'react';
-import TaskSection from './TaskSection';
 import useTaskStore, { Task } from '../lib/taskStore';
+import useProjectStore from '../lib/projectStore';
 import TimerWidget from './TimerWidget';
+import DailyTaskCard from './DailyTaskCard';
+import EditTaskModal from './EditTaskModal';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
+import CreateDailyModal from './CreateDailyModal';
 
 export default function DailiesClient() {
   const tasks = useTaskStore((s) => s.tasks) as Task[];
   const deleteTask = useTaskStore((s) => s.deleteTask);
+  const updateTask = useTaskStore((s) => s.updateTask);
+  const projects = useProjectStore((s) => s.projects);
   const resetIfNeeded = useTaskStore((s) => s.resetDailiesIfNeeded);
   const resetNow = useTaskStore((s) => s.resetDailiesNow);
-  const edit = (t: Task) => {
-    // placeholder: open modal? For now just console
-    console.log('edit', t.id);
+  const [editing, setEditing] = React.useState<Task | null>(null);
+  const [deleting, setDeleting] = React.useState<Task | null>(null);
+  const [creating, setCreating] = React.useState(false);
+  const edit = (t: Partial<Task> | string) => {
+    // accept either a Task-like object or an id string
+    const id = typeof t === 'string' ? t : t?.id;
+    if (!id) return;
+    const found = tasks.find((x) => x.id === id) ?? null;
+    if (found) setEditing(found);
   };
 
   const daily = tasks.filter((t) => (t.recurrence ?? 'once') === 'daily');
@@ -60,6 +72,27 @@ export default function DailiesClient() {
     };
   }, [resetIfNeeded, resetNow]);
 
+  const toggle = (id: string) => {
+    const t = tasks.find((x) => x.id === id);
+    if (!t) return;
+    if (t.completed) {
+      updateTask(id, { completed: false, started: false });
+      return;
+    }
+    if (t.started) {
+      updateTask(id, { started: false, completed: true });
+      return;
+    }
+    updateTask(id, { started: true, completed: false });
+  };
+
+  const handleSave = (id: string, patch: Partial<Task>) => {
+    updateTask(id, patch);
+    setEditing(null);
+  };
+
+  // deletion is handled from the task card directly; modal no longer supports delete
+
   return (
     <main className="p-6">
       <div className="flex flex-col gap-4">
@@ -68,13 +101,33 @@ export default function DailiesClient() {
           <h1 className="text-3xl md:text-2xl font-semibold mb-0 text-center md:text-left md:pl-4 w-full md:w-auto">
             Dailies
           </h1>
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center gap-3">
             <button
               onClick={() => setTimerOpen((s) => !s)}
               className="text-sm text-gray-500 hover:text-gray-700"
               aria-expanded={timerOpen}
             >
               {timerOpen ? 'Hide timer' : 'Show timer'}
+            </button>
+            <button
+              onClick={() => {
+                // open create modal; after creation we'll allow editing
+                setCreating(true);
+              }}
+              className="btn btn-success btn-sm"
+              aria-label="Add daily task"
+            >
+              + Add Daily Task
+            </button>
+          </div>
+          {/* mobile add button - small and visible on md:hidden */}
+          <div className="flex md:hidden items-center gap-3">
+            <button
+              onClick={() => setCreating(true)}
+              className="btn btn-ghost btn-sm"
+              aria-label="Add daily task"
+            >
+              + Add
             </button>
           </div>
         </div>
@@ -87,15 +140,56 @@ export default function DailiesClient() {
           </div>
 
           <div className="mt-4">
-            <TaskSection
-              tasks={daily}
-              accentClass="border-emerald-400"
-              onEdit={edit}
-              onDelete={deleteTask}
-            />
+            <section className="mb-[74px]">
+              <div className="overflow-y-auto transition-all duration-300 ease-in-out pt-4 pl-4 pr-4 pb-2">
+                <ul className="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6">
+                  {daily.length === 0 && (
+                    <li className="text-sm text-neutral-content">No items.</li>
+                  )}
+                  {daily.map((t) => (
+                    <li key={t.id}>
+                      <DailyTaskCard
+                        task={{
+                          id: t.id,
+                          title: t.title,
+                          notes: t.notes,
+                          started: !!t.started,
+                          completed: !!t.completed,
+                          href: undefined,
+                          projectName: projects.find((p) => p.id === t.projectId)?.name,
+                        }}
+                        onToggle={toggle}
+                        onEdit={edit}
+                        onDelete={(id: string) => {
+                          const found = tasks.find((x) => x.id === id) ?? null;
+                          setDeleting(found);
+                        }}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
           </div>
         </div>
       </div>
+      <EditTaskModal
+        open={!!editing}
+        onOpenChange={(v) => !v && setEditing(null)}
+        task={editing}
+        onSave={handleSave}
+      />
+      <CreateDailyModal open={creating} onOpenChange={(v) => setCreating(v)} />
+      <ConfirmDeleteModal
+        open={!!deleting}
+        onCancel={() => setDeleting(null)}
+        itemTitle={deleting?.title}
+        onConfirm={() => {
+          if (!deleting) return;
+          deleteTask(deleting.id);
+          setDeleting(null);
+        }}
+      />
     </main>
   );
 }

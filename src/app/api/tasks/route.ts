@@ -17,6 +17,18 @@ export async function POST(request: Request) {
     // server-side auth integration (Clerk) deferred for now
     const userId = ownerId;
 
+    // Enforce per-user daily task limit when creating daily recurrence tasks
+    // If the client requests a daily task and the user already has 10 or more
+    // daily tasks, reject the creation with a 400.
+    if ((body.recurrence || '').toString() === 'daily' && userId) {
+      const existingDaily = await prisma.task.count({
+        where: { ownerId: userId, recurrence: 'daily' },
+      });
+      if (existingDaily >= 10) {
+        return NextResponse.json({ error: 'daily task limit reached' }, { status: 400 });
+      }
+    }
+
     const task = await prisma.task.create({
       data: { title, description, ownerId: userId || undefined, projectId: projectId || undefined },
     });

@@ -8,6 +8,8 @@ import TimerWidget from './TimerWidget';
 export default function DailiesClient() {
   const tasks = useTaskStore((s) => s.tasks) as Task[];
   const deleteTask = useTaskStore((s) => s.deleteTask);
+  const resetIfNeeded = useTaskStore((s) => s.resetDailiesIfNeeded);
+  const resetNow = useTaskStore((s) => s.resetDailiesNow);
   const edit = (t: Task) => {
     // placeholder: open modal? For now just console
     console.log('edit', t.id);
@@ -15,6 +17,48 @@ export default function DailiesClient() {
 
   const daily = tasks.filter((t) => (t.recurrence ?? 'once') === 'daily');
   const [timerOpen, setTimerOpen] = React.useState(false); // default closed
+
+  // Run reset check on mount, on visibility/focus, and schedule next midnight reset
+  React.useEffect(() => {
+    // initial check
+    try {
+      resetIfNeeded();
+    } catch (e) {
+      console.error('error running resetIfNeeded', e);
+    }
+
+    let timeoutId: number | undefined;
+
+    const scheduleNext = () => {
+      const now = new Date();
+      const next = new Date(now);
+      next.setDate(now.getDate() + 1);
+      next.setHours(0, 0, 0, 0);
+      const ms = next.getTime() - now.getTime();
+      timeoutId = window.setTimeout(() => {
+        try {
+          resetNow();
+        } catch (e) {
+          console.error('error running resetNow', e);
+        }
+        // schedule again for the following midnight
+        scheduleNext();
+      }, ms);
+    };
+
+    scheduleNext();
+
+    const onVisibility = () => resetIfNeeded();
+    const onFocus = () => resetIfNeeded();
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [resetIfNeeded, resetNow]);
 
   return (
     <main className="p-6">

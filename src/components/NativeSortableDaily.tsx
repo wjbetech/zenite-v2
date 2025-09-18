@@ -51,6 +51,117 @@ export default function NativeSortableDaily<T extends Item>({
   const windowMoveRef = React.useRef<((e: PointerEvent) => void) | null>(null);
   const rafRef = React.useRef<number | null>(null);
 
+  // Helper: cleanup a pending drag state (can be called from different places)
+  const cleanupPending = () => {
+    try {
+      if (
+        dragState.current.capturedEl &&
+        dragState.current.pointerId &&
+        dragState.current.pointerId !== -1
+      ) {
+        dragState.current.capturedEl.releasePointerCapture?.(dragState.current.pointerId as number);
+      }
+    } catch {}
+    dragState.current.pending = false;
+    dragState.current.pointerId = -1;
+    dragState.current.candidateEl = null;
+    dragState.current.startX = 0;
+    dragState.current.startY = 0;
+    dragState.current.pendingIndex = -1;
+    window.removeEventListener('pointermove', handlePendingMove, true);
+    window.removeEventListener('pointerup', handlePendingUp, true);
+  };
+
+  // Promote a pending drag into an active drag using values stored on dragState.current
+  const promoteToDrag = () => {
+    window.removeEventListener('pointermove', handlePendingMove, true);
+    window.removeEventListener('pointerup', handlePendingUp, true);
+    dragState.current.pending = false;
+
+    const pointerId = dragState.current.pointerId as number;
+    const candidateEl = dragState.current.candidateEl as Element;
+    const pendingIdx = dragState.current.pendingIndex ?? 0;
+    const id = items[pendingIdx]?.id;
+    const el = id ? itemRefs.current.get(id) : null;
+    try {
+      candidateEl?.setPointerCapture?.(pointerId as number);
+      dragState.current.capturedEl = candidateEl;
+    } catch {}
+    const contTop = containerRef.current?.getBoundingClientRect().top ?? 0;
+    const rect = el?.getBoundingClientRect();
+    const startY = dragState.current.startY ?? 0;
+    dragState.current.startY = startY;
+    dragState.current.initialTop = rect ? rect.top - contTop : 0;
+    dragState.current.originalIndex = pendingIdx;
+    dragState.current.placeholderIndex = pendingIdx;
+    dragState.current.pointerId = pointerId;
+    dragState.current.lastDrop = dragState.current.lastDrop || 0;
+
+    setDragTop(rect ? rect.top - contTop : 0);
+    setDragHeight(rect ? rect.height : 0);
+    if (id) setDraggingId(id);
+    setTick((k: number) => k + 1);
+
+    // attach the active global pointermove handler used during a drag
+    const onWindowMove = (moveEvent: PointerEvent) => {
+      try {
+        moveEvent.preventDefault?.();
+      } catch {}
+      const s = dragState.current;
+      if (!s) return;
+      if (typeof moveEvent.buttons === 'number' && moveEvent.buttons === 0) {
+        finishDrag();
+        return;
+      }
+      const delta = moveEvent.clientY - s.startY;
+      const top = s.initialTop + delta;
+      setDragTop(top);
+
+      if (!cachedMidpoints.current) recomputeCachedMidpoints();
+      const mids = cachedMidpoints.current || [];
+      const center = top + dragHeight / 2;
+      let lo = 0;
+      let hi = mids.length;
+      while (lo < hi) {
+        const m = Math.floor((lo + hi) / 2);
+        if (center < mids[m].mid) hi = m;
+        else lo = m + 1;
+      }
+      const newIndex = Math.max(0, Math.min(mids.length, lo));
+      if (newIndex !== s.placeholderIndex) {
+        s.placeholderIndex = newIndex;
+        setTick((k: number) => k + 1);
+      }
+    };
+    windowMoveRef.current = onWindowMove;
+    window.addEventListener('pointermove', onWindowMove, { passive: false });
+    recomputeCachedMidpoints();
+    window.addEventListener('resize', recomputeCachedMidpoints, true);
+    window.addEventListener('scroll', recomputeCachedMidpoints, true);
+  };
+
+  const handlePendingMove = (we: PointerEvent) => {
+    // If no buttons are pressed, cancel pending (user likely lifted finger).
+    if (typeof we.buttons === 'number' && we.buttons === 0) {
+      cleanupPending();
+      return;
+    }
+    const startX = dragState.current.startX ?? 0;
+    const startY = dragState.current.startY ?? 0;
+    const dx = we.clientX - startX;
+    const dy = we.clientY - startY;
+    const threshold = 6;
+    if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
+      // promote to active drag
+      promoteToDrag();
+    }
+  };
+
+  const handlePendingUp = () => {
+    // user released before threshold — cancel pending and allow click
+    cleanupPending();
+  };
+
   // measurePositions removed: we now use cachedMidpoints and DOM reads only on drag start/resize/scroll
 
   // Cached midpoints used during an active drag to avoid recomputing DOM
@@ -69,23 +180,59 @@ export default function NativeSortableDaily<T extends Item>({
     });
   };
 
+  // Helper: decide whether a pointerdown should be ignored (interactive element)
+  const shouldIgnorePointerDown = (e: React.PointerEvent) => {
+    if (e.button && e.button !== 0) return true;
+    const tgt = e.target as Element | null;
+    if (tgt && tgt.closest && tgt.closest('button,a,input,textarea,select,[role="button"]')) {
+      return true;
+    }
+    if (draggingId) return true;
+    const now = Date.now();
+    if (dragState.current.lastDrop && now - dragState.current.lastDrop < 200) return true;
+    return false;
+  };
+
+  // Helper: start a pending drag — extracts the state setup and listener registration
+  const startPendingDrag = (
+    id: string,
+    index: number,
+    candidateEl: Element,
+    startX: number,
+    startY: number,
+    pointerId: number,
+  ) => {
+    dragState.current.pending = true;
+    dragState.current.pointerId = pointerId;
+    dragState.current.candidateEl = candidateEl;
+    dragState.current.startX = startX;
+    dragState.current.startY = startY;
+    dragState.current.pendingIndex = index;
+
+    // attach pending listeners (use capture so we see them early)
+    window.addEventListener('pointermove', handlePendingMove, true);
+    window.addEventListener('pointerup', handlePendingUp, true);
+  };
+
+  const computePlaceholderIndex = (top: number) => {
+    if (!cachedMidpoints.current) recomputeCachedMidpoints();
+    const mids = cachedMidpoints.current || [];
+    const center = top + dragHeight / 2;
+    let lo = 0;
+    let hi = mids.length;
+    while (lo < hi) {
+      const m = Math.floor((lo + hi) / 2);
+      if (center < mids[m].mid) hi = m;
+      else lo = m + 1;
+    }
+    return Math.max(0, Math.min(mids.length, lo));
+  };
+
   // we use a placeholder element to hold layout space while dragging;
   // cachedMidpoints are used for fast index calculation
 
   const handlePointerDown = (e: React.PointerEvent, id: string, index: number) => {
-    // ignore non-primary buttons
-    if (e.button && e.button !== 0) return;
-    // If the pointerdown started on an interactive control (button, link,
-    // input, textarea, select or any element with role=button), do not begin
-    // a drag. Use `closest` to detect interactive ancestors so nested markup
-    // works correctly.
-    const tgt = e.target as Element | null;
-    if (tgt && tgt.closest && tgt.closest('button,a,input,textarea,select,[role="button"]')) {
-      return;
-    }
-    if (draggingId) return;
-    const now = Date.now();
-    if (dragState.current.lastDrop && now - dragState.current.lastDrop < 200) return;
+    if (shouldIgnorePointerDown(e)) return;
     const el = itemRefs.current.get(id);
     if (!el) return;
 
@@ -97,124 +244,7 @@ export default function NativeSortableDaily<T extends Item>({
     const startY = e.clientY;
     const pointerId = e.pointerId;
     const candidateEl = e.currentTarget as Element;
-    dragState.current.pending = true;
-    dragState.current.pointerId = pointerId;
-    dragState.current.candidateEl = candidateEl;
-    dragState.current.startX = startX;
-    dragState.current.startY = startY;
-    dragState.current.pendingIndex = index;
-
-    const threshold = 6; // pixels
-
-    const onPendingMove = (we: PointerEvent) => {
-      // If no buttons are pressed, cancel pending (user likely lifted finger).
-      if (typeof we.buttons === 'number' && we.buttons === 0) {
-        cleanupPending();
-        return;
-      }
-      const dx = we.clientX - startX;
-      const dy = we.clientY - startY;
-      if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
-        // promote to active drag
-        promoteToDrag();
-      }
-    };
-
-    const onPendingUp = () => {
-      // user released before threshold — cancel pending and allow click
-      cleanupPending();
-    };
-
-    const cleanupPending = () => {
-      // release pointer capture if we set it
-      try {
-        if (
-          dragState.current.capturedEl &&
-          dragState.current.pointerId &&
-          dragState.current.pointerId !== -1
-        ) {
-          dragState.current.capturedEl.releasePointerCapture?.(
-            dragState.current.pointerId as number,
-          );
-        }
-      } catch {}
-      dragState.current.pending = false;
-      dragState.current.pointerId = -1;
-      dragState.current.candidateEl = null;
-      dragState.current.startX = 0;
-      dragState.current.startY = 0;
-      dragState.current.pendingIndex = -1;
-      window.removeEventListener('pointermove', onPendingMove, true);
-      window.removeEventListener('pointerup', onPendingUp, true);
-    };
-
-    const promoteToDrag = () => {
-      window.removeEventListener('pointermove', onPendingMove, true);
-      window.removeEventListener('pointerup', onPendingUp, true);
-      dragState.current.pending = false;
-
-      // attempt to capture the pointer now that we're promoting to a drag
-      try {
-        candidateEl.setPointerCapture?.(pointerId as number);
-        dragState.current.capturedEl = candidateEl;
-      } catch {}
-      const contTop = containerRef.current?.getBoundingClientRect().top ?? 0;
-      const rect = el.getBoundingClientRect();
-      dragState.current.startY = startY;
-      dragState.current.initialTop = rect.top - contTop;
-      dragState.current.originalIndex = index;
-      dragState.current.placeholderIndex = index;
-      dragState.current.pointerId = pointerId;
-      dragState.current.lastDrop = dragState.current.lastDrop || 0;
-
-      setDragTop(rect.top - contTop);
-      setDragHeight(rect.height);
-      setDraggingId(id);
-      // ensure re-render with dragged removed
-      setTick((k: number) => k + 1);
-      console.debug('[NativeSortableDaily] drag promoted', { id, index });
-
-      // attach the active global pointermove handler used during a drag
-      const onWindowMove = (moveEvent: PointerEvent) => {
-        try {
-          moveEvent.preventDefault?.();
-        } catch {}
-        const s = dragState.current;
-        if (!s) return;
-        if (typeof moveEvent.buttons === 'number' && moveEvent.buttons === 0) {
-          finishDrag();
-          return;
-        }
-        const delta = moveEvent.clientY - s.startY;
-        const top = s.initialTop + delta;
-        setDragTop(top);
-
-        if (!cachedMidpoints.current) recomputeCachedMidpoints();
-        const mids = cachedMidpoints.current || [];
-        const center = top + dragHeight / 2;
-        let lo = 0;
-        let hi = mids.length;
-        while (lo < hi) {
-          const m = Math.floor((lo + hi) / 2);
-          if (center < mids[m].mid) hi = m;
-          else lo = m + 1;
-        }
-        const newIndex = Math.max(0, Math.min(mids.length, lo));
-        if (newIndex !== s.placeholderIndex) {
-          s.placeholderIndex = newIndex;
-          setTick((k: number) => k + 1);
-        }
-      };
-      windowMoveRef.current = onWindowMove;
-      window.addEventListener('pointermove', onWindowMove, { passive: false });
-      recomputeCachedMidpoints();
-      window.addEventListener('resize', recomputeCachedMidpoints, true);
-      window.addEventListener('scroll', recomputeCachedMidpoints, true);
-    };
-
-    // attach pending listeners (use capture so we see them early)
-    window.addEventListener('pointermove', onPendingMove, true);
-    window.addEventListener('pointerup', onPendingUp, true);
+    startPendingDrag(id, index, candidateEl, startX, startY, pointerId);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
@@ -231,18 +261,7 @@ export default function NativeSortableDaily<T extends Item>({
     const delta = e.clientY - s.startY;
     const top = s.initialTop + delta;
     setDragTop(top);
-
-    if (!cachedMidpoints.current) recomputeCachedMidpoints();
-    const mids = cachedMidpoints.current || [];
-    const center = top + dragHeight / 2;
-    let lo = 0;
-    let hi = mids.length;
-    while (lo < hi) {
-      const m = Math.floor((lo + hi) / 2);
-      if (center < mids[m].mid) hi = m;
-      else lo = m + 1;
-    }
-    const newIndex = Math.max(0, Math.min(mids.length, lo));
+    const newIndex = computePlaceholderIndex(top);
     if (newIndex !== s.placeholderIndex) {
       s.placeholderIndex = newIndex;
       setTick((k: number) => k + 1);

@@ -21,6 +21,13 @@ jest.mock('src/lib/prisma', () => ({
     update: jest.fn(),
     delete: jest.fn(),
   },
+  task: {
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    findUnique: jest.fn(),
+  },
 }));
 
 import prisma from 'src/lib/prisma';

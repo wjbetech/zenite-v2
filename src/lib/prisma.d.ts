@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+// Auto-generated minimal declaration to help tests mock `src/lib/prisma`
 declare module 'src/lib/prisma' {
-  // Use very permissive any types for the mocked prisma client used in tests
   const prisma: any;
-
   export default prisma;
+  export { prisma };
 }

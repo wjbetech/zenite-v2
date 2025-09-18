@@ -21,186 +21,387 @@ export default function NativeSortableDaily<T extends Item>({
   const itemRefs = React.useRef(new Map<string, HTMLDivElement>());
 
   const [draggingId, setDraggingId] = React.useState<string | null>(null);
-  const dragState = React.useRef({
+  const [dragTop, setDragTop] = React.useState<number>(0);
+  const [dragHeight, setDragHeight] = React.useState<number>(0);
+  const [, setTick] = React.useState(0);
+
+  const dragState = React.useRef<{
+    startY: number;
+    initialTop: number;
+    originalIndex: number;
+    placeholderIndex: number;
+    pointerId: number;
+    capturedEl: Element | null;
+    lastDrop: number;
+    // optional pending-state fields
+    pending?: boolean;
+    candidateEl?: Element | null;
+    startX?: number;
+    // startY already declared above; kept for active drag
+    pendingIndex?: number;
+  }>({
     startY: 0,
-    draggedHeight: 0,
+    initialTop: 0,
     originalIndex: 0,
     placeholderIndex: 0,
-    positions: [] as Array<{ id: string; top: number; height: number }>,
     pointerId: -1,
-    capturedEl: null as Element | null,
+    capturedEl: null,
+    lastDrop: 0,
   });
+  const windowMoveRef = React.useRef<((e: PointerEvent) => void) | null>(null);
+  const rafRef = React.useRef<number | null>(null);
 
-  // keep a stable original order when a drag starts
-  const originalOrderRef = React.useRef<string[]>(items.map((i) => i.id));
+  // measurePositions removed: we now use cachedMidpoints and DOM reads only on drag start/resize/scroll
 
-  React.useEffect(() => {
-    if (!draggingId) originalOrderRef.current = items.map((i) => i.id);
-  }, [items, draggingId]);
+  // Cached midpoints used during an active drag to avoid recomputing DOM
+  // measurements on every pointer move which can cause jumps and skipped items.
+  const cachedMidpoints = React.useRef<{ id: string; mid: number }[] | null>(null);
 
-  const measure = () => {
-    const positions: Array<{ id: string; top: number; height: number }> = [];
+  const recomputeCachedMidpoints = () => {
     const contTop = containerRef.current?.getBoundingClientRect().top ?? 0;
-    items.forEach((it) => {
+    const list = draggingId ? items.filter((it) => it.id !== draggingId) : items;
+    cachedMidpoints.current = list.map((it) => {
       const el = itemRefs.current.get(it.id);
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      // top relative to container's top in viewport coordinates
-      positions.push({ id: it.id, top: r.top - contTop, height: r.height });
+      const r = el?.getBoundingClientRect();
+      const top = r ? r.top - contTop : 0;
+      const height = r ? r.height : 0;
+      return { id: it.id, mid: top + height / 2 };
     });
-    return positions;
   };
 
-  // helper removed - logic is handled inline in pointer move
+  // we use a placeholder element to hold layout space while dragging;
+  // cachedMidpoints are used for fast index calculation
 
   const handlePointerDown = (e: React.PointerEvent, id: string, index: number) => {
-    // only left click or touch
+    // ignore non-primary buttons
     if (e.button && e.button !== 0) return;
-    // capture pointer on the element that has the listener so we continue to get move/up events
-    try {
-      (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
-      dragState.current.capturedEl = e.currentTarget as Element;
-    } catch {}
-    e.currentTarget.classList.add('dragging');
-    const positions = measure();
-    const el = itemRefs.current.get(id)!;
-    dragState.current = {
-      startY: e.clientY,
-      draggedHeight: el.getBoundingClientRect().height,
-      originalIndex: index,
-      placeholderIndex: index,
-      positions,
-      pointerId: e.pointerId,
-      capturedEl: dragState.current.capturedEl,
+    // If the pointerdown started on an interactive control (button, link,
+    // input, textarea, select or any element with role=button), do not begin
+    // a drag. Use `closest` to detect interactive ancestors so nested markup
+    // works correctly.
+    const tgt = e.target as Element | null;
+    if (tgt && tgt.closest && tgt.closest('button,a,input,textarea,select,[role="button"]')) {
+      return;
+    }
+    if (draggingId) return;
+    const now = Date.now();
+    if (dragState.current.lastDrop && now - dragState.current.lastDrop < 200) return;
+    const el = itemRefs.current.get(id);
+    if (!el) return;
+
+    // Start a "pending" drag. We do NOT set pointer capture or mutate DOM yet.
+    // If the pointer moves beyond a small threshold, we promote to a real
+    // drag; if the pointer is released before that, we cancel and allow a
+    // normal click to proceed.
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const pointerId = e.pointerId;
+    const candidateEl = e.currentTarget as Element;
+    dragState.current.pending = true;
+    dragState.current.pointerId = pointerId;
+    dragState.current.candidateEl = candidateEl;
+    dragState.current.startX = startX;
+    dragState.current.startY = startY;
+    dragState.current.pendingIndex = index;
+
+    const threshold = 6; // pixels
+
+    const onPendingMove = (we: PointerEvent) => {
+      // If no buttons are pressed, cancel pending (user likely lifted finger).
+      if (typeof we.buttons === 'number' && we.buttons === 0) {
+        cleanupPending();
+        return;
+      }
+      const dx = we.clientX - startX;
+      const dy = we.clientY - startY;
+      if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
+        // promote to active drag
+        promoteToDrag();
+      }
     };
-    setDraggingId(id);
+
+    const onPendingUp = () => {
+      // user released before threshold — cancel pending and allow click
+      cleanupPending();
+    };
+
+    const cleanupPending = () => {
+      // release pointer capture if we set it
+      try {
+        if (
+          dragState.current.capturedEl &&
+          dragState.current.pointerId &&
+          dragState.current.pointerId !== -1
+        ) {
+          dragState.current.capturedEl.releasePointerCapture?.(
+            dragState.current.pointerId as number,
+          );
+        }
+      } catch {}
+      dragState.current.pending = false;
+      dragState.current.pointerId = -1;
+      dragState.current.candidateEl = null;
+      dragState.current.startX = 0;
+      dragState.current.startY = 0;
+      dragState.current.pendingIndex = -1;
+      window.removeEventListener('pointermove', onPendingMove, true);
+      window.removeEventListener('pointerup', onPendingUp, true);
+    };
+
+    const promoteToDrag = () => {
+      window.removeEventListener('pointermove', onPendingMove, true);
+      window.removeEventListener('pointerup', onPendingUp, true);
+      dragState.current.pending = false;
+
+      // attempt to capture the pointer now that we're promoting to a drag
+      try {
+        candidateEl.setPointerCapture?.(pointerId as number);
+        dragState.current.capturedEl = candidateEl;
+      } catch {}
+      const contTop = containerRef.current?.getBoundingClientRect().top ?? 0;
+      const rect = el.getBoundingClientRect();
+      dragState.current.startY = startY;
+      dragState.current.initialTop = rect.top - contTop;
+      dragState.current.originalIndex = index;
+      dragState.current.placeholderIndex = index;
+      dragState.current.pointerId = pointerId;
+      dragState.current.lastDrop = dragState.current.lastDrop || 0;
+
+      setDragTop(rect.top - contTop);
+      setDragHeight(rect.height);
+      setDraggingId(id);
+      // ensure re-render with dragged removed
+      setTick((k: number) => k + 1);
+      console.debug('[NativeSortableDaily] drag promoted', { id, index });
+
+      // attach the active global pointermove handler used during a drag
+      const onWindowMove = (moveEvent: PointerEvent) => {
+        try {
+          moveEvent.preventDefault?.();
+        } catch {}
+        const s = dragState.current;
+        if (!s) return;
+        if (typeof moveEvent.buttons === 'number' && moveEvent.buttons === 0) {
+          finishDrag();
+          return;
+        }
+        const delta = moveEvent.clientY - s.startY;
+        const top = s.initialTop + delta;
+        setDragTop(top);
+
+        if (!cachedMidpoints.current) recomputeCachedMidpoints();
+        const mids = cachedMidpoints.current || [];
+        const center = top + dragHeight / 2;
+        let lo = 0;
+        let hi = mids.length;
+        while (lo < hi) {
+          const m = Math.floor((lo + hi) / 2);
+          if (center < mids[m].mid) hi = m;
+          else lo = m + 1;
+        }
+        const newIndex = Math.max(0, Math.min(mids.length, lo));
+        if (newIndex !== s.placeholderIndex) {
+          s.placeholderIndex = newIndex;
+          setTick((k: number) => k + 1);
+        }
+      };
+      windowMoveRef.current = onWindowMove;
+      window.addEventListener('pointermove', onWindowMove, { passive: false });
+      recomputeCachedMidpoints();
+      window.addEventListener('resize', recomputeCachedMidpoints, true);
+      window.addEventListener('scroll', recomputeCachedMidpoints, true);
+    };
+
+    // attach pending listeners (use capture so we see them early)
+    window.addEventListener('pointermove', onPendingMove, true);
+    window.addEventListener('pointerup', onPendingUp, true);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!draggingId) return;
     e.preventDefault();
     const s = dragState.current;
-    const delta = e.clientY - s.startY;
-    // compute where the center of the dragged item would be
-    const draggedCenter = s.positions[s.originalIndex].top + s.draggedHeight / 2 + delta;
-    // find new placeholder index
-    let newIndex = s.positions.length - 1;
-    const HYSTERESIS = Math.min(12, s.draggedHeight * 0.15); // avoid tiny, jittery changes
-    for (let i = 0; i < s.positions.length; i++) {
-      const mid = s.positions[i].top + s.positions[i].height / 2;
-      if (draggedCenter < mid - HYSTERESIS) {
-        newIndex = i;
-        break;
+    if (!s) return;
+    try {
+      if (typeof e.buttons === 'number' && e.buttons === 0) {
+        finishDrag();
+        return;
       }
+    } catch {}
+    const delta = e.clientY - s.startY;
+    const top = s.initialTop + delta;
+    setDragTop(top);
+
+    if (!cachedMidpoints.current) recomputeCachedMidpoints();
+    const mids = cachedMidpoints.current || [];
+    const center = top + dragHeight / 2;
+    let lo = 0;
+    let hi = mids.length;
+    while (lo < hi) {
+      const m = Math.floor((lo + hi) / 2);
+      if (center < mids[m].mid) hi = m;
+      else lo = m + 1;
     }
+    const newIndex = Math.max(0, Math.min(mids.length, lo));
     if (newIndex !== s.placeholderIndex) {
       s.placeholderIndex = newIndex;
-      // force update for transforms by toggling state
-      // (no-op state) to trigger re-render
-      setRenderKey((k) => k + 1);
+      setTick((k: number) => k + 1);
     }
-    // update dragged element transform directly for smoother follow
-    const draggedEl = itemRefs.current.get(draggingId!);
-    if (draggedEl) {
-      draggedEl.style.transform = `translateY(${delta}px)`;
-      draggedEl.style.zIndex = '60';
-      draggedEl.style.transition = 'none';
-      draggedEl.style.boxShadow = '0 8px 20px rgba(0,0,0,0.12)';
-    }
-    // set transforms for others via state render
   };
 
-  const [renderKey, setRenderKey] = React.useState(0);
-
-  const handlePointerUp = () => {
+  const finishDrag = () => {
     if (!draggingId) return;
+    console.debug('[NativeSortableDaily] finishDrag start', {
+      draggingId,
+      placeholder: dragState.current.placeholderIndex,
+    });
     const s = dragState.current;
     const to = s.placeholderIndex;
-    const next = [...items];
-    const movedIndex = next.findIndex((n) => n.id === draggingId);
-    const [moved] = next.splice(movedIndex, 1);
-    next.splice(to, 0, moved);
-    // release pointer capture from the captured element (if any)
+    // cancel any pending rAF
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+
+    // Build the new ordering by removing the dragged id then inserting it at
+    // the placeholder index. Map IDs back to item objects and filter out any
+    // missing entries to avoid throwing during debug logging.
+    const draggedId = draggingId as string;
+    const idList = items.map((it) => it.id);
+    const withoutId = idList.filter((x) => x !== draggedId);
+    const insertAt = Math.max(0, Math.min(to, withoutId.length));
+    const newIdOrder = [...withoutId];
+    newIdOrder.splice(insertAt, 0, draggedId);
+    const next = newIdOrder.map((id) => items.find((it) => it.id === id));
+    const nextFiltered = next.filter(Boolean) as T[];
+
+    // release pointer capture
     try {
       if (s.capturedEl && s.pointerId && s.pointerId !== -1) {
         (s.capturedEl as Element).releasePointerCapture?.(s.pointerId as number);
       }
     } catch {}
+    // record drop time and clear pointer info
+    dragState.current.lastDrop = Date.now();
+    dragState.current.pointerId = -1;
+    dragState.current.capturedEl = null;
 
-    // clear styles/classes for all tracked item elements to avoid stuck state
-    itemRefs.current.forEach((el) => {
-      try {
-        (el as HTMLElement).style.transform = '';
-        (el as HTMLElement).style.zIndex = '';
-        (el as HTMLElement).style.transition = '';
-        (el as HTMLElement).style.boxShadow = '';
-        el.classList.remove('dragging');
-      } catch {}
-    });
+    // remove global pointermove listener if attached
+    if (windowMoveRef.current) {
+      window.removeEventListener('pointermove', windowMoveRef.current);
+      windowMoveRef.current = null;
+    }
 
-    // reset drag state and re-render
+    // cleanup cached midpoints and layout listeners
+    cachedMidpoints.current = null;
+    window.removeEventListener('resize', recomputeCachedMidpoints, true);
+    window.removeEventListener('scroll', recomputeCachedMidpoints, true);
+
     setDraggingId(null);
-    setRenderKey((k) => k + 1);
-    onReorder(next);
+    setTick((k: number) => k + 1);
+    console.debug(
+      '[NativeSortableDaily] onReorder next order',
+      nextFiltered.map((n) => n.id),
+    );
+    try {
+      onReorder(nextFiltered);
+    } catch (err) {
+      console.error('[NativeSortableDaily] onReorder threw', err);
+    }
   };
 
   React.useEffect(() => {
-    const handlePointerUpWindow = () => handlePointerUp();
-    window.addEventListener('pointerup', handlePointerUpWindow);
-    return () => window.removeEventListener('pointerup', handlePointerUpWindow);
+    const onUp = () => finishDrag();
+    const onCancel = () => finishDrag();
+    // use capture so these fire even if events would be stopped by children
+    window.addEventListener('pointerup', onUp, true);
+    window.addEventListener('pointercancel', onCancel, true);
+    // add additional fallbacks for mouse and touch end events
+    window.addEventListener('mouseup', onUp, true);
+    window.addEventListener('touchend', onUp, true);
+    return () => {
+      window.removeEventListener('pointerup', onUp, true);
+      window.removeEventListener('pointercancel', onCancel, true);
+      window.removeEventListener('mouseup', onUp, true);
+      window.removeEventListener('touchend', onUp, true);
+      // ensure global pointermove is removed if still attached
+      if (windowMoveRef.current) {
+        window.removeEventListener('pointermove', windowMoveRef.current);
+        windowMoveRef.current = null;
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [items]);
 
-  // compute transforms for non-dragged items according to placeholder movement
-  const getTransformFor = (id: string) => {
-    if (!draggingId) return '';
+  // Render list with dragged item removed and placeholder inserted
+  const renderList = () => {
     const s = dragState.current;
-    const origIndex = s.positions.findIndex((p) => p.id === id);
-    if (origIndex === -1) return '';
-    const placeholder = s.placeholderIndex;
-    const draggedIndex = s.originalIndex;
-    if (id === draggingId) return '';
-    // if dragged moved down (placeholder > draggedIndex), items between draggedIndex+1..placeholder shift up by draggedHeight
-    if (placeholder > draggedIndex) {
-      if (origIndex > draggedIndex && origIndex <= placeholder) {
-        return `translateY(-${s.draggedHeight}px)`;
-      }
-    }
-    // if dragged moved up (placeholder < draggedIndex), items between placeholder..draggedIndex-1 shift down
-    if (placeholder < draggedIndex) {
-      if (origIndex >= placeholder && origIndex < draggedIndex) {
-        return `translateY(${s.draggedHeight}px)`;
-      }
-    }
-    return '';
-  };
+    const arr: React.ReactNode[] = [];
+    const without = items.filter((it) => it.id !== draggingId);
+    // placeholderIndex is tracked in dragState.current; offsets are applied via offsetsRef
 
-  return (
-    <div key={renderKey} ref={containerRef} className={containerClassName}>
-      {items.map((it, idx) => {
-        const isDragging = draggingId === it.id;
-        const transform = getTransformFor(it.id);
-        return (
+    // Insert the placeholder at the current placeholderIndex so it follows
+    // the pointer and visually indicates the drop target. This prevents
+    // sudden layout jumps because the placeholder always occupies a slot.
+    const placeholderIndex = draggingId ? s.placeholderIndex : -1;
+    for (let i = 0; i <= without.length; i++) {
+      if (i === placeholderIndex) {
+        arr.push(
+          <div
+            key={`placeholder-${i}`}
+            // collapse immediately when removed so slotting is instant
+            style={{ height: dragHeight, transition: 'none' }}
+            className="bg-transparent"
+          />,
+        );
+      }
+      if (i < without.length) {
+        const it = without[i];
+        arr.push(
           <div
             key={it.id}
             ref={(el) => {
               if (el) itemRefs.current.set(it.id, el);
               else itemRefs.current.delete(it.id);
             }}
-            onPointerDown={(e) => handlePointerDown(e, it.id, idx)}
+            onPointerDown={(e) =>
+              handlePointerDown(
+                e,
+                it.id,
+                items.findIndex((x) => x.id === it.id),
+              )
+            }
             onPointerMove={handlePointerMove}
-            className="draggable-item"
-            style={{
-              transform: isDragging ? undefined : transform,
-              transition: isDragging ? 'none' : 'transform 200ms ease',
-              touchAction: 'none',
-              cursor: 'grab',
-            }}
+            className="select-none"
           >
             {renderItem(it)}
-          </div>
+          </div>,
         );
-      })}
+      }
+    }
+    return arr;
+  };
+
+  return (
+    <div ref={containerRef} className={containerClassName} style={{ position: 'relative' }}>
+      {renderList()}
+      {draggingId && (
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: dragTop,
+            zIndex: 80,
+            pointerEvents: 'none',
+            transition: 'none',
+          }}
+        >
+          <div style={{ width: '100%', height: dragHeight }} className="shadow-lg rounded-md">
+            {renderItem(items.find((i) => i.id === draggingId) as T)}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

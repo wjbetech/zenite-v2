@@ -76,6 +76,8 @@ async function main() {
           projectId: p.id,
         });
       }
+      // Type-checking in JS files can flag Prisma enum types; allow this runtime call
+      // @ts-expect-error Allow using string enum values in createMany JS call
       await prisma.task.createMany({ data: toCreate });
     }
   }

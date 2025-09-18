@@ -9,7 +9,13 @@ import { PrismaClient } from '@prisma/client';
     console.log('Tasks:', tasks);
     console.log('Projects:', projects);
   } catch (e) {
-    console.error('Error querying DB:', e.message);
+    // `e` is `unknown` in modern TS checkers; narrow it safely before reading `.message`
+    if (e instanceof Error) {
+      console.error('Error querying DB:', e.message);
+    } else {
+      // Fallback for non-Error throws (strings, objects, etc.)
+      console.error('Error querying DB:', String(e));
+    }
     process.exitCode = 1;
   } finally {
     await prisma.$disconnect();

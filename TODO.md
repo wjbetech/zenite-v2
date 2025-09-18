@@ -55,4 +55,3 @@ These are the immediate actionable items. Completed items were moved to `impleme
 If you want, I can start working on the top item now: add the Prisma `Project` model and create the migration.
 
 - [ ] Build out drag and drop for the dailies page so that items can be reshuffled.
-

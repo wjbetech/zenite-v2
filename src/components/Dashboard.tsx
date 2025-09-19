@@ -127,12 +127,9 @@ export default function Dashboard() {
   const [modalMode, setModalMode] = useState<'task' | 'project'>('task');
   const [view, setView] = useState<'imminent' | 'new' | 'today' | 'week'>('new');
 
-  // merge sample and store tasks by id (store overrides sample)
-  const mergedById: Record<string, Task> = {};
-  [...storeTasks].forEach((t) => {
-    mergedById[t.id] = t;
-  });
-  const all = Object.values(mergedById).slice(0, 50);
+  // derive `all` directly from the store to preserve the global ordering
+  // (storeTasks is the canonical ordered list; use it as the source of truth)
+  const all = [...storeTasks].slice(0, 50);
   // decide how many items to show based on whether the heatmap is open
   const extra = heatmapOpen ? 0 : 2; // show 2 more items when heatmap closed
 
@@ -176,47 +173,22 @@ export default function Dashboard() {
           'Dashboard: week ids',
           week.map((t) => t.id),
         );
-    }
-  }, [storeTasks.length, all.length, today, week]);
 
-  // Dev-only diagnostics: log store and computed buckets so we can see why Today/Week may be empty
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(
-        'Dashboard: diagnostics -> storeTasks=',
-        storeTasks.length,
-        'all=',
-        all.length,
-        'today=',
-        today.length,
-        'week=',
-        week.length,
-      );
-      if (today.length > 0)
-        console.log(
-          'Dashboard: today ids',
-          today.map((t) => t.id),
-        );
-      if (week.length > 0)
-        console.log(
-          'Dashboard: week ids',
-          week.map((t) => t.id),
-        );
-    }
-    if (process.env.NODE_ENV !== 'production' && today.length === 0 && week.length === 0) {
-      console.log('Dashboard: detailed storeTasks dump (first 20):');
-      storeTasks.slice(0, 20).forEach((t, i) => {
-        try {
-          console.log(i, {
-            id: t.id,
-            title: t.title,
-            dueDate: t.dueDate,
-            daysUntil: daysUntil(t.dueDate),
-          });
-        } catch {
-          console.log('err dumping task', i, t && t.id);
-        }
-      });
+      if (today.length === 0 && week.length === 0) {
+        console.log('Dashboard: detailed storeTasks dump (first 20):');
+        storeTasks.slice(0, 20).forEach((t, i) => {
+          try {
+            console.log(i, {
+              id: t.id,
+              title: t.title,
+              dueDate: t.dueDate,
+              daysUntil: daysUntil(t.dueDate),
+            });
+          } catch {
+            console.log('err dumping task', i, t && t.id);
+          }
+        });
+      }
     }
   }, [storeTasks.length, all.length, today, week, storeTasks]);
   const handleStatusChange = (id: string, status: 'none' | 'done' | 'tilde') => {
@@ -234,7 +206,7 @@ export default function Dashboard() {
     // If the task wasn't in the store (updateTask returned undefined), fallback
     // to adding the patched task into the store so UI reflects the change.
     if (!updated) {
-      const base = mergedById[id];
+      const base = storeTasks.find((t) => t.id === id) ?? null;
       if (base) {
         const patched = { ...base, ...patch } as Task;
         // avoid duplicate ids
@@ -506,20 +478,20 @@ export default function Dashboard() {
                 }))}
                 onReorder={(next) => {
                   const idOrder = next.map((n) => n.id);
-                    const reordered = idOrder
-                      .map((id) => storeTasks.find((t) => t.id === id))
-                      .filter(Boolean) as typeof storeTasks;
-                    const positions: number[] = [];
-                    const idSet = new Set(idOrder);
-                    storeTasks.forEach((t, idx) => {
-                      if (idSet.has(t.id)) positions.push(idx);
-                    });
-                    const merged = [...storeTasks];
-                    for (let i = 0; i < positions.length; i++) {
-                      const pos = positions[i];
-                      merged[pos] = reordered[i] || merged[pos];
-                    }
-                    useTaskStore.getState().setTasks(merged);
+                  const reordered = idOrder
+                    .map((id) => storeTasks.find((t) => t.id === id))
+                    .filter(Boolean) as typeof storeTasks;
+                  const positions: number[] = [];
+                  const idSet = new Set(idOrder);
+                  storeTasks.forEach((t, idx) => {
+                    if (idSet.has(t.id)) positions.push(idx);
+                  });
+                  const merged = [...storeTasks];
+                  for (let i = 0; i < positions.length; i++) {
+                    const pos = positions[i];
+                    merged[pos] = reordered[i] || merged[pos];
+                  }
+                  useTaskStore.getState().setTasks(merged);
                 }}
                 renderItem={(t: {
                   id: string;

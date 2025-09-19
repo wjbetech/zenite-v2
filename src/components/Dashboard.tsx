@@ -73,25 +73,21 @@ export default function Dashboard() {
   // derive `all` directly from the store to preserve the global ordering
   // (storeTasks is the canonical ordered list; use it as the source of truth)
   const all = [...storeTasks].slice(0, 50);
-  // decide how many items to show based on whether the heatmap is open
-  const extra = heatmapOpen ? 0 : 2; // show 2 more items when heatmap closed
+  // heatmap controls layout; we no longer vary the item cap per-section
 
-  const newTasks = [...all]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5 + extra);
+  const newTasks = [...all].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
   const soonest = [...all]
     .filter((t) => t.dueDate)
-    .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
-    .slice(0, 5 + extra);
-  const today = [...all].filter((t) => t.dueDate && daysUntil(t.dueDate) === 0).slice(0, 5 + extra);
+    .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
+  const today = [...all].filter((t) => t.dueDate && daysUntil(t.dueDate) === 0);
 
-  const week = [...all]
-    .filter((t) => {
-      if (!t.dueDate) return false;
-      const days = daysUntil(t.dueDate);
-      return days >= 0 && days <= 6; // this week including today
-    })
-    .slice(0, 5 + extra);
+  const week = [...all].filter((t) => {
+    if (!t.dueDate) return false;
+    const days = daysUntil(t.dueDate);
+    return days >= 0 && days <= 6; // this week including today
+  });
 
   // Dev-only diagnostics: log store and computed buckets so we can see why Today/Week may be empty
   useEffect(() => {
@@ -259,6 +255,11 @@ export default function Dashboard() {
       </div>
       {/* Single list area that switches based on selected view */}
       <div>
+        {/* Inner scrollable area that contains only the task lists */}
+        <div
+          className="overflow-y-auto pt-4 pl-4 pr-4"
+          style={{ maxHeight: heatmapOpen ? 'calc(100vh - 18rem)' : 'calc(100vh - 10rem)' }}
+        >
         {view === 'imminent' && (
           <TaskSection
             expanded={!heatmapOpen}
@@ -282,132 +283,115 @@ export default function Dashboard() {
         )}
 
         {view === 'new' && (
-          <div
-            className={`overflow-y-auto transition-all duration-300 ease-in-out pt-4 pb-2 pl-4 pr-4`}
-            style={{ maxHeight: !heatmapOpen ? 'calc(100vh - 10rem)' : undefined }}
-          >
+          <TaskSection
+            expanded={!heatmapOpen}
+            accentClass="border-emerald-400"
+            tasks={newTasks}
+            renderRight={(t: Task) => (
+              <span className="text-xs text-white">
+                {new Date(t.createdAt).toLocaleDateString()}
+              </span>
+            )}
+            onEdit={(t) => {
+              setEditing(t);
+              setModalOpen(true);
+            }}
+            onDelete={(id) => {
+              const found = storeTasks.find((x) => x.id === id) ?? null;
+              setDeleting(found);
+            }}
+            onStatusChange={handleStatusChange}
+          />
+        )}
+
+        {view === 'today' &&
+          (today.length === 0 ? (
             <TaskSection
               expanded={!heatmapOpen}
-              accentClass="border-emerald-400"
-              tasks={newTasks}
-              renderRight={(t: Task) => (
-                <span className="text-xs text-white">
-                  {new Date(t.createdAt).toLocaleDateString()}
-                </span>
-              )}
+              accentClass="border-sky-500"
+              tasks={today}
+              renderRight={() => <span className="text-xs text-gray-100">Due today</span>}
               onEdit={(t) => {
                 setEditing(t);
                 setModalOpen(true);
               }}
-              onDelete={(id) => {
-                const found = storeTasks.find((x) => x.id === id) ?? null;
-                setDeleting(found);
-              }}
+              onDelete={(id) => deleteTask(id)}
               onStatusChange={handleStatusChange}
             />
-          </div>
-        )}
-
-        {view === 'today' && (
-          <div className="pl-4 pr-4">
-            {today.length === 0 ? (
-              <TaskSection
-                expanded={!heatmapOpen}
-                accentClass="border-sky-500"
-                tasks={today}
-                renderRight={() => <span className="text-xs text-gray-100">Due today</span>}
-                onEdit={(t) => {
-                  setEditing(t);
-                  setModalOpen(true);
-                }}
-                onDelete={(id) => deleteTask(id)}
-                onStatusChange={handleStatusChange}
-              />
-            ) : (
-              <div
-                className={`overflow-y-auto transition-all duration-300 ease-in-out pt-4 pb-2`}
-                style={{ maxHeight: !heatmapOpen ? 'calc(100vh - 10rem)' : undefined }}
-              >
-                <NativeSortableDaily
-                  items={today.map((t) => ({
-                    id: t.id,
-                    title: t.title,
-                    notes: t.notes,
-                    started: !!t.started,
-                    completed: !!t.completed,
-                    // omit `href` in draggable lists so the card isn't wrapped with an anchor
-                  }))}
-                  onReorder={(next) => {
-                    const idOrder = next.map((n) => n.id);
-                    const reordered = idOrder
-                      .map((id) => storeTasks.find((t) => t.id === id))
-                      .filter(Boolean) as typeof storeTasks;
-                    // Determine the original positions of the subset within the global store
-                    const positions: number[] = [];
-                    const idSet = new Set(idOrder);
-                    storeTasks.forEach((t, idx) => {
-                      if (idSet.has(t.id)) positions.push(idx);
-                    });
-                    // Place reordered items back into their original indices
-                    const merged = [...storeTasks];
-                    for (let i = 0; i < positions.length; i++) {
-                      const pos = positions[i];
-                      merged[pos] = reordered[i] || merged[pos];
-                    }
-                    useTaskStore.getState().setTasks(merged);
-                  }}
-                  renderItem={(t: {
-                    id: string;
-                    title: string;
-                    notes?: string;
-                    started?: boolean;
-                    completed?: boolean;
-                    href?: string;
-                  }) => (
-                    <div className="mb-6" key={t.id}>
-                      <DailyTaskCard
-                        task={{
-                          id: t.id,
-                          title: t.title,
-                          notes: t.notes,
-                          completed: !!t.completed,
-                          started: !!t.started,
-                          href: t.href as string | undefined,
-                          projectName: undefined,
-                        }}
-                        onToggle={(id: string) => {
-                          const found = storeTasks.find((x) => x.id === id) ?? null;
-                          const started = !!found?.started;
-                          const completed = !!found?.completed;
-                          // cycle: none -> started -> done -> none
-                          const next =
-                            !started && !completed
-                              ? 'tilde'
-                              : started && !completed
-                              ? 'done'
-                              : 'none';
-                          handleStatusChange(id, next as 'none' | 'done' | 'tilde');
-                        }}
-                        onEdit={(task: { id: string }) => {
-                          const found = storeTasks.find((x) => x.id === task.id) ?? null;
-                          if (found) {
-                            setEditing(found);
-                            setModalOpen(true);
-                          }
-                        }}
-                        onDelete={(id: string) => {
-                          const found = storeTasks.find((x) => x.id === id) ?? null;
-                          setDeleting(found);
-                        }}
-                      />
-                    </div>
-                  )}
-                  containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
-                />
-              </div>
-            )}
-          </div>
-        )}
+          ) : (
+            <NativeSortableDaily
+              items={today.map((t) => ({
+                id: t.id,
+                title: t.title,
+                notes: t.notes,
+                started: !!t.started,
+                completed: !!t.completed,
+                // omit `href` in draggable lists so the card isn't wrapped with an anchor
+              }))}
+              onReorder={(next) => {
+                const idOrder = next.map((n) => n.id);
+                const reordered = idOrder
+                  .map((id) => storeTasks.find((t) => t.id === id))
+                  .filter(Boolean) as typeof storeTasks;
+                // Determine the original positions of the subset within the global store
+                const positions: number[] = [];
+                const idSet = new Set(idOrder);
+                storeTasks.forEach((t, idx) => {
+                  if (idSet.has(t.id)) positions.push(idx);
+                });
+                // Place reordered items back into their original indices
+                const merged = [...storeTasks];
+                for (let i = 0; i < positions.length; i++) {
+                  const pos = positions[i];
+                  merged[pos] = reordered[i] || merged[pos];
+                }
+                useTaskStore.getState().setTasks(merged);
+              }}
+              renderItem={(t: {
+                id: string;
+                title: string;
+                notes?: string;
+                started?: boolean;
+                completed?: boolean;
+                href?: string;
+              }) => (
+                <div className="mb-6" key={t.id}>
+                  <DailyTaskCard
+                    task={{
+                      id: t.id,
+                      title: t.title,
+                      notes: t.notes,
+                      completed: !!t.completed,
+                      started: !!t.started,
+                      href: t.href as string | undefined,
+                      projectName: undefined,
+                    }}
+                    onToggle={(id: string) => {
+                      const found = storeTasks.find((x) => x.id === id) ?? null;
+                      const started = !!found?.started;
+                      const completed = !!found?.completed;
+                      // cycle: none -> started -> done -> none
+                      const next =
+                        !started && !completed ? 'tilde' : started && !completed ? 'done' : 'none';
+                      handleStatusChange(id, next as 'none' | 'done' | 'tilde');
+                    }}
+                    onEdit={(task: { id: string }) => {
+                      const found = storeTasks.find((x) => x.id === task.id) ?? null;
+                      if (found) {
+                        setEditing(found);
+                        setModalOpen(true);
+                      }
+                    }}
+                    onDelete={(id: string) => {
+                      const found = storeTasks.find((x) => x.id === id) ?? null;
+                      setDeleting(found);
+                    }}
+                  />
+                </div>
+              )}
+              containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
+            />
+          ))}
 
         {view === 'week' && (
           <div className="pl-4 pr-4">
@@ -514,6 +498,7 @@ export default function Dashboard() {
             )}
           </div>
         )}
+        </div>
       </div>
       {all.length === 0 && !loading && (
         <div className="text-center text-gray-500 py-12">

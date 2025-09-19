@@ -162,9 +162,9 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6 flex flex-col flex-1 min-h-0 overflow-x-hidden">
+    <div className="flex flex-col flex-1 min-h-0 overflow-x-hidden">
       {loading && <div className="text-sm text-gray-500">Loading remote tasks…</div>}
-      <div className="flex items-center justify-between mb-14 px-4 pt-4">
+      <div className="flex items-center justify-between mb-8 px-4 pt-4">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
         <div className="flex items-center gap-2">
           <button

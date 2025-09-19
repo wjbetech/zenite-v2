@@ -282,25 +282,30 @@ export default function Dashboard() {
         )}
 
         {view === 'new' && (
-          <TaskSection
-            expanded={!heatmapOpen}
-            accentClass="border-emerald-400"
-            tasks={newTasks}
-            renderRight={(t: Task) => (
-              <span className="text-xs text-white">
-                {new Date(t.createdAt).toLocaleDateString()}
-              </span>
-            )}
-            onEdit={(t) => {
-              setEditing(t);
-              setModalOpen(true);
-            }}
-            onDelete={(id) => {
-              const found = storeTasks.find((x) => x.id === id) ?? null;
-              setDeleting(found);
-            }}
-            onStatusChange={handleStatusChange}
-          />
+          <div
+            className={`overflow-y-auto transition-all duration-300 ease-in-out pt-4 pb-2 pl-4 pr-4`}
+            style={{ maxHeight: !heatmapOpen ? 'calc(100vh - 10rem)' : undefined }}
+          >
+            <TaskSection
+              expanded={!heatmapOpen}
+              accentClass="border-emerald-400"
+              tasks={newTasks}
+              renderRight={(t: Task) => (
+                <span className="text-xs text-white">
+                  {new Date(t.createdAt).toLocaleDateString()}
+                </span>
+              )}
+              onEdit={(t) => {
+                setEditing(t);
+                setModalOpen(true);
+              }}
+              onDelete={(id) => {
+                const found = storeTasks.find((x) => x.id === id) ?? null;
+                setDeleting(found);
+              }}
+              onStatusChange={handleStatusChange}
+            />
+          </div>
         )}
 
         {view === 'today' && (

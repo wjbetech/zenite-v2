@@ -88,6 +88,36 @@ async function main() {
     await prisma.task.updateMany({ where: { projectId: null }, data: { projectId: gs.id } });
   }
 
+  // Create a few unassigned tasks with dueDate values so Today/Week lists display
+  const now = new Date();
+  /**
+   * @param {Date} d
+   */
+  const iso = (d) => d.toISOString();
+  const sampleDueDates = [
+    new Date(now),
+    new Date(now.getTime() + 24 * 60 * 60 * 1000),
+    new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
+    new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000),
+  ];
+  for (let i = 0; i < sampleDueDates.length; i++) {
+    const title = `Due Sample ${i + 1}`;
+    const exists = await prisma.task.findFirst({ where: { title } });
+    if (!exists) {
+      await prisma.task.create({
+        data: {
+          title,
+          description: `Auto-generated due-date sample ${i + 1}`,
+          status: 'TODO',
+          priority: 'LOW',
+          ownerId: user.id,
+          projectId: gs ? gs.id : null,
+          dueDate: iso(sampleDueDates[i]),
+        },
+      });
+    }
+  }
+
   console.log('Seeding complete.');
 }
 

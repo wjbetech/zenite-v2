@@ -4,9 +4,11 @@ import React from 'react';
 // ...existing code...
 import { Plus } from 'lucide-react';
 import TaskSection from './TaskSection';
+import NativeSortableDaily from './NativeSortableDaily';
 import ActivityHeatmap from './ActivityHeatmap';
 import type { Task } from './TaskCard';
 import useTaskStore from '../lib/taskStore';
+import DailyTaskCard from './DailyTaskCard';
 import TaskModal from './TaskModal';
 import { useState } from 'react';
 import { useEffect } from 'react';
@@ -263,37 +265,131 @@ export default function Dashboard() {
         )}
 
         {view === 'today' && (
-          <TaskSection
-            expanded={!heatmapOpen}
-            accentClass="border-sky-500"
-            tasks={today}
-            renderRight={() => <span className="text-xs text-gray-100">Due today</span>}
-            onEdit={(t) => {
-              setEditing(t);
-              setModalOpen(true);
-            }}
-            onDelete={(id) => deleteTask(id)}
-            onStatusChange={handleStatusChange}
-          />
+          <div className="pl-4 pr-4">
+            {today.length === 0 ? (
+              <TaskSection
+                expanded={!heatmapOpen}
+                accentClass="border-sky-500"
+                tasks={today}
+                renderRight={() => <span className="text-xs text-gray-100">Due today</span>}
+                onEdit={(t) => {
+                  setEditing(t);
+                  setModalOpen(true);
+                }}
+                onDelete={(id) => deleteTask(id)}
+                onStatusChange={handleStatusChange}
+              />
+            ) : (
+              <NativeSortableDaily
+                items={today.map((t) => ({
+                  id: t.id,
+                  title: t.title,
+                  notes: t.notes,
+                  started: !!t.started,
+                  completed: !!t.completed,
+                  href: `/tasks/${t.id}`,
+                }))}
+                onReorder={(next) => {
+                  const idOrder = next.map((n) => n.id);
+                  const reordered = idOrder
+                    .map((id) => storeTasks.find((t) => t.id === id))
+                    .filter(Boolean) as typeof storeTasks;
+                  useTaskStore.getState().setTasks(reordered.concat(storeTasks.filter((t)=>!idOrder.includes(t.id))));
+                }}
+                renderItem={(t: { id: string; title: string; notes?: string; started?: boolean; completed?: boolean; href?: string }) => (
+                  <div className="mb-6" key={t.id}>
+                      <DailyTaskCard
+                        task={{
+                          id: t.id,
+                          title: t.title,
+                          notes: t.notes,
+                          completed: !!t.completed,
+                          started: !!t.started,
+                          href: t.href as string | undefined,
+                          projectName: undefined,
+                        }}
+                        onToggle={(id: string) => handleStatusChange(id, 'tilde')}
+                        onEdit={(task: { id: string }) => {
+                          const found = storeTasks.find((x) => x.id === task.id) ?? null;
+                          if (found) {
+                            setEditing(found);
+                            setModalOpen(true);
+                          }
+                        }}
+                        onDelete={(id: string) => deleteTask(id)}
+                      />
+                  </div>
+                )}
+                containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
+              />
+            )}
+          </div>
         )}
 
         {view === 'week' && (
-          <TaskSection
-            expanded={!heatmapOpen}
-            accentClass="border-indigo-300"
-            tasks={week}
-            renderRight={(t: Task) => {
-              const days = daysUntil(t.dueDate);
-              const dueLabel = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days}d`;
-              return <span className="text-xs text-gray-100">{dueLabel}</span>;
-            }}
-            onEdit={(t) => {
-              setEditing(t);
-              setModalOpen(true);
-            }}
-            onDelete={(id) => deleteTask(id)}
-            onStatusChange={handleStatusChange}
-          />
+          <div className="pl-4 pr-4">
+            {week.length === 0 ? (
+              <TaskSection
+                expanded={!heatmapOpen}
+                accentClass="border-indigo-300"
+                tasks={week}
+                renderRight={(t: Task) => {
+                  const days = daysUntil(t.dueDate);
+                  const dueLabel = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days}d`;
+                  return <span className="text-xs text-gray-100">{dueLabel}</span>;
+                }}
+                onEdit={(t) => {
+                  setEditing(t);
+                  setModalOpen(true);
+                }}
+                onDelete={(id) => deleteTask(id)}
+                onStatusChange={handleStatusChange}
+              />
+            ) : (
+              <NativeSortableDaily
+                items={week.map((t) => ({
+                  id: t.id,
+                  title: t.title,
+                  notes: t.notes,
+                  started: !!t.started,
+                  completed: !!t.completed,
+                  href: `/tasks/${t.id}`,
+                }))}
+                onReorder={(next) => {
+                  const idOrder = next.map((n) => n.id);
+                  const reordered = idOrder
+                    .map((id) => storeTasks.find((t) => t.id === id))
+                    .filter(Boolean) as typeof storeTasks;
+                  useTaskStore.getState().setTasks(reordered.concat(storeTasks.filter((t)=>!idOrder.includes(t.id))));
+                }}
+                renderItem={(t: { id: string; title: string; notes?: string; started?: boolean; completed?: boolean; href?: string }) => (
+                  <div className="mb-6" key={t.id}>
+                    <DailyTaskCard
+                      task={{
+                        id: t.id,
+                        title: t.title,
+                        notes: t.notes,
+                        completed: !!t.completed,
+                        started: !!t.started,
+                        href: t.href as string | undefined,
+                        projectName: undefined,
+                      }}
+                      onToggle={(id: string) => handleStatusChange(id, 'tilde')}
+                      onEdit={(task: { id: string }) => {
+                        const found = storeTasks.find((x) => x.id === task.id) ?? null;
+                        if (found) {
+                          setEditing(found);
+                          setModalOpen(true);
+                        }
+                      }}
+                      onDelete={(id: string) => deleteTask(id)}
+                    />
+                  </div>
+                )}
+                containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
+              />
+            )}
+          </div>
         )}
       </div>
       {all.length === 0 && !loading && (

@@ -405,7 +405,7 @@ export default function Dashboard() {
                   notes: t.notes,
                   started: !!t.started,
                   completed: !!t.completed,
-                  href: `/tasks/${t.id}`,
+                  // omit `href` in draggable lists so the card isn't wrapped with an anchor
                 }))}
                 onReorder={(next) => {
                   const idOrder = next.map((n) => n.id);
@@ -439,7 +439,14 @@ export default function Dashboard() {
                         href: t.href as string | undefined,
                         projectName: undefined,
                       }}
-                      onToggle={(id: string) => handleStatusChange(id, 'tilde')}
+                      onToggle={(id: string) => {
+                        const found = storeTasks.find((x) => x.id === id) ?? null;
+                        const started = !!found?.started;
+                        const completed = !!found?.completed;
+                        // cycle: none -> started -> done -> none
+                        const next = !started && !completed ? 'tilde' : started && !completed ? 'done' : 'none';
+                        handleStatusChange(id, next as 'none' | 'done' | 'tilde');
+                      }}
                       onEdit={(task: { id: string }) => {
                         const found = storeTasks.find((x) => x.id === task.id) ?? null;
                         if (found) {
@@ -484,7 +491,7 @@ export default function Dashboard() {
                   notes: t.notes,
                   started: !!t.started,
                   completed: !!t.completed,
-                  href: `/tasks/${t.id}`,
+                  // omit `href` in draggable lists so the card isn't wrapped with an anchor
                 }))}
                 onReorder={(next) => {
                   const idOrder = next.map((n) => n.id);
@@ -518,7 +525,14 @@ export default function Dashboard() {
                         href: t.href as string | undefined,
                         projectName: undefined,
                       }}
-                      onToggle={(id: string) => handleStatusChange(id, 'tilde')}
+                      onToggle={(id: string) => {
+                        const found = storeTasks.find((x) => x.id === id) ?? null;
+                        const started = !!found?.started;
+                        const completed = !!found?.completed;
+                        // cycle: none -> started -> done -> none
+                        const next = !started && !completed ? 'tilde' : started && !completed ? 'done' : 'none';
+                        handleStatusChange(id, next as 'none' | 'done' | 'tilde');
+                      }}
                       onEdit={(task: { id: string }) => {
                         const found = storeTasks.find((x) => x.id === task.id) ?? null;
                         if (found) {

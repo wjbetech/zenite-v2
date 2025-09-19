@@ -1,9 +1,6 @@
 import Dashboard from '../../components/Dashboard';
 
 export default async function Page() {
-  return (
-    <main className="p-6">
-      <Dashboard />
-    </main>
-  );
+  // Parent layout main already supplies padding and height constraints.
+  return <Dashboard />;
 }

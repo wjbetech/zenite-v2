@@ -95,12 +95,19 @@ export default function ActivityHeatmap({
   activity,
   startRange = '3m',
   onOpenChange,
+  open: openProp,
 }: {
   activity?: ActivityMap;
   startRange?: RangeKey;
   onOpenChange?: (open: boolean) => void;
+  open?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<boolean>(() => !!openProp);
+
+  // sync controlled `open` prop when provided
+  useEffect(() => {
+    if (typeof openProp === 'boolean') setOpen(openProp);
+  }, [openProp]);
   const [range, setRange] = useState<RangeKey>(startRange);
 
   // compute date range

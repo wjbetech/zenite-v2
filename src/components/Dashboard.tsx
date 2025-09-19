@@ -8,7 +8,6 @@ import NativeSortableDaily from './NativeSortableDaily';
 import ActivityHeatmap from './ActivityHeatmap';
 import type { Task } from '../lib/taskStore';
 import useTaskStore from '../lib/taskStore';
-import api from '../lib/api';
 import DailyTaskCard from './DailyTaskCard';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 import TaskModal from './TaskModal';
@@ -28,7 +27,7 @@ function daysUntil(date?: string | null) {
 
 export default function Dashboard() {
   const storeTasks = useTaskStore((s) => s.tasks);
-  const storeCount = storeTasks.length;
+  
   const loadRemote = useTaskStore(
     (s) => (s as unknown as { loadRemote?: () => Promise<void> }).loadRemote,
   );
@@ -43,7 +42,7 @@ export default function Dashboard() {
   useEffect(() => {
     let mounted = true;
     async function start() {
-      // Primary path: respect explicit environment flag and the store's loadRemote helper
+      // Only load remote tasks when explicitly requested via env + store helper.
       if (process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true' && loadRemote) {
         try {
           setLoading(true);
@@ -53,71 +52,13 @@ export default function Dashboard() {
         } finally {
           if (mounted) setLoading(false);
         }
-        return;
-      }
-
-      // Fallback (dev-friendly): if there are no local tasks (e.g. after a fresh seed),
-      // attempt to fetch tasks from the app API and populate the local store so
-      // Today/This Week views can render seeded items without requiring an env var.
-      try {
-        // If local store is empty OR contains no tasks with a valid future dueDate,
-        // fetch remote seeded tasks. This covers cases where local store already has
-        // items but their `dueDate` values are missing or stale (in the past).
-        const needsRemote =
-          storeTasks.length === 0 ||
-          storeTasks.every((t) => !t.dueDate || daysUntil(t.dueDate) < 0);
-        if (mounted && needsRemote) {
-          if (process.env.NODE_ENV !== 'production') {
-            console.log(
-              'Dashboard: fallback fetching remote tasks because local store needsRemote=',
-              needsRemote,
-              'storeCount=',
-              storeCount,
-            );
-          }
-          setLoading(true);
-          const remote = await api.fetchTasks();
-          if (Array.isArray(remote) && remote.length > 0) {
-            // Merge remote tasks into the current local store by id (remote wins).
-            const byId = new Map<string, Task>(storeTasks.map((t) => [t.id, t]));
-            for (const r of remote) {
-              const mapped: Task = {
-                id: (r.id as string) || '',
-                title: (r.title as string) || 'Untitled',
-                notes: (r.description as string) || (r.notes as string) || undefined,
-                dueDate: (r.dueDate as string) ?? undefined,
-                createdAt: (r.createdAt as string) || new Date().toISOString(),
-                completed: !!r.completed,
-                started: !!r.started,
-                projectId: (r.projectId as string) ?? null,
-                recurrence: (r.recurrence as string) ?? null,
-                ownerId: (r.ownerId as string) ?? undefined,
-              };
-              if (mapped.id) byId.set(mapped.id, mapped);
-            }
-            const merged = Array.from(byId.values());
-            if (process.env.NODE_ENV !== 'production') {
-              console.log(
-                'Dashboard: fetched',
-                remote.length,
-                'remote tasks, merging -> set',
-                merged.length,
-              );
-            }
-            useTaskStore.getState().setTasks(merged);
-          }
-        }
-      } catch (err) {
-        console.warn('failed to fetch tasks fallback', err);
-      } finally {
-        if (mounted) setLoading(false);
       }
     }
     start();
     return () => {
       mounted = false;
     };
-  }, [loadRemote, storeCount, storeTasks]);
+  }, [loadRemote]);
 
   const deleteTask = useTaskStore((s) => s.deleteTask);
   const updateTask = useTaskStore((s) => s.updateTask);

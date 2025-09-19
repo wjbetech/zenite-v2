@@ -27,7 +27,7 @@ function daysUntil(date?: string | null) {
 
 export default function Dashboard() {
   const storeTasks = useTaskStore((s) => s.tasks);
-  
+
   const loadRemote = useTaskStore(
     (s) => (s as unknown as { loadRemote?: () => Promise<void> }).loadRemote,
   );

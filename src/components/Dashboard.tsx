@@ -10,6 +10,7 @@ import type { Task } from '../lib/taskStore';
 import useTaskStore from '../lib/taskStore';
 import api from '../lib/api';
 import DailyTaskCard from './DailyTaskCard';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 import TaskModal from './TaskModal';
 import { useState } from 'react';
 import { useEffect } from 'react';
@@ -124,6 +125,7 @@ export default function Dashboard() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Task> | undefined>(undefined);
+  const [deleting, setDeleting] = useState<Task | null>(null);
   const [modalMode, setModalMode] = useState<'task' | 'project'>('task');
   const [view, setView] = useState<'imminent' | 'new' | 'today' | 'week'>('new');
 
@@ -330,7 +332,10 @@ export default function Dashboard() {
               setEditing(t);
               setModalOpen(true);
             }}
-            onDelete={(id) => deleteTask(id)}
+            onDelete={(id) => {
+              const found = storeTasks.find((x) => x.id === id) ?? null;
+              setDeleting(found);
+            }}
             onStatusChange={handleStatusChange}
           />
         )}
@@ -349,7 +354,10 @@ export default function Dashboard() {
               setEditing(t);
               setModalOpen(true);
             }}
-            onDelete={(id) => deleteTask(id)}
+            onDelete={(id) => {
+              const found = storeTasks.find((x) => x.id === id) ?? null;
+              setDeleting(found);
+            }}
             onStatusChange={handleStatusChange}
           />
         )}
@@ -437,7 +445,10 @@ export default function Dashboard() {
                           setModalOpen(true);
                         }
                       }}
-                      onDelete={(id: string) => deleteTask(id)}
+                      onDelete={(id: string) => {
+                        const found = storeTasks.find((x) => x.id === id) ?? null;
+                        setDeleting(found);
+                      }}
                     />
                   </div>
                 )}
@@ -463,7 +474,10 @@ export default function Dashboard() {
                   setEditing(t);
                   setModalOpen(true);
                 }}
-                onDelete={(id) => deleteTask(id)}
+                onDelete={(id) => {
+                  const found = storeTasks.find((x) => x.id === id) ?? null;
+                  setDeleting(found);
+                }}
                 onStatusChange={handleStatusChange}
               />
             ) : (
@@ -532,7 +546,10 @@ export default function Dashboard() {
                           setModalOpen(true);
                         }
                       }}
-                      onDelete={(id: string) => deleteTask(id)}
+                      onDelete={(id: string) => {
+                        const found = storeTasks.find((x) => x.id === id) ?? null;
+                        setDeleting(found);
+                      }}
                     />
                   </div>
                 )}
@@ -555,6 +572,16 @@ export default function Dashboard() {
         }}
         initial={editing}
         allowCreateProject={modalMode === 'project'}
+      />
+      <ConfirmDeleteModal
+        open={!!deleting}
+        itemTitle={deleting?.title}
+        onCancel={() => setDeleting(null)}
+        onConfirm={() => {
+          if (!deleting) return;
+          deleteTask(deleting.id);
+          setDeleting(null);
+        }}
       />
     </div>
   );

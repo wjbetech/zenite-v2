@@ -6,8 +6,9 @@ import { Plus } from 'lucide-react';
 import TaskSection from './TaskSection';
 import NativeSortableDaily from './NativeSortableDaily';
 import ActivityHeatmap from './ActivityHeatmap';
-import type { Task } from './TaskCard';
+import type { Task } from '../lib/taskStore';
 import useTaskStore from '../lib/taskStore';
+import api from '../lib/api';
 import DailyTaskCard from './DailyTaskCard';
 import TaskModal from './TaskModal';
 import { useState } from 'react';
@@ -16,14 +17,17 @@ import { useEffect } from 'react';
 function daysUntil(date?: string | null) {
   if (!date) return Infinity;
   const d = new Date(date);
-  const diff = Math.ceil(
-    (d.setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24),
-  );
+  const now = new Date();
+  // compute date-only UTC timestamps to avoid local timezone shifting seeded ISO dates
+  const dUtc = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  const nowUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const diff = Math.ceil((dUtc - nowUtc) / (1000 * 60 * 60 * 24));
   return diff;
 }
 
 export default function Dashboard() {
   const storeTasks = useTaskStore((s) => s.tasks);
+  const storeCount = storeTasks.length;
   const loadRemote = useTaskStore(
     (s) => (s as unknown as { loadRemote?: () => Promise<void> }).loadRemote,
   );
@@ -38,6 +42,7 @@ export default function Dashboard() {
   useEffect(() => {
     let mounted = true;
     async function start() {
+      // Primary path: respect explicit environment flag and the store's loadRemote helper
       if (process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true' && loadRemote) {
         try {
           setLoading(true);
@@ -47,13 +52,71 @@ export default function Dashboard() {
         } finally {
           if (mounted) setLoading(false);
         }
+        return;
+      }
+
+      // Fallback (dev-friendly): if there are no local tasks (e.g. after a fresh seed),
+      // attempt to fetch tasks from the app API and populate the local store so
+      // Today/This Week views can render seeded items without requiring an env var.
+      try {
+        // If local store is empty OR contains no tasks with a valid future dueDate,
+        // fetch remote seeded tasks. This covers cases where local store already has
+        // items but their `dueDate` values are missing or stale (in the past).
+        const needsRemote =
+          storeTasks.length === 0 ||
+          storeTasks.every((t) => !t.dueDate || daysUntil(t.dueDate) < 0);
+        if (mounted && needsRemote) {
+          if (process.env.NODE_ENV !== 'production') {
+            console.log(
+              'Dashboard: fallback fetching remote tasks because local store needsRemote=',
+              needsRemote,
+              'storeCount=',
+              storeCount,
+            );
+          }
+          setLoading(true);
+          const remote = await api.fetchTasks();
+          if (Array.isArray(remote) && remote.length > 0) {
+            // Merge remote tasks into the current local store by id (remote wins).
+            const byId = new Map<string, Task>(storeTasks.map((t) => [t.id, t]));
+            for (const r of remote) {
+              const mapped: Task = {
+                id: (r.id as string) || '',
+                title: (r.title as string) || 'Untitled',
+                notes: (r.description as string) || (r.notes as string) || undefined,
+                dueDate: (r.dueDate as string) ?? undefined,
+                createdAt: (r.createdAt as string) || new Date().toISOString(),
+                completed: !!r.completed,
+                started: !!r.started,
+                projectId: (r.projectId as string) ?? null,
+                recurrence: (r.recurrence as string) ?? null,
+                ownerId: (r.ownerId as string) ?? undefined,
+              };
+              if (mapped.id) byId.set(mapped.id, mapped);
+            }
+            const merged = Array.from(byId.values());
+            if (process.env.NODE_ENV !== 'production') {
+              console.log(
+                'Dashboard: fetched',
+                remote.length,
+                'remote tasks, merging -> set',
+                merged.length,
+              );
+            }
+            useTaskStore.getState().setTasks(merged);
+          }
+        }
+      } catch (err) {
+        console.warn('failed to fetch tasks fallback', err);
+      } finally {
+        if (mounted) setLoading(false);
       }
     }
     start();
     return () => {
       mounted = false;
     };
-  }, [loadRemote]);
+  }, [loadRemote, storeCount, storeTasks]);
 
   const deleteTask = useTaskStore((s) => s.deleteTask);
   const updateTask = useTaskStore((s) => s.updateTask);
@@ -80,18 +143,7 @@ export default function Dashboard() {
     .filter((t) => t.dueDate)
     .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
     .slice(0, 5 + extra);
-  const today = [...all]
-    .filter((t) => {
-      if (!t.dueDate) return false;
-      const d = new Date(t.dueDate);
-      const n = new Date();
-      return (
-        d.getFullYear() === n.getFullYear() &&
-        d.getMonth() === n.getMonth() &&
-        d.getDate() === n.getDate()
-      );
-    })
-    .slice(0, 5 + extra);
+  const today = [...all].filter((t) => t.dueDate && daysUntil(t.dueDate) === 0).slice(0, 5 + extra);
 
   const week = [...all]
     .filter((t) => {
@@ -101,6 +153,72 @@ export default function Dashboard() {
     })
     .slice(0, 5 + extra);
 
+  // Dev-only diagnostics: log store and computed buckets so we can see why Today/Week may be empty
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(
+        'Dashboard: diagnostics -> storeTasks=',
+        storeTasks.length,
+        'all=',
+        all.length,
+        'today=',
+        today.length,
+        'week=',
+        week.length,
+      );
+      if (today.length > 0)
+        console.log(
+          'Dashboard: today ids',
+          today.map((t) => t.id),
+        );
+      if (week.length > 0)
+        console.log(
+          'Dashboard: week ids',
+          week.map((t) => t.id),
+        );
+    }
+  }, [storeTasks.length, all.length, today, week]);
+
+  // Dev-only diagnostics: log store and computed buckets so we can see why Today/Week may be empty
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(
+        'Dashboard: diagnostics -> storeTasks=',
+        storeTasks.length,
+        'all=',
+        all.length,
+        'today=',
+        today.length,
+        'week=',
+        week.length,
+      );
+      if (today.length > 0)
+        console.log(
+          'Dashboard: today ids',
+          today.map((t) => t.id),
+        );
+      if (week.length > 0)
+        console.log(
+          'Dashboard: week ids',
+          week.map((t) => t.id),
+        );
+    }
+    if (process.env.NODE_ENV !== 'production' && today.length === 0 && week.length === 0) {
+      console.log('Dashboard: detailed storeTasks dump (first 20):');
+      storeTasks.slice(0, 20).forEach((t, i) => {
+        try {
+          console.log(i, {
+            id: t.id,
+            title: t.title,
+            dueDate: t.dueDate,
+            daysUntil: daysUntil(t.dueDate),
+          });
+        } catch {
+          console.log('err dumping task', i, t && t.id);
+        }
+      });
+    }
+  }, [storeTasks.length, all.length, today, week, storeTasks]);
   const handleStatusChange = (id: string, status: 'none' | 'done' | 'tilde') => {
     console.log('Dashboard: handleStatusChange', { id, status });
     const patch =
@@ -294,30 +412,43 @@ export default function Dashboard() {
                   const reordered = idOrder
                     .map((id) => storeTasks.find((t) => t.id === id))
                     .filter(Boolean) as typeof storeTasks;
-                  useTaskStore.getState().setTasks(reordered.concat(storeTasks.filter((t)=>!idOrder.includes(t.id))));
+                  const idxMap = new Map<string, number>(idOrder.map((id, i) => [id, i]));
+                  const merged = storeTasks.map((t) => {
+                    const i = idxMap.get(t.id);
+                    if (typeof i === 'number') return reordered[i];
+                    return t;
+                  });
+                  useTaskStore.getState().setTasks(merged);
                 }}
-                renderItem={(t: { id: string; title: string; notes?: string; started?: boolean; completed?: boolean; href?: string }) => (
+                renderItem={(t: {
+                  id: string;
+                  title: string;
+                  notes?: string;
+                  started?: boolean;
+                  completed?: boolean;
+                  href?: string;
+                }) => (
                   <div className="mb-6" key={t.id}>
-                      <DailyTaskCard
-                        task={{
-                          id: t.id,
-                          title: t.title,
-                          notes: t.notes,
-                          completed: !!t.completed,
-                          started: !!t.started,
-                          href: t.href as string | undefined,
-                          projectName: undefined,
-                        }}
-                        onToggle={(id: string) => handleStatusChange(id, 'tilde')}
-                        onEdit={(task: { id: string }) => {
-                          const found = storeTasks.find((x) => x.id === task.id) ?? null;
-                          if (found) {
-                            setEditing(found);
-                            setModalOpen(true);
-                          }
-                        }}
-                        onDelete={(id: string) => deleteTask(id)}
-                      />
+                    <DailyTaskCard
+                      task={{
+                        id: t.id,
+                        title: t.title,
+                        notes: t.notes,
+                        completed: !!t.completed,
+                        started: !!t.started,
+                        href: t.href as string | undefined,
+                        projectName: undefined,
+                      }}
+                      onToggle={(id: string) => handleStatusChange(id, 'tilde')}
+                      onEdit={(task: { id: string }) => {
+                        const found = storeTasks.find((x) => x.id === task.id) ?? null;
+                        if (found) {
+                          setEditing(found);
+                          setModalOpen(true);
+                        }
+                      }}
+                      onDelete={(id: string) => deleteTask(id)}
+                    />
                   </div>
                 )}
                 containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
@@ -360,9 +491,22 @@ export default function Dashboard() {
                   const reordered = idOrder
                     .map((id) => storeTasks.find((t) => t.id === id))
                     .filter(Boolean) as typeof storeTasks;
-                  useTaskStore.getState().setTasks(reordered.concat(storeTasks.filter((t)=>!idOrder.includes(t.id))));
+                  const idxMap = new Map<string, number>(idOrder.map((id, i) => [id, i]));
+                  const merged = storeTasks.map((t) => {
+                    const i = idxMap.get(t.id);
+                    if (typeof i === 'number') return reordered[i];
+                    return t;
+                  });
+                  useTaskStore.getState().setTasks(merged);
                 }}
-                renderItem={(t: { id: string; title: string; notes?: string; started?: boolean; completed?: boolean; href?: string }) => (
+                renderItem={(t: {
+                  id: string;
+                  title: string;
+                  notes?: string;
+                  started?: boolean;
+                  completed?: boolean;
+                  href?: string;
+                }) => (
                   <div className="mb-6" key={t.id}>
                     <DailyTaskCard
                       task={{

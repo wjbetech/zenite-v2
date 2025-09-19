@@ -103,7 +103,13 @@ async function main() {
   for (let i = 0; i < sampleDueDates.length; i++) {
     const title = `Due Sample ${i + 1}`;
     const exists = await prisma.task.findFirst({ where: { title } });
-    if (!exists) {
+    if (exists) {
+      // If a sample task already exists from a previous seed run, refresh its dueDate
+      await prisma.task.update({
+        where: { id: exists.id },
+        data: { dueDate: iso(sampleDueDates[i]) },
+      });
+    } else {
       await prisma.task.create({
         data: {
           title,

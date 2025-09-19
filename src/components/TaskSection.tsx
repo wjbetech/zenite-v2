@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import TaskCard, { Task } from './TaskCard';
+import DashboardTaskCard from './DashboardTaskCard';
+import type { Task } from './TaskCard';
 
 type TaskSectionProps = {
   title?: string;
@@ -40,8 +41,8 @@ export default function TaskSection({
           {tasks.length === 0 && <li className="text-sm text-neutral-content">No items.</li>}
           {tasks.map((t) => (
             <li key={t.id}>
-              <TaskCard
-                task={t}
+              <DashboardTaskCard
+                task={t as unknown as Task}
                 href={`/tasks/${t.id}`}
                 right={renderRight ? renderRight(t) : undefined}
                 onEdit={onEdit}

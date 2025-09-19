@@ -412,12 +412,18 @@ export default function Dashboard() {
                   const reordered = idOrder
                     .map((id) => storeTasks.find((t) => t.id === id))
                     .filter(Boolean) as typeof storeTasks;
-                  const idxMap = new Map<string, number>(idOrder.map((id, i) => [id, i]));
-                  const merged = storeTasks.map((t) => {
-                    const i = idxMap.get(t.id);
-                    if (typeof i === 'number') return reordered[i];
-                    return t;
+                  // Determine the original positions of the subset within the global store
+                  const positions: number[] = [];
+                  const idSet = new Set(idOrder);
+                  storeTasks.forEach((t, idx) => {
+                    if (idSet.has(t.id)) positions.push(idx);
                   });
+                  // Place reordered items back into their original indices
+                  const merged = [...storeTasks];
+                  for (let i = 0; i < positions.length; i++) {
+                    const pos = positions[i];
+                    merged[pos] = reordered[i] || merged[pos];
+                  }
                   useTaskStore.getState().setTasks(merged);
                 }}
                 renderItem={(t: {
@@ -444,7 +450,12 @@ export default function Dashboard() {
                         const started = !!found?.started;
                         const completed = !!found?.completed;
                         // cycle: none -> started -> done -> none
-                        const next = !started && !completed ? 'tilde' : started && !completed ? 'done' : 'none';
+                        const next =
+                          !started && !completed
+                            ? 'tilde'
+                            : started && !completed
+                            ? 'done'
+                            : 'none';
                         handleStatusChange(id, next as 'none' | 'done' | 'tilde');
                       }}
                       onEdit={(task: { id: string }) => {
@@ -495,16 +506,20 @@ export default function Dashboard() {
                 }))}
                 onReorder={(next) => {
                   const idOrder = next.map((n) => n.id);
-                  const reordered = idOrder
-                    .map((id) => storeTasks.find((t) => t.id === id))
-                    .filter(Boolean) as typeof storeTasks;
-                  const idxMap = new Map<string, number>(idOrder.map((id, i) => [id, i]));
-                  const merged = storeTasks.map((t) => {
-                    const i = idxMap.get(t.id);
-                    if (typeof i === 'number') return reordered[i];
-                    return t;
-                  });
-                  useTaskStore.getState().setTasks(merged);
+                    const reordered = idOrder
+                      .map((id) => storeTasks.find((t) => t.id === id))
+                      .filter(Boolean) as typeof storeTasks;
+                    const positions: number[] = [];
+                    const idSet = new Set(idOrder);
+                    storeTasks.forEach((t, idx) => {
+                      if (idSet.has(t.id)) positions.push(idx);
+                    });
+                    const merged = [...storeTasks];
+                    for (let i = 0; i < positions.length; i++) {
+                      const pos = positions[i];
+                      merged[pos] = reordered[i] || merged[pos];
+                    }
+                    useTaskStore.getState().setTasks(merged);
                 }}
                 renderItem={(t: {
                   id: string;
@@ -530,7 +545,12 @@ export default function Dashboard() {
                         const started = !!found?.started;
                         const completed = !!found?.completed;
                         // cycle: none -> started -> done -> none
-                        const next = !started && !completed ? 'tilde' : started && !completed ? 'done' : 'none';
+                        const next =
+                          !started && !completed
+                            ? 'tilde'
+                            : started && !completed
+                            ? 'done'
+                            : 'none';
                         handleStatusChange(id, next as 'none' | 'done' | 'tilde');
                       }}
                       onEdit={(task: { id: string }) => {

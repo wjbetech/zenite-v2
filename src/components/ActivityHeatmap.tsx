@@ -18,7 +18,9 @@ function readCookie(key: string): string | null {
 function writeCookie(key: string, value: string) {
   try {
     const maxAge = 60 * 60 * 24 * 365; // 1 year
-    document.cookie = `${key}=${encodeURIComponent(value)}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+    document.cookie = `${key}=${encodeURIComponent(
+      value,
+    )}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
   } catch {
     // ignore
   }
@@ -161,13 +163,15 @@ export default function ActivityHeatmap({
     if (typeof openProp === 'boolean') setOpen(openProp);
   }, [openProp]);
   const [range, setRange] = useState<RangeKey>(() => {
-    // prefer explicit startRange prop
-    if (startRange) return startRange;
+    // If there's a stored cookie preference, prefer it (client only).
     try {
-      const r = typeof document !== 'undefined' ? readActivityRangeFromCookie() : null;
-      if (r) return r;
+      if (typeof document !== 'undefined') {
+        const r = readActivityRangeFromCookie();
+        if (r) return r;
+      }
     } catch {}
-    return '3m';
+    // Otherwise fall back to the provided startRange prop (default '3m').
+    return (startRange as RangeKey) ?? '3m';
   });
 
   // compute date range
@@ -233,11 +237,9 @@ export default function ActivityHeatmap({
   const shortDayName = (d: Date) =>
     d.toLocaleDateString(undefined, { weekday: 'short' }).slice(0, 2);
 
-  // inform parent once on mount about initial state
-  useEffect(() => {
-    onOpenChange?.(open);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // (removed) Do not call parent setState during render — the effect below
+  // will notify the parent after the component has rendered and `open`
+  // has stabilized.
 
   // persist open state to cookie whenever it changes and inform parent
   useEffect(() => {
@@ -259,13 +261,7 @@ export default function ActivityHeatmap({
       <div className="flex items-center mb-2">
         <h5 className="font-semibold">Activity Tracker</h5>
         <button
-          onClick={() =>
-            setOpen((s) => {
-              const next = !s;
-              onOpenChange?.(next);
-              return next;
-            })
-          }
+          onClick={() => setOpen((s) => !s)}
           aria-expanded={open}
           aria-label={open ? 'Collapse activity tracker' : 'Expand activity tracker'}
           className="ml-1 text-lg cursor-pointer flex items-center justify-center"

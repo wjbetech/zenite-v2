@@ -3,25 +3,46 @@
 import React, { useMemo, useState, useEffect } from 'react';
 
 const ACTIVITY_COOKIE_KEY = 'zenite.activityOpen';
+const ACTIVITY_RANGE_KEY = 'zenite.activityRange';
 
-function readActivityOpenFromCookie(): boolean | null {
+function readCookie(key: string): string | null {
   try {
-    const m = document.cookie.match(new RegExp('(?:^|; )' + ACTIVITY_COOKIE_KEY + '=([^;]*)'));
+    const m = document.cookie.match(new RegExp('(?:^|; )' + key + '=([^;]*)'));
     if (!m) return null;
-    return m[1] === '1';
+    return decodeURIComponent(m[1]);
   } catch {
     return null;
   }
 }
 
-function writeActivityOpenToCookie(open: boolean) {
+function writeCookie(key: string, value: string) {
   try {
-    // persist for 1 year
-    const maxAge = 60 * 60 * 24 * 365;
-    document.cookie = `${ACTIVITY_COOKIE_KEY}=${open ? '1' : '0'}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+    const maxAge = 60 * 60 * 24 * 365; // 1 year
+    document.cookie = `${key}=${encodeURIComponent(value)}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
   } catch {
     // ignore
   }
+}
+
+function readActivityOpenFromCookie(): boolean | null {
+  const v = readCookie(ACTIVITY_COOKIE_KEY);
+  if (v === null) return null;
+  return v === '1';
+}
+
+function writeActivityOpenToCookie(open: boolean) {
+  writeCookie(ACTIVITY_COOKIE_KEY, open ? '1' : '0');
+}
+
+function readActivityRangeFromCookie(): RangeKey | null {
+  const v = readCookie(ACTIVITY_RANGE_KEY);
+  if (!v) return null;
+  if (v === '3m' || v === '1m' || v === '1w') return v as RangeKey;
+  return null;
+}
+
+function writeActivityRangeToCookie(range: RangeKey) {
+  writeCookie(ACTIVITY_RANGE_KEY, range);
 }
 
 type RangeKey = '3m' | '1m' | '1w';
@@ -139,7 +160,15 @@ export default function ActivityHeatmap({
   useEffect(() => {
     if (typeof openProp === 'boolean') setOpen(openProp);
   }, [openProp]);
-  const [range, setRange] = useState<RangeKey>(startRange);
+  const [range, setRange] = useState<RangeKey>(() => {
+    // prefer explicit startRange prop
+    if (startRange) return startRange;
+    try {
+      const r = typeof document !== 'undefined' ? readActivityRangeFromCookie() : null;
+      if (r) return r;
+    } catch {}
+    return '3m';
+  });
 
   // compute date range
   const { startDate, endDate, days } = useMemo(() => {
@@ -217,6 +246,13 @@ export default function ActivityHeatmap({
     } catch {}
     onOpenChange?.(open);
   }, [open, onOpenChange]);
+
+  // persist range selection to cookie
+  useEffect(() => {
+    try {
+      writeActivityRangeToCookie(range);
+    } catch {}
+  }, [range]);
 
   return (
     <div className="w-full">

@@ -33,6 +33,20 @@ export default function Dashboard() {
   );
   const [loading, setLoading] = useState(false);
   const [heatmapOpen, setHeatmapOpen] = useState(true);
+  // On mount, read persisted activity open state from cookie so Dashboard
+  // reflects the user's last choice. We do this in an effect to avoid SSR
+  // hydration mismatches.
+  useEffect(() => {
+    try {
+      if (typeof document === 'undefined') return;
+      const m = document.cookie.match(new RegExp('(?:^|; )' + 'zenite.activityOpen' + '=([^;]*)'));
+      if (m) {
+        setHeatmapOpen(m[1] === '1');
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
   // avoid rendering client-only dynamic data during SSR to prevent hydration mismatches
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -195,9 +209,9 @@ export default function Dashboard() {
       </div>
 
       {/* Activity heatmap under the title */}
-      <div className="mb-6 px-4">
+      <div className="px-4">
         <ActivityHeatmap open={heatmapOpen} onOpenChange={(v) => setHeatmapOpen(v)} />
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3">
           <button
             onClick={() => setView('new')}
             className={`w-full px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${

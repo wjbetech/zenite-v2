@@ -2,6 +2,28 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 
+const ACTIVITY_COOKIE_KEY = 'zenite.activityOpen';
+
+function readActivityOpenFromCookie(): boolean | null {
+  try {
+    const m = document.cookie.match(new RegExp('(?:^|; )' + ACTIVITY_COOKIE_KEY + '=([^;]*)'));
+    if (!m) return null;
+    return m[1] === '1';
+  } catch {
+    return null;
+  }
+}
+
+function writeActivityOpenToCookie(open: boolean) {
+  try {
+    // persist for 1 year
+    const maxAge = 60 * 60 * 24 * 365;
+    document.cookie = `${ACTIVITY_COOKIE_KEY}=${open ? '1' : '0'}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+  } catch {
+    // ignore
+  }
+}
+
 type RangeKey = '3m' | '1m' | '1w';
 
 export type ActivityMap = Record<string, number>; // yyyy-mm-dd -> count
@@ -102,7 +124,16 @@ export default function ActivityHeatmap({
   onOpenChange?: (open: boolean) => void;
   open?: boolean;
 }) {
-  const [open, setOpen] = useState<boolean>(() => !!openProp);
+  const [open, setOpen] = useState<boolean>(() => {
+    // prefer controlled prop initial value when provided
+    if (typeof openProp === 'boolean') return openProp;
+    // otherwise attempt to read stored value from cookie (client only)
+    try {
+      const val = typeof document !== 'undefined' ? readActivityOpenFromCookie() : null;
+      if (val !== null) return val;
+    } catch {}
+    return false;
+  });
 
   // sync controlled `open` prop when provided
   useEffect(() => {
@@ -178,6 +209,14 @@ export default function ActivityHeatmap({
     onOpenChange?.(open);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // persist open state to cookie whenever it changes and inform parent
+  useEffect(() => {
+    try {
+      writeActivityOpenToCookie(open);
+    } catch {}
+    onOpenChange?.(open);
+  }, [open, onOpenChange]);
 
   return (
     <div className="w-full">

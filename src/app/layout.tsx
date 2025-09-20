@@ -106,8 +106,6 @@ export default async function RootLayout({
           <div style={{ height: 72 }} />
           <div className="flex h-[calc(100vh-72px)] overflow-hidden">
             <Sidebar isLoggedIn={isLoggedIn} />
-            {/* spacer so fixed-position sidebar doesn't overlap the flex content */}
-            <div style={{ width: 'var(--sidebar-width)', minWidth: 'var(--sidebar-width)' }} />
             <main className="flex-1 p-6 h-full overflow-hidden flex flex-col min-h-0">
               {children}
             </main>

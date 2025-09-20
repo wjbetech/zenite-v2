@@ -12,7 +12,7 @@ export default function HomeHero() {
 
   return (
     <section
-      className="relative overflow-hidden flex items-start sm:items-center pt-6 sm:py-12"
+      className="relative overflow-hidden flex items-center py-8"
       style={{ minHeight: 'calc(100vh - var(--nav-height) - 48px)' }}
     >
       <div className="container mx-auto px-6 lg:px-12">

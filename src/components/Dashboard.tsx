@@ -146,12 +146,13 @@ export default function Dashboard() {
   }, [storeTasks.length, all.length, today, week, storeTasks]);
   const handleStatusChange = (id: string, status: 'none' | 'done' | 'tilde') => {
     console.log('Dashboard: handleStatusChange', { id, status });
+    const nowIso = new Date().toISOString();
     const patch =
       status === 'tilde'
-        ? { started: true, completed: false }
+        ? { started: true, completed: false, completedAt: null }
         : status === 'done'
-        ? { started: false, completed: true }
-        : { started: false, completed: false };
+        ? { started: false, completed: true, completedAt: nowIso }
+        : { started: false, completed: false, completedAt: null };
 
     const updated = updateTask(id, patch);
     console.log('Dashboard: updated task', updated);
@@ -169,6 +170,23 @@ export default function Dashboard() {
       }
     }
   };
+
+  // Build activity map and details from task completions
+  const { activityMap, activityDetails } = React.useMemo(() => {
+    const map: Record<string, number> = {};
+    const details: Record<string, string[]> = {};
+    for (const t of storeTasks) {
+      if (!t.completed) continue;
+      // Prefer completedAt if present, otherwise use createdAt as fallback
+      const when = t.completedAt || t.createdAt;
+      if (!when) continue;
+      const date = when.slice(0, 10);
+      map[date] = (map[date] || 0) + 1;
+      if (!details[date]) details[date] = [];
+      details[date].push(t.title || 'Untitled');
+    }
+    return { activityMap: map, activityDetails: details };
+  }, [storeTasks]);
 
   if (!mounted) {
     // render a simple placeholder during SSR so server and client markup match
@@ -210,7 +228,12 @@ export default function Dashboard() {
 
       {/* Activity heatmap under the title */}
       <div className="px-4">
-        <ActivityHeatmap open={heatmapOpen} onOpenChange={(v) => setHeatmapOpen(v)} />
+        <ActivityHeatmap
+          open={heatmapOpen}
+          onOpenChange={(v) => setHeatmapOpen(v)}
+          activity={activityMap}
+          activityDetails={activityDetails}
+        />
         <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3">
           <button
             onClick={() => setView('new')}

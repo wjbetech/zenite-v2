@@ -77,14 +77,14 @@ export default function DailiesClient() {
     const t = tasks.find((x) => x.id === id);
     if (!t) return;
     if (t.completed) {
-      updateTask(id, { completed: false, started: false });
+      updateTask(id, { completed: false, started: false, completedAt: null });
       return;
     }
     if (t.started) {
-      updateTask(id, { started: false, completed: true });
+      updateTask(id, { started: false, completed: true, completedAt: new Date().toISOString() });
       return;
     }
-    updateTask(id, { started: true, completed: false });
+    updateTask(id, { started: true, completed: false, completedAt: null });
   };
 
   const handleSave = (id: string, patch: Partial<Task>) => {

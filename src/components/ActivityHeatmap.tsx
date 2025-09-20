@@ -138,11 +138,14 @@ function borderForCount(count: number) {
 
 export default function ActivityHeatmap({
   activity,
+  activityDetails,
   startRange = '3m',
   onOpenChange,
   open: openProp,
 }: {
   activity?: ActivityMap;
+  // optional mapping yyyy-mm-dd -> list of completed task titles for tooltip
+  activityDetails?: Record<string, string[]>;
   startRange?: RangeKey;
   onOpenChange?: (open: boolean) => void;
   open?: boolean;
@@ -333,14 +336,17 @@ export default function ActivityHeatmap({
                           const count = d ? map[key] ?? 0 : 0;
                           const color = colorForCount(count);
                           const border = borderForCount(count);
+                          const titles = d ? activityDetails?.[key] ?? [] : [];
                           const title = d
-                            ? `${key}: ${count} completed task${count === 1 ? '' : 's'}`
+                            ? `${key}: ${count} completed task${count === 1 ? '' : 's'}${
+                                titles.length ? '\n' + titles.slice(0, 5).join('\n') : ''
+                              }`
                             : 'No date';
                           return (
                             <div
                               key={i}
-                              title={title}
-                              className={`w-8 h-8 rounded-sm ${color} ${border} cursor-default`}
+                              data-tip={title}
+                              className={`w-8 h-8 rounded-sm ${color} ${border} cursor-default tooltip`}
                             />
                           );
                         })}
@@ -365,12 +371,15 @@ export default function ActivityHeatmap({
                       const color = inMonth ? colorForCount(count) : 'bg-transparent';
                       const border = inMonth ? borderForCount(count) : 'border-2 border-gray-400';
                       const opacity = inMonth ? '' : 'opacity-50';
-                      const title = `${key}: ${count} completed task${count === 1 ? '' : 's'}`;
+                      const titles = activityDetails?.[key] ?? [];
+                      const title = `${key}: ${count} completed task${count === 1 ? '' : 's'}${
+                        titles.length ? '\n' + titles.slice(0, 5).join('\n') : ''
+                      }`;
                       return (
                         <div
                           key={i}
-                          title={title}
-                          className={`w-5 h-5 rounded-sm ${color} ${border} ${opacity} cursor-default`}
+                          data-tip={title}
+                          className={`w-5 h-5 rounded-sm ${color} ${border} ${opacity} cursor-default tooltip`}
                         />
                       );
                     })}
@@ -393,12 +402,15 @@ export default function ActivityHeatmap({
                           const count = map[key] ?? 0;
                           const color = colorForCount(count);
                           const border = borderForCount(count);
-                          const title = `${key}: ${count} completed task${count === 1 ? '' : 's'}`;
+                          const titles = activityDetails?.[key] ?? [];
+                          const title = `${key}: ${count} completed task${count === 1 ? '' : 's'}${
+                            titles.length ? '\n' + titles.slice(0, 5).join('\n') : ''
+                          }`;
                           return (
                             <div
                               key={i}
-                              title={title}
-                              className={`w-5 h-5 rounded-sm ${color} ${border} cursor-default`}
+                              data-tip={title}
+                              className={`w-5 h-5 rounded-sm ${color} ${border} cursor-default tooltip`}
                             />
                           );
                         })}

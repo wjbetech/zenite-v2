@@ -101,9 +101,19 @@ export default function Dashboard() {
   const soonest = [...all]
     .filter((t) => t.dueDate)
     .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
-  const today = [...all].filter((t) => t.dueDate && daysUntil(t.dueDate) === 0);
+  // Include daily recurrence tasks in Today and This Week views.
+  // Use the canonical `all` ordering and filter so we don't introduce duplicates
+  // or change the store ordering.
+  const today = [...all].filter((t) => {
+    const isDaily = (t.recurrence ?? 'once') === 'daily';
+    if (isDaily) return true;
+    if (!t.dueDate) return false;
+    return daysUntil(t.dueDate) === 0;
+  });
 
   const week = [...all].filter((t) => {
+    const isDaily = (t.recurrence ?? 'once') === 'daily';
+    if (isDaily) return true;
     if (!t.dueDate) return false;
     const days = daysUntil(t.dueDate);
     return days >= 0 && days <= 6; // this week including today
@@ -186,7 +196,17 @@ export default function Dashboard() {
       // Prefer completedAt if present, otherwise use createdAt as fallback
       const when = t.completedAt || t.createdAt;
       if (!when) continue;
-      const date = when.slice(0, 10);
+      // Normalize to local YYYY-MM-DD to match ActivityHeatmap's local keys
+      let date: string;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(when)) {
+        date = when;
+      } else {
+        const d = new Date(when);
+        const y = d.getFullYear();
+        const m = `${d.getMonth() + 1}`.padStart(2, '0');
+        const day = `${d.getDate()}`.padStart(2, '0');
+        date = `${y}-${m}-${day}`;
+      }
       map[date] = (map[date] || 0) + 1;
       if (!details[date]) details[date] = [];
       details[date].push(t.title || 'Untitled');

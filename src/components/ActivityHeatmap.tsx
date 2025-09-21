@@ -54,7 +54,12 @@ function writeActivityRangeToCookie(range: RangeKey) {
 }
 
 function formatDateISO(d: Date) {
-  return d.toISOString().slice(0, 10);
+  // Return a local YYYY-MM-DD string using local date components to avoid
+  // UTC shifts when formatting date-only buckets.
+  const y = d.getFullYear();
+  const m = `${d.getMonth() + 1}`.padStart(2, '0');
+  const day = `${d.getDate()}`.padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 function addDays(d: Date, days: number) {
@@ -155,7 +160,19 @@ function getOrdinal(n: number) {
 
 function formatTooltipDateFromISO(iso: string) {
   try {
-    const d = new Date(iso);
+    // If the incoming string is a date-only `YYYY-MM-DD`, construct a
+    // local Date using numeric components to avoid the ECMAScript behavior
+    // where `new Date('YYYY-MM-DD')` is parsed as UTC and can display the
+    // previous day in locales west of UTC. For full ISO timestamps keep
+    // the normal parsing so timezone-aware times are respected.
+    let d: Date;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+      const [y, m, day] = iso.split('-').map((s) => parseInt(s, 10));
+      // monthIndex is zero-based
+      d = new Date(y, m - 1, day, 0, 0, 0, 0);
+    } else {
+      d = new Date(iso);
+    }
     const weekday = d.toLocaleDateString(undefined, { weekday: 'long' });
     const monthAbbrev = d.toLocaleDateString(undefined, { month: 'short' });
     const month = monthAbbrev.endsWith('.') ? monthAbbrev : `${monthAbbrev}.`;
@@ -239,17 +256,11 @@ export default function ActivityHeatmap({
     return { startDate: start, endDate: clampedEnd, days: filtered };
   }, [range]);
 
-  const [map, setMap] = useState<ActivityMap>(() => {
-    if (activity) return activity;
-    return zeroMap(startDate, endDate);
-  });
-
-  useEffect(() => {
-    if (activity) {
-      setMap(activity);
-      return;
-    }
-    setMap(zeroMap(startDate, endDate));
+  // derive a map for rendering by merging zeroed range with any incoming activity
+  const map = useMemo<ActivityMap>(() => {
+    const base = zeroMap(startDate, endDate);
+    if (!activity) return base;
+    return Object.assign({}, base, activity);
   }, [activity, startDate, endDate]);
 
   // tooltip portal

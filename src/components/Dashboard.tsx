@@ -42,7 +42,8 @@ export default function Dashboard() {
       const m = document.cookie.match(new RegExp('(?:^|; )' + 'zenite.activityOpen' + '=([^;]*)'));
       if (m) {
         const v = m[1] === '1';
-        console.debug('Dashboard: read persisted heatmapOpen from cookie', { v });
+        if (process.env.NODE_ENV !== 'test')
+          console.debug('Dashboard: read persisted heatmapOpen from cookie', { v });
         setHeatmapOpen(v);
       }
     } catch {
@@ -51,7 +52,9 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    console.debug('Dashboard: heatmapOpen changed', { heatmapOpen });
+    if (process.env.NODE_ENV !== 'test') {
+      console.debug('Dashboard: heatmapOpen changed', { heatmapOpen });
+    }
   }, [heatmapOpen]);
   // avoid rendering client-only dynamic data during SSR to prevent hydration mismatches
   const [mounted, setMounted] = useState(false);
@@ -119,9 +122,9 @@ export default function Dashboard() {
     return days >= 0 && days <= 6; // this week including today
   });
 
-  // Dev-only diagnostics: log store and computed buckets so we can see why Today/Week may be empty
+  // Dev-only diagnostics: guard logs out during tests to keep test output clean
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       console.log(
         'Dashboard: diagnostics -> storeTasks=',
         storeTasks.length,
@@ -161,7 +164,8 @@ export default function Dashboard() {
     }
   }, [storeTasks.length, all.length, today, week, storeTasks]);
   const handleStatusChange = (id: string, status: 'none' | 'done' | 'tilde') => {
-    console.log('Dashboard: handleStatusChange', { id, status });
+    if (process.env.NODE_ENV !== 'test')
+      console.log('Dashboard: handleStatusChange', { id, status });
     const nowIso = new Date().toISOString();
     const patch =
       status === 'tilde'
@@ -171,7 +175,7 @@ export default function Dashboard() {
         : { started: false, completed: false, completedAt: null };
 
     const updated = updateTask(id, patch);
-    console.log('Dashboard: updated task', updated);
+    if (process.env.NODE_ENV !== 'test') console.log('Dashboard: updated task', updated);
 
     // If the task wasn't in the store (updateTask returned undefined), fallback
     // to adding the patched task into the store so UI reflects the change.
@@ -182,7 +186,8 @@ export default function Dashboard() {
         // avoid duplicate ids
         const next = [...storeTasks.filter((t) => t.id !== id), patched];
         setTasks(next);
-        console.log('Dashboard: fallback setTasks added', patched);
+        if (process.env.NODE_ENV !== 'test')
+          console.log('Dashboard: fallback setTasks added', patched);
       }
     }
   };

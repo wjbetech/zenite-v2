@@ -41,12 +41,18 @@ export default function Dashboard() {
       if (typeof document === 'undefined') return;
       const m = document.cookie.match(new RegExp('(?:^|; )' + 'zenite.activityOpen' + '=([^;]*)'));
       if (m) {
-        setHeatmapOpen(m[1] === '1');
+        const v = m[1] === '1';
+        console.debug('Dashboard: read persisted heatmapOpen from cookie', { v });
+        setHeatmapOpen(v);
       }
     } catch {
       // ignore
     }
   }, []);
+
+  useEffect(() => {
+    console.debug('Dashboard: heatmapOpen changed', { heatmapOpen });
+  }, [heatmapOpen]);
   // avoid rendering client-only dynamic data during SSR to prevent hydration mismatches
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -230,7 +236,10 @@ export default function Dashboard() {
       <div className="px-4">
         <ActivityHeatmap
           open={heatmapOpen}
-          onOpenChange={(v) => setHeatmapOpen(v)}
+          onOpenChange={(v) => {
+            console.debug('Dashboard: onOpenChange received', { v });
+            setHeatmapOpen(v);
+          }}
           activity={activityMap}
           activityDetails={activityDetails}
         />

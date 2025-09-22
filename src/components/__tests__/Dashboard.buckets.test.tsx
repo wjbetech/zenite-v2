@@ -3,19 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 
 // Mock the taskStore to supply a small set of tasks covering daily and due dates
 jest.mock('../../lib/taskStore', () => {
-  // compute local YYYY-MM-DD strings inside the factory (allowed by Jest)
-  const d0 = new Date();
-  const today = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate()).toISOString().slice(0, 10);
-  const d3 = new Date(d0);
-  d3.setDate(d3.getDate() + 3);
-  const inThree = new Date(d3.getFullYear(), d3.getMonth(), d3.getDate())
-    .toISOString()
-    .slice(0, 10);
-  const d7 = new Date(d0);
-  d7.setDate(d7.getDate() + 8);
-  const inSeven = new Date(d7.getFullYear(), d7.getMonth(), d7.getDate())
-    .toISOString()
-    .slice(0, 10);
+  // compute dates inline for task dueDate fields (no unused locals)
 
   const mockState = {
     tasks: [

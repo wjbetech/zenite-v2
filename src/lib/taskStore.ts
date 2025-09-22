@@ -12,6 +12,8 @@ export type Task = {
   recurrence?: string | null;
   createdAt: string;
   completed?: boolean;
+  // ISO timestamp when task was marked completed. Optional for older/local tasks.
+  completedAt?: string | null;
   started?: boolean;
   projectId?: string | null;
   ownerId?: string;
@@ -100,7 +102,20 @@ export const useTaskStore = create<State>((set, get) => {
     },
 
     updateTask(id, patch) {
-      const tasks = get().tasks.map((t) => (t.id === id ? { ...t, ...patch } : t));
+      const tasks = get().tasks.map((t) => {
+        if (t.id !== id) return t;
+        // compute completedAt semantics: if patch explicitly provides completedAt, use it.
+        // Otherwise, if patch.completed === true and task was not previously completed, set completedAt to now.
+        // If patch.completed === false, clear completedAt.
+        const next = { ...t, ...patch } as Task;
+        if (patch.completed === true && !t.completed && patch.completedAt === undefined) {
+          next.completedAt = new Date().toISOString();
+        }
+        if (patch.completed === false && patch.completedAt === undefined) {
+          next.completedAt = null;
+        }
+        return next;
+      });
       set({ tasks });
       save(tasks);
       return tasks.find((t) => t.id === id);
@@ -152,6 +167,7 @@ export const useTaskStore = create<State>((set, get) => {
                 notes: (r.description as string) || (r.notes as string) || undefined,
                 createdAt: (r.createdAt as string) || new Date().toISOString(),
                 completed: !!r.completed,
+                completedAt: (r.completedAt as string) || null,
                 projectId: (r.projectId as string) ?? null,
                 recurrence: (r.recurrence as string) ?? null,
                 ownerId: (r.ownerId as string) ?? undefined,

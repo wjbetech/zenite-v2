@@ -33,6 +33,29 @@ export default function Dashboard() {
   );
   const [loading, setLoading] = useState(false);
   const [heatmapOpen, setHeatmapOpen] = useState(true);
+  // On mount, read persisted activity open state from cookie so Dashboard
+  // reflects the user's last choice. We do this in an effect to avoid SSR
+  // hydration mismatches.
+  useEffect(() => {
+    try {
+      if (typeof document === 'undefined') return;
+      const m = document.cookie.match(new RegExp('(?:^|; )' + 'zenite.activityOpen' + '=([^;]*)'));
+      if (m) {
+        const v = m[1] === '1';
+        if (process.env.NODE_ENV !== 'test')
+          console.debug('Dashboard: read persisted heatmapOpen from cookie', { v });
+        setHeatmapOpen(v);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'test') {
+      console.debug('Dashboard: heatmapOpen changed', { heatmapOpen });
+    }
+  }, [heatmapOpen]);
   // avoid rendering client-only dynamic data during SSR to prevent hydration mismatches
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -81,17 +104,27 @@ export default function Dashboard() {
   const soonest = [...all]
     .filter((t) => t.dueDate)
     .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
-  const today = [...all].filter((t) => t.dueDate && daysUntil(t.dueDate) === 0);
+  // Include daily recurrence tasks in Today and This Week views.
+  // Use the canonical `all` ordering and filter so we don't introduce duplicates
+  // or change the store ordering.
+  const today = [...all].filter((t) => {
+    const isDaily = (t.recurrence ?? 'once') === 'daily';
+    if (isDaily) return true;
+    if (!t.dueDate) return false;
+    return daysUntil(t.dueDate) === 0;
+  });
 
   const week = [...all].filter((t) => {
+    const isDaily = (t.recurrence ?? 'once') === 'daily';
+    if (isDaily) return true;
     if (!t.dueDate) return false;
     const days = daysUntil(t.dueDate);
     return days >= 0 && days <= 6; // this week including today
   });
 
-  // Dev-only diagnostics: log store and computed buckets so we can see why Today/Week may be empty
+  // Dev-only diagnostics: guard logs out during tests to keep test output clean
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       console.log(
         'Dashboard: diagnostics -> storeTasks=',
         storeTasks.length,
@@ -131,16 +164,18 @@ export default function Dashboard() {
     }
   }, [storeTasks.length, all.length, today, week, storeTasks]);
   const handleStatusChange = (id: string, status: 'none' | 'done' | 'tilde') => {
-    console.log('Dashboard: handleStatusChange', { id, status });
+    if (process.env.NODE_ENV !== 'test')
+      console.log('Dashboard: handleStatusChange', { id, status });
+    const nowIso = new Date().toISOString();
     const patch =
       status === 'tilde'
-        ? { started: true, completed: false }
+        ? { started: true, completed: false, completedAt: null }
         : status === 'done'
-        ? { started: false, completed: true }
-        : { started: false, completed: false };
+        ? { started: false, completed: true, completedAt: nowIso }
+        : { started: false, completed: false, completedAt: null };
 
     const updated = updateTask(id, patch);
-    console.log('Dashboard: updated task', updated);
+    if (process.env.NODE_ENV !== 'test') console.log('Dashboard: updated task', updated);
 
     // If the task wasn't in the store (updateTask returned undefined), fallback
     // to adding the patched task into the store so UI reflects the change.
@@ -151,10 +186,38 @@ export default function Dashboard() {
         // avoid duplicate ids
         const next = [...storeTasks.filter((t) => t.id !== id), patched];
         setTasks(next);
-        console.log('Dashboard: fallback setTasks added', patched);
+        if (process.env.NODE_ENV !== 'test')
+          console.log('Dashboard: fallback setTasks added', patched);
       }
     }
   };
+
+  // Build activity map and details from task completions
+  const { activityMap, activityDetails } = React.useMemo(() => {
+    const map: Record<string, number> = {};
+    const details: Record<string, string[]> = {};
+    for (const t of storeTasks) {
+      if (!t.completed) continue;
+      // Prefer completedAt if present, otherwise use createdAt as fallback
+      const when = t.completedAt || t.createdAt;
+      if (!when) continue;
+      // Normalize to local YYYY-MM-DD to match ActivityHeatmap's local keys
+      let date: string;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(when)) {
+        date = when;
+      } else {
+        const d = new Date(when);
+        const y = d.getFullYear();
+        const m = `${d.getMonth() + 1}`.padStart(2, '0');
+        const day = `${d.getDate()}`.padStart(2, '0');
+        date = `${y}-${m}-${day}`;
+      }
+      map[date] = (map[date] || 0) + 1;
+      if (!details[date]) details[date] = [];
+      details[date].push(t.title || 'Untitled');
+    }
+    return { activityMap: map, activityDetails: details };
+  }, [storeTasks]);
 
   if (!mounted) {
     // render a simple placeholder during SSR so server and client markup match
@@ -195,9 +258,17 @@ export default function Dashboard() {
       </div>
 
       {/* Activity heatmap under the title */}
-      <div className="mb-6 px-4">
-        <ActivityHeatmap open={heatmapOpen} onOpenChange={(v) => setHeatmapOpen(v)} />
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="px-4">
+        <ActivityHeatmap
+          open={heatmapOpen}
+          onOpenChange={(v) => {
+            console.debug('Dashboard: onOpenChange received', { v });
+            setHeatmapOpen(v);
+          }}
+          activity={activityMap}
+          activityDetails={activityDetails}
+        />
+        <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3">
           <button
             onClick={() => setView('new')}
             className={`w-full px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${

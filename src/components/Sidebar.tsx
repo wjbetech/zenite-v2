@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useUser } from '@clerk/nextjs';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 // import UISidebar from './ui/Sidebar';
 // ...existing code...
@@ -20,16 +20,7 @@ import useProjectStore from '../lib/projectStore';
 import { Star } from 'lucide-react';
 import { useEffect } from 'react';
 
-function safeUseRouter() {
-  try {
-    // call the real hook; in environments where next/navigation isn't
-    // available or not mocked this may throw — catch and return null.
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return useRouter();
-  } catch {
-    return null;
-  }
-}
+// ...existing code...
 
 const SIDEBAR_KEY = 'zenite.sidebarCollapsed';
 
@@ -60,10 +51,6 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
 
   const projects = useProjectStore((s) => s.projects);
   const updateProject = useProjectStore((s) => s.updateProject);
-  const createProject = useProjectStore((s) => s.createProject);
-
-  const router = safeUseRouter();
-  const [newProjectName, setNewProjectName] = React.useState('');
 
   React.useEffect(() => {
     try {
@@ -133,7 +120,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                   !!pathname && (pathname === item.href || pathname.startsWith(item.href + '/'));
                 if (effectiveLoggedIn) {
                   return (
-                    <React.Fragment key={item.href}>
+                    <div key={item.href} className="w-full">
                       <div
                         className={`flex items-center gap-3 rounded ${
                           item.href === '/projects' ? 'px-1 py-1.5' : 'px-2 py-2'
@@ -185,41 +172,6 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                             className="flex flex-col gap-1 overflow-auto w-full"
                             style={{ maxHeight: '20rem' }}
                           >
-                            {/* quick-create form */}
-                            <form
-                              onSubmit={(e) => {
-                                e.preventDefault();
-                                const name = (newProjectName || '').trim();
-                                if (!name) return;
-                                try {
-                                  const p = createProject(name);
-                                  setNewProjectName('');
-                                  setProjectsOpen(true);
-                                  // navigate to the created project
-                                  try {
-                                    router?.push?.(`/projects/${p.id}`);
-                                  } catch {}
-                                } catch {
-                                  // ignore/create failure
-                                }
-                              }}
-                              className="flex items-center gap-2 px-2 py-1"
-                            >
-                              <input
-                                aria-label="New project name"
-                                className="input input-sm flex-1"
-                                placeholder="New project"
-                                value={newProjectName}
-                                onChange={(e) => setNewProjectName(e.target.value)}
-                              />
-                              <button
-                                type="submit"
-                                className="btn btn-sm"
-                                disabled={!newProjectName.trim()}
-                              >
-                                Create
-                              </button>
-                            </form>
                             {projects.length === 0 && (
                               <div className="text-xs text-gray-500">No projects yet</div>
                             )}
@@ -263,7 +215,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                           </div>
                         </div>
                       )}
-                    </React.Fragment>
+                    </div>
                   );
                 }
 

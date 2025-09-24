@@ -1,6 +1,6 @@
 'use client';
 
-import create from 'zustand';
+import { create } from 'zustand';
 import { nanoid } from 'nanoid/non-secure';
 import api from './api';
 

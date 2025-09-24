@@ -120,7 +120,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                   !!pathname && (pathname === item.href || pathname.startsWith(item.href + '/'));
                 if (effectiveLoggedIn) {
                   return (
-                    <React.Fragment key={item.href}>
+                    <div key={item.href} className="w-full">
                       <div
                         className={`flex items-center gap-3 rounded ${
                           item.href === '/projects' ? 'px-1 py-1.5' : 'px-2 py-2'
@@ -215,7 +215,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                           </div>
                         </div>
                       )}
-                    </React.Fragment>
+                    </div>
                   );
                 }
 

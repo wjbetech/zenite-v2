@@ -120,9 +120,11 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                   return (
                     <React.Fragment key={item.href}>
                       <div
-                        className={`flex items-center gap-3 rounded px-2 py-2 ${
-                          isActive ? 'bg-success-content/20' : 'hover:bg-base-300'
-                        } ${collapsed ? 'justify-center w-full' : 'justify-between w-full'}`}
+                        className={`flex items-center gap-3 rounded ${
+                          item.href === '/projects' ? 'px-1 py-1.5' : 'px-2 py-2'
+                        } ${isActive ? 'bg-success-content/20' : 'hover:bg-base-300'} ${
+                          collapsed ? 'justify-center w-full' : 'justify-between w-full'
+                        }`}
                       >
                         <Link
                           href={item.href}
@@ -158,7 +160,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                       {item.href === '/projects' && !collapsed && (
                         <div
                           id="sidebar-projects"
-                          className={`ml-3 mt-1 w-full pr-3 overflow-hidden origin-top transition-[max-height,opacity,transform] duration-200 ease-out ${
+                          className={`ml-3 mt-0 w-full pr-3 overflow-hidden origin-top transition-[max-height,opacity,transform] duration-200 ease-out ${
                             projectsOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0'
                           }`}
                           style={{ maxHeight: projectsOpen ? '20rem' : 0 }}

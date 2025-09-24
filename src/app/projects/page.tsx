@@ -2,7 +2,12 @@ import ProjectsClient from '../../components/ProjectsClient';
 import prisma from '../../lib/prisma';
 
 export default async function Page() {
-  let projects = [] as Array<{ id: string; name: string; description?: string | null; createdAt: Date }>;
+  let projects = [] as Array<{
+    id: string;
+    name: string;
+    description?: string | null;
+    createdAt: Date;
+  }>;
 
   try {
     projects = await prisma.project.findMany({ orderBy: { createdAt: 'desc' }, take: 200 });

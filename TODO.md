@@ -55,3 +55,21 @@ These are the immediate actionable items. Completed items were moved to `impleme
 If you want, I can start working on the top item now: add the Prisma `Project` model and create the migration.
 
 - [ ] Build out drag and drop for the dailies page so that items can be reshuffled.
+
+---
+
+## Recent progress (2025-09-22)
+
+- Merged `feature/activity-refactor` into `main` with the following highlights:
+  - Activity heatmap refactor and tooltip/details wiring.
+  - Guarded dev console diagnostics in `Dashboard.tsx` to keep test/CI output clean.
+  - Added `src/components/__tests__/Dashboard.buckets.test.tsx` to validate Today and This Week bucketing logic.
+  - Removed unused test locals and updated Sidebar spacing for Projects (aligns nested items with other nav items).
+
+All tests pass locally after these changes.
+
+## Suggested next steps
+
+- Address `zustand` deprecation warnings by switching store files to the named `create` export.
+- Add a small visual regression/smoke test for `Sidebar` to assert padding/spacing for the Projects item.
+- Add CI steps (typecheck, lint, tests) so these regressions are caught in PRs.

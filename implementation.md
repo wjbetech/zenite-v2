@@ -179,6 +179,14 @@ The following items were completed and moved from `TODO.md` on 2025-09-17 to kee
 
   - Project cards restyled and behavior updated (folder icon, project-only directories, delete via reusable `ConfirmModal`, responsive grid layout). Sidebar Projects dropdown added as specified (shows current tasks, opens when active, uses `framer-motion`).
 
+- Activity refactor and heatmap
+
+  - Refactored the Activity Heatmap and Dashboard activity wiring to normalize completion dates to local YYYY-MM-DD keys and added `ActivityHeatmap` tooltips and details. Guarded dev-only console diagnostics in `Dashboard.tsx` so tests/CI output remains clean.
+
+- Tests: Dashboard Today/Week bucketing
+
+  - Added `src/components/__tests__/Dashboard.buckets.test.tsx` covering Today and This Week bucketing (daily recurrence inclusion and 0-6 day range). Tests added and merged into `main` on 2025-09-22.
+
 If you prefer a different date or more granular notes per task, I can expand these entries.
 
 ---

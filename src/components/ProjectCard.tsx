@@ -1,16 +1,18 @@
-'use client';
+ 'use client';
 
 import React from 'react';
 import Link from 'next/link';
-import { Trash } from 'lucide-react';
+import { Trash, Star, StarOff } from 'lucide-react';
+import useProjectStore from '../lib/projectStore';
 
 type Props = {
-  project: { id: string; name: string; description?: string; taskCount?: number };
+  project: { id: string; name: string; description?: string; taskCount?: number; starred?: boolean };
   onDelete?: (id: string) => void;
   href?: string;
 };
 
 export default function ProjectCard({ project, onDelete, href }: Props) {
+  const toggleStar = useProjectStore((s) => s.toggleStar);
   const cardInner = (
     <div
       className={`bg-base-200 relative z-10 rounded-md shadow-sm border border-info p-4 xl:p-5 min-h-[6rem] transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md cursor-pointer`}
@@ -30,7 +32,24 @@ export default function ProjectCard({ project, onDelete, href }: Props) {
           )}
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
+          <button
+            aria-label={project.starred ? 'Unstar project' : 'Star project'}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              toggleStar(project.id);
+            }}
+            className="text-yellow-400 hover:text-yellow-500 p-2 rounded-md cursor-pointer flex items-center justify-center"
+            title={project.starred ? 'Unstar project' : 'Star project'}
+          >
+            {project.starred ? (
+              <Star className="h-5 w-5" />
+            ) : (
+              <StarOff className="h-5 w-5" />
+            )}
+          </button>
+
           {onDelete && (
             <button
               aria-label="Delete project"

@@ -20,6 +20,7 @@ type State = {
   updateProject: (id: string, patch: Partial<Project>) => Project | undefined;
   deleteProject: (id: string) => void;
   setProjects: (p: Project[]) => void;
+  toggleStar: (id: string) => void;
   loadRemote: () => Promise<void>;
 };
 
@@ -74,6 +75,29 @@ const useProjectStore = create<State>((set, get) => ({
     const projects = get().projects.filter((p) => p.id !== id);
     set({ projects });
     save(projects);
+  },
+  toggleStar(id) {
+    const projects = get().projects;
+    const idx = projects.findIndex((p) => p.id === id);
+    if (idx === -1) return;
+    const project = projects[idx];
+    const updated = { ...project, starred: !project.starred };
+
+    // Remove the project from the list
+    const others = projects.filter((p) => p.id !== id);
+
+    let newProjects: Project[];
+    if (updated.starred) {
+      // Move starred project to the top
+      newProjects = [updated, ...others];
+    } else {
+      // Restore to its previous position (if possible) or put at top
+      const insertAt = Math.min(idx, others.length);
+      newProjects = [...others.slice(0, insertAt), updated, ...others.slice(insertAt)];
+    }
+
+    set({ projects: newProjects });
+    save(newProjects);
   },
   async loadRemote() {
     try {

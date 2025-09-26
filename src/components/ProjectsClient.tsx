@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import useProjectStore, { Project } from '../lib/projectStore';
+import useTaskStore from '../lib/taskStore';
 // import { Input } from './ui/input';
 // ...existing code...
 import { Plus } from 'lucide-react';
@@ -35,6 +36,9 @@ export default function ProjectsClient({ initialProjects }: Props) {
       } as Project;
     }),
   );
+  const tasks = useTaskStore((s) => s.tasks);
+  const usingRemoteDb = process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true';
+
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -210,6 +214,38 @@ export default function ProjectsClient({ initialProjects }: Props) {
     initProjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const localTaskCounts = useMemo(() => {
+    return tasks.reduce<Record<string, number>>((acc, t) => {
+      const pid = t.projectId ?? null;
+      if (!pid) return acc;
+      acc[pid] = (acc[pid] ?? 0) + 1;
+      return acc;
+    }, {});
+  }, [tasks]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    if (usingRemoteDb) return;
+
+    const storeProjects = useProjectStore.getState().projects;
+    let changed = false;
+    const next = storeProjects.map((p) => {
+      const current = typeof p.taskCount === 'number' ? p.taskCount : 0;
+      const nextCount = localTaskCounts[p.id] ?? current;
+      if (nextCount !== current) changed = true;
+      return { ...p, taskCount: nextCount };
+    });
+
+    if (!changed) {
+      // ensure displayed projects still reflect the store state
+      setDisplayedProjects(next);
+      return;
+    }
+
+    setProjects(next as Project[]);
+    setDisplayedProjects(next as Project[]);
+  }, [mounted, localTaskCounts, setProjects, usingRemoteDb]);
 
   const create = () => {
     if (!name.trim()) return;

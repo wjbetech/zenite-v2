@@ -15,7 +15,8 @@ export default async function Page() {
         take: 200,
         include: { _count: { select: { tasks: true } } },
       });
-  } catch (_) {
+    } catch (e) {
+      console.log(e);
       // Server-side only: log a concise warning so maintainers can see why the
       // projects page couldn't load. Don't expose DB internals to the client.
       console.warn('Projects page: could not reach database; showing empty list.');

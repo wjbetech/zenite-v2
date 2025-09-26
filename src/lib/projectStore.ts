@@ -57,6 +57,7 @@ const useProjectStore = create<State>((set, get) => ({
       createdAt: new Date().toISOString(),
       view: 'list',
       starred: false,
+      taskCount: 0,
     };
     const projects = [p, ...get().projects];
     set({ projects });

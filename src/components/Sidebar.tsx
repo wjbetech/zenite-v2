@@ -123,7 +123,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                     <div key={item.href} className="w-full">
                       <div
                         className={`flex items-center gap-3 rounded ${
-                          item.href === '/projects' ? 'px-1 py-1.5' : 'px-2 py-2'
+                          item.href === '/projects' ? 'px-2 py-1.5' : 'px-2 py-2'
                         } ${isActive ? 'bg-success-content/20' : 'hover:bg-base-300'} ${
                           collapsed ? 'justify-center w-full' : 'justify-between w-full'
                         }`}

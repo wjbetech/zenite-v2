@@ -17,9 +17,9 @@ export default function ProjectCard({ project, onDelete, href }: Props) {
     >
       <div className="mt-1 flex items-center justify-between h-full">
         <div className="flex-1">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <div className="text-lg font-medium truncate">{project.name}</div>
-            <span className="ml-2 inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold px-2 py-0.5 shadow-sm">
+            <span className="ml-1 inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold px-2 py-0.5 shadow-sm">
               {typeof project.taskCount === 'number' ? project.taskCount : 0}
               <span className="sr-only"> tasks</span>
             </span>

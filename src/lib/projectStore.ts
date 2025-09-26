@@ -11,6 +11,7 @@ export type Project = {
   createdAt: string;
   view?: 'list' | 'kanban' | 'grouped';
   starred?: boolean;
+  taskCount?: number;
 };
 
 type State = {
@@ -78,12 +79,22 @@ const useProjectStore = create<State>((set, get) => ({
       if (process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true') {
         const remote = await api.fetchProjects();
         if (Array.isArray(remote)) {
-          const projects = (remote as Array<Partial<Project>>).map((r) => ({
-            id: r.id || '',
-            name: r.name || 'Untitled',
-            description: r.description,
-            createdAt: r.createdAt || new Date().toISOString(),
-          }));
+          const projects = (remote as Array<Partial<Project>>).map((r) => {
+            const remoteItem = r as Partial<Project> & { tasks?: unknown };
+            return {
+              id: remoteItem.id || '',
+              name: remoteItem.name || 'Untitled',
+              description: remoteItem.description,
+              createdAt: remoteItem.createdAt || new Date().toISOString(),
+              // Accept either an explicit taskCount or a tasks array from the API
+              taskCount:
+                typeof remoteItem.taskCount === 'number'
+                  ? remoteItem.taskCount
+                  : Array.isArray(remoteItem.tasks)
+                  ? remoteItem.tasks.length
+                  : undefined,
+            } as Project;
+          });
           set({ projects });
           save(projects);
         }

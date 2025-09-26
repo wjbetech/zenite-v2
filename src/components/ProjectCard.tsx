@@ -2,10 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Trash, Folder } from 'lucide-react';
+import { Trash } from 'lucide-react';
 
 type Props = {
-  project: { id: string; name: string; description?: string };
+  project: { id: string; name: string; description?: string; taskCount?: number };
   onDelete?: (id: string) => void;
   href?: string;
 };
@@ -18,9 +18,11 @@ export default function ProjectCard({ project, onDelete, href }: Props) {
       <div className="mt-1 flex items-center justify-between h-full">
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            {/* make folder icon flat (no bg/border) and same visual weight as trash */}
-            <Folder className="h-6 w-6 text-info" />
-            <div className="text-lg font-medium">{project.name}</div>
+            <div className="text-lg font-medium truncate">{project.name}</div>
+            <span className="ml-2 inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold px-2 py-0.5 shadow-sm">
+              {typeof project.taskCount === 'number' ? project.taskCount : 0}
+              <span className="sr-only"> tasks</span>
+            </span>
           </div>
 
           {project.description && (
@@ -49,9 +51,16 @@ export default function ProjectCard({ project, onDelete, href }: Props) {
   );
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <div className="absolute inset-0 translate-x-2 translate-y-2 rounded-md bg-base-200 border border-gray-200/20 z-0" />
-      {href ? <Link href={href}>{cardInner}</Link> : cardInner}
+      {href ? (
+        <Link href={href}>
+          {/* ensure link child fills width */}
+          {cardInner}
+        </Link>
+      ) : (
+        cardInner
+      )}
     </div>
   );
 }

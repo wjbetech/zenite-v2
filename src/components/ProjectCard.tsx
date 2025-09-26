@@ -1,18 +1,22 @@
- 'use client';
+'use client';
 
 import React from 'react';
 import Link from 'next/link';
 import { Trash } from 'lucide-react';
-import useProjectStore from '../lib/projectStore';
 
 type Props = {
-  project: { id: string; name: string; description?: string; taskCount?: number; starred?: boolean };
+  project: {
+    id: string;
+    name: string;
+    description?: string;
+    taskCount?: number;
+    starred?: boolean;
+  };
   onDelete?: (id: string) => void;
   href?: string;
 };
 
 export default function ProjectCard({ project, onDelete, href }: Props) {
-  const toggleStar = useProjectStore((s) => s.toggleStar);
   const cardInner = (
     <div
       className={`bg-base-200 relative z-10 rounded-md shadow-sm border border-info p-4 xl:p-5 min-h-[6rem] transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md cursor-pointer`}
@@ -32,30 +36,7 @@ export default function ProjectCard({ project, onDelete, href }: Props) {
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            aria-label={project.starred ? 'Unstar project' : 'Star project'}
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              toggleStar(project.id);
-            }}
-            className="text-yellow-400 hover:text-yellow-500 p-2 rounded-md cursor-pointer flex items-center justify-center"
-            title={project.starred ? 'Unstar project' : 'Star project'}
-          >
-            {project.starred ? (
-              // filled star
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-              </svg>
-            ) : (
-              // outline star
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-              </svg>
-            )}
-          </button>
-
+        <div className="flex items-center">
           {onDelete && (
             <button
               aria-label="Delete project"

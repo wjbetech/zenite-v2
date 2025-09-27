@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import TaskCard, { Task } from './TaskCard';
+import { useTaskStore } from '../lib/taskStore';
 
 type Props = {
   projectId: string;
@@ -20,9 +21,13 @@ export default function ProjectTasksClient({ projectId }: Props) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const usingRemoteDb = process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true';
+  const localTasks = useTaskStore((s) => s.tasks);
+
   useEffect(() => {
     let mounted = true;
-    async function load() {
+
+    async function loadRemote() {
       setLoading(true);
       try {
         const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}/tasks`)
@@ -44,11 +49,32 @@ export default function ProjectTasksClient({ projectId }: Props) {
         if (mounted) setLoading(false);
       }
     }
-    load();
+
+    if (usingRemoteDb) {
+      loadRemote();
+      return () => {
+        mounted = false;
+      };
+    }
+
+    // When not using the remote DB, derive tasks from the local store so counts match
+    const derived = localTasks
+      .filter((t) => t.projectId === projectId)
+      .map((t) => ({
+        id: t.id,
+        title: t.title,
+        notes: t.notes,
+        dueDate: t.dueDate ?? null,
+        createdAt: t.createdAt,
+        completed: !!t.completed,
+      }));
+    setTasks(derived);
+    setLoading(false);
+
     return () => {
       mounted = false;
     };
-  }, [projectId]);
+  }, [projectId, localTasks, usingRemoteDb]);
 
   if (loading) return <div>Loading tasks…</div>;
   if (tasks.length === 0)

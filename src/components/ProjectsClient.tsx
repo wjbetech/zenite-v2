@@ -180,20 +180,22 @@ export default function ProjectsClient({ initialProjects }: Props) {
   );
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">Projects</h1>
+    <div className="flex flex-col flex-1 min-h-0 overflow-x-visible px-4">
+      <header className="pt-4 pb-6">
+        <h1 className="text-2xl font-semibold mb-4">Projects</h1>
 
-      <div className="mb-8 flex items-center gap-2">
-        <button
-          onClick={() => setCreateModalOpen(true)}
-          className="btn btn-success py-3 flex items-center gap-2 border-neutral"
-        >
-          <Plus className="h-4 w-4" />
-          <span className="leading-none">New Project</span>
-        </button>
-      </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setCreateModalOpen(true)}
+            className="btn btn-success py-3 flex items-center gap-2 border-neutral"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="leading-none">New Project</span>
+          </button>
+        </div>
+      </header>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 pb-10">
         {dbUnavailable ? (
           <div className="text-sm text-red-600 font-semibold">
             The DB was not found - please contact your network administrator

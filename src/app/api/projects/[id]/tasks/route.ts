@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import prisma from '../../../../../lib/prisma';
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
-export async function GET(request: Request, context: unknown) {
-  const { params } = context as RouteContext;
-  const { id } = params;
+export async function GET(request: Request, { params }: RouteContext) {
+  const { id } = await params;
   try {
     const tasks = await prisma.task.findMany({
       where: { projectId: id },

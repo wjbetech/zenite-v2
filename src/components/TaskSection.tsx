@@ -37,14 +37,14 @@ export default function TaskSection({
         </h2>
       )}
       <div
-        className={`${
-          noInnerScroll ? '' : 'overflow-y-auto'
-        } transition-all duration-300 ease-in-out pt-4 pr-4 pb-2`}
+        className={`transition-all duration-300 ease-in-out pt-4 pb-2 pr-4 ${
+          noInnerScroll ? '' : 'overflow-x-visible'
+        }`}
         style={
           noInnerScroll ? undefined : { maxHeight: expanded ? 'calc(100vh - 10rem)' : undefined }
         }
       >
-        <ul className="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6 perspective-[1000px]">
+        <ul className="list-none pl-0 space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6 perspective-[1000px]">
           {tasks.length === 0 && <li className="text-sm text-neutral-content">No items.</li>}
           {tasks.map((t) => (
             <li key={t.id}>

@@ -104,11 +104,9 @@ export default async function RootLayout({
           <Navbar />
           {/* spacer for fixed navbar height (kept for layout), use CSS var '--nav-height' for precise centering */}
           <div style={{ height: 72 }} />
-          <div className="flex h-[calc(100vh-72px)] overflow-hidden">
+          <div className="flex h-[calc(100vh-72px)]">
             <Sidebar isLoggedIn={isLoggedIn} />
-            <main className="flex-1 p-6 h-full overflow-hidden flex flex-col min-h-0">
-              {children}
-            </main>
+            <main className="flex-1 p-6 h-full flex flex-col min-h-0">{children}</main>
           </div>
         </Providers>
       </body>

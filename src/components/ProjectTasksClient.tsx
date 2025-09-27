@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import TaskCard, { Task } from './TaskCard';
-import { useTaskStore } from '../lib/taskStore';
+// local task store is no longer used here; always prefer server
 
 type Props = {
   projectId: string;
@@ -21,8 +21,7 @@ export default function ProjectTasksClient({ projectId }: Props) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const usingRemoteDb = process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true';
-  const localTasks = useTaskStore((s) => s.tasks);
+  const [dbUnavailable, setDbUnavailable] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -30,9 +29,14 @@ export default function ProjectTasksClient({ projectId }: Props) {
     async function loadRemote() {
       setLoading(true);
       try {
-        const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}/tasks`)
-          .then((r) => r.json())
-          .catch(() => []);
+        const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/tasks`);
+        if (!response.ok) {
+          // non-OK response, treat as DB unavailable
+          setDbUnavailable(true);
+          if (mounted) setTasks([]);
+          return;
+        }
+        const res = await response.json().catch(() => []);
         const arr = Array.isArray(res) ? (res as ApiTask[]) : ([] as ApiTask[]);
         const mapped: Task[] = arr.map((t) => ({
           id: t.id,
@@ -42,43 +46,38 @@ export default function ProjectTasksClient({ projectId }: Props) {
           createdAt: t.createdAt,
           completed: !!t.completedAt,
         }));
-        if (mounted) setTasks(mapped);
+        if (mounted) {
+          setTasks(mapped);
+          setDbUnavailable(false);
+        }
       } catch (e) {
         console.warn('ProjectTasksClient: failed to fetch tasks', e);
+        if (mounted) setDbUnavailable(true);
       } finally {
         if (mounted) setLoading(false);
       }
     }
 
-    if (usingRemoteDb) {
-      loadRemote();
-      return () => {
-        mounted = false;
-      };
-    }
-
-    // When not using the remote DB, derive tasks from the local store so counts match
-    const derived = localTasks
-      .filter((t) => t.projectId === projectId)
-      .map((t) => ({
-        id: t.id,
-        title: t.title,
-        notes: t.notes,
-        dueDate: t.dueDate ?? null,
-        createdAt: t.createdAt,
-        completed: !!t.completed,
-      }));
-    setTasks(derived);
-    setLoading(false);
-
+    loadRemote();
     return () => {
       mounted = false;
     };
-  }, [projectId, localTasks, usingRemoteDb]);
+  }, [projectId]);
 
   if (loading) return <div>Loading tasks…</div>;
-  if (tasks.length === 0)
-    return <div className="text-sm text-gray-500">No tasks for this project.</div>;
+
+  if (dbUnavailable) {
+    return (
+      <div>
+        <div className="text-sm text-red-600 font-semibold mb-2">
+          The DB was not found - please contact your network administrator
+        </div>
+        <div className="text-sm text-gray-500">No tasks found!</div>
+      </div>
+    );
+  }
+
+  if (tasks.length === 0) return <div className="text-sm text-gray-500">No tasks for this project.</div>;
 
   return (
     <div className="flex flex-col gap-3">

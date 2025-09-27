@@ -54,6 +54,10 @@ export type CreateTaskPayload = {
   description?: string;
   dueDate?: string | null;
   projectId?: string | null;
+  recurrence?: string | null;
+  started?: boolean;
+  completed?: boolean;
+  completedAt?: string | null;
 };
 
 export async function createTask(payload: CreateTaskPayload) {
@@ -64,9 +68,39 @@ export async function createTask(payload: CreateTaskPayload) {
   });
 }
 
+export type UpdateTaskPayload = {
+  id: string;
+  title?: string;
+  notes?: string | null;
+  description?: string | null;
+  dueDate?: string | null;
+  recurrence?: string | null;
+  projectId?: string | null;
+  ownerId?: string;
+  started?: boolean;
+  completed?: boolean;
+  completedAt?: string | null;
+};
+
+export async function updateTask(payload: UpdateTaskPayload) {
+  return request(`${API_BASE}/tasks`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
 export async function deleteTask(id: string) {
   return request(`${API_BASE}/tasks?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
-const api = { fetchProjects, createProject, deleteProject, fetchTasks, createTask, deleteTask };
+const api = {
+  fetchProjects,
+  createProject,
+  deleteProject,
+  fetchTasks,
+  createTask,
+  updateTask,
+  deleteTask,
+};
 export default api;

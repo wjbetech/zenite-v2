@@ -25,7 +25,15 @@ async function safeConfirm() {
 async function main() {
   await safeConfirm();
 
-  console.log('Running dev/test seed...');
+  const shouldSeedDemo = process.env.SEED_DEMO_DATA === 'true';
+  console.log(`Running dev/test seed (demo data ${shouldSeedDemo ? 'enabled' : 'disabled'}).`);
+
+  if (!shouldSeedDemo) {
+    console.log(
+      'Skipping demo projects and tasks. Set SEED_DEMO_DATA=true if you want sample data inserted.',
+    );
+    return;
+  }
 
   // Create a default user if not exists
   const user = await prisma.user.upsert({
@@ -124,7 +132,7 @@ async function main() {
     }
   }
 
-  console.log('Seeding complete.');
+  console.log('Demo data seeding complete.');
 }
 
 main()

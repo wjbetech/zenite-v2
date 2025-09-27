@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 // ...existing code...
 // import { Input } from './ui/input';
 import useTaskStore, { Task } from '../lib/taskStore';
-import useProjectStore from '../lib/projectStore';
+import useProjectStore, { RemoteProject, normalizeRemoteProject } from '../lib/projectStore';
 import api from '../lib/api';
 import { toast } from 'react-toastify';
 import ChevronDown from './icons/ChevronDown';
@@ -29,10 +29,18 @@ export default function TaskModal({
   const [recurrence, setRecurrence] = useState<string | null>(initial?.recurrence ?? 'once');
   const [projectId, setProjectId] = useState<string | null>(initial?.projectId ?? null);
   const projects = useProjectStore((s) => s.projects);
-  const createProject = useProjectStore((s) => s.createProject);
-  const setProjects = useProjectStore((s) => s.setProjects);
   const [newProjectCreated, setNewProjectCreated] = useState(false);
   const [showTaskInputs, setShowTaskInputs] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // local state for creating a project from this modal
+  const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectLoading, setNewProjectLoading] = useState(false);
+  const [localToast, setLocalToast] = useState<{
+    type: 'error' | 'success';
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     setTitle(initial?.title ?? '');
@@ -44,16 +52,9 @@ export default function TaskModal({
     setNewProjectCreated(false);
     // default: when opened as New Project (and not editing) hide task inputs
     setShowTaskInputs(!(allowCreateProject && !initial?.id));
+    setSubmitError(null);
+    setSaving(false);
   }, [initial, open, allowCreateProject]);
-
-  // local state for creating a project from this modal
-  const [newProjectName, setNewProjectName] = useState('');
-  const [newProjectLoading, setNewProjectLoading] = useState(false);
-  const [localToast, setLocalToast] = useState<{
-    type: 'error' | 'success';
-    message: string;
-  } | null>(null);
-
   useEffect(() => {
     if (!localToast) return;
     const id = setTimeout(() => setLocalToast(null), 3000);
@@ -62,7 +63,10 @@ export default function TaskModal({
 
   async function submit(e?: React.FormEvent) {
     e?.preventDefault();
-    if (!title.trim()) return;
+    if (!title.trim() || saving) return;
+
+    setSubmitError(null);
+    setSaving(true);
 
     // If user typed a new project name but didn't press Enter to create it,
     // create the project first so the task can reference it.
@@ -75,74 +79,85 @@ export default function TaskModal({
 
     let createdProjectName: string | null = null;
 
-    if (initial?.id) {
-      const id = initial.id;
-      await tryCreateProjectBeforeTask().then(() =>
-        updateTask(id, {
+    try {
+      if (initial?.id) {
+        const id = initial.id;
+        await tryCreateProjectBeforeTask();
+        await updateTask(id, {
           title: title.trim(),
           notes: notes.trim(),
           dueDate,
           projectId,
           recurrence: recurrence ?? undefined,
-        }),
-      );
-    } else {
-      createdProjectName = await tryCreateProjectBeforeTask();
+        });
+      } else {
+        createdProjectName = await tryCreateProjectBeforeTask();
 
-      createTask({
-        title: title.trim(),
-        notes: notes.trim(),
-        dueDate,
-        projectId,
-        recurrence: recurrence ?? undefined,
-      });
-    }
+        await createTask({
+          title: title.trim(),
+          notes: notes.trim(),
+          dueDate,
+          projectId,
+          recurrence: recurrence ?? undefined,
+        });
+      }
 
-    onOpenChange(false);
+      onOpenChange(false);
 
-    // show a single global toast if a new project was created during submit
-    if (createdProjectName) {
-      // ensure any existing toasts are cleared so only one is visible
-      toast.dismiss();
-      toast.success(`New project was created: ${createdProjectName}`, {
-        autoClose: 4000,
-        position: 'top-center',
-      });
+      if (createdProjectName) {
+        toast.dismiss();
+        toast.success(`New project was created: ${createdProjectName}`, {
+          autoClose: 4000,
+          position: 'top-center',
+        });
+      }
+    } catch (err) {
+      console.error('TaskModal submit failed', err);
+      const message = err instanceof Error ? err.message : 'Failed to save task';
+      setSubmitError(message);
+    } finally {
+      setSaving(false);
     }
   }
 
   async function createAndSelectProject(name: string): Promise<string | null> {
     // avoid duplicate checks if already exist
-    const exists = projects.some((p) => p.name.trim().toLowerCase() === name.toLowerCase());
+    const storeProjects = useProjectStore.getState().projects;
+    const exists = storeProjects.some((p) => p.name.trim().toLowerCase() === name.toLowerCase());
     if (exists) {
-      const existing = projects.find((p) => p.name.trim().toLowerCase() === name.toLowerCase());
+      const existing = storeProjects.find(
+        (p) => p.name.trim().toLowerCase() === name.toLowerCase(),
+      );
       if (existing) setProjectId(existing.id);
       return existing?.name ?? null;
     }
 
     setNewProjectLoading(true);
     try {
+      const store = useProjectStore.getState();
       if (process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true') {
         const created = (await api.createProject({ name })) as {
-          id: string;
-          name: string;
-          description?: string;
-          createdAt?: string;
+          id?: unknown;
+          name?: unknown;
+          description?: unknown;
+          createdAt?: unknown;
+          taskCount?: unknown;
+          _count?: { tasks?: unknown } | null;
         };
-        setProjects([
-          {
-            id: created.id,
-            name: created.name,
-            description: created.description,
-            createdAt: created.createdAt || new Date().toISOString(),
-          },
-          ...projects,
-        ]);
-        setProjectId(created.id);
+        const normalized = normalizeRemoteProject(created as RemoteProject);
+        if (!normalized.id) {
+          throw new Error('Failed to create project: missing id in response');
+        }
+        const updated = [
+          normalized,
+          ...store.projects.filter((project) => project.id !== normalized.id),
+        ];
+        store.setProjects(updated);
+        setProjectId(normalized.id);
       } else {
-        const p = createProject(name);
+        const p = store.createProject(name);
+        store.setProjects([p, ...store.projects.filter((project) => project.id !== p.id)]);
         setProjectId(p.id);
-        setProjects([p, ...projects]);
       }
       setNewProjectName('');
       // mark that we created a new project from this modal so we can show the 'New Task' subheader
@@ -164,7 +179,9 @@ export default function TaskModal({
       const name = (newProjectName || '').trim();
       if (!name) return;
       // background duplicate check (case-insensitive)
-      const exists = projects.some((p) => p.name.trim().toLowerCase() === name.toLowerCase());
+      const exists = useProjectStore
+        .getState()
+        .projects.some((p) => p.name.trim().toLowerCase() === name.toLowerCase());
       if (exists) {
         setLocalToast({ type: 'error', message: 'A project with that name already exists.' });
         return;
@@ -306,12 +323,13 @@ export default function TaskModal({
 
         {/* project creation moved above title; Create button removed per request */}
 
-        <div className="mt-4 flex justify-end gap-2">
+        <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+          {submitError && <span className="mr-auto text-sm text-error">{submitError}</span>}
           <button className="btn btn-error" onClick={() => onOpenChange(false)} type="button">
             Cancel
           </button>
-          <button className="btn btn-success" type="submit">
-            {initial?.id ? 'Save' : 'Create'}
+          <button className="btn btn-success" type="submit" disabled={saving}>
+            {saving ? 'Saving…' : initial?.id ? 'Save' : 'Create'}
           </button>
         </div>
       </form>

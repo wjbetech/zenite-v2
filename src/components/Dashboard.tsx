@@ -27,11 +27,9 @@ function daysUntil(date?: string | null) {
 
 export default function Dashboard() {
   const storeTasks = useTaskStore((s) => s.tasks);
-
-  const loadRemote = useTaskStore(
-    (s) => (s as unknown as { loadRemote?: () => Promise<void> }).loadRemote,
-  );
-  const [loading, setLoading] = useState(false);
+  const loadTasks = useTaskStore((s) => s.loadTasks);
+  const tasksLoading = useTaskStore((s) => s.loading);
+  const tasksError = useTaskStore((s) => s.error);
   const [heatmapOpen, setHeatmapOpen] = useState(true);
   // On mount, read persisted activity open state from cookie so Dashboard
   // reflects the user's last choice. We do this in an effect to avoid SSR
@@ -63,25 +61,8 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    let mounted = true;
-    async function start() {
-      // Only load remote tasks when explicitly requested via env + store helper.
-      if (process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true' && loadRemote) {
-        try {
-          setLoading(true);
-          await loadRemote();
-        } catch (err) {
-          console.warn('failed to load remote tasks', err);
-        } finally {
-          if (mounted) setLoading(false);
-        }
-      }
-    }
-    start();
-    return () => {
-      mounted = false;
-    };
-  }, [loadRemote]);
+    void loadTasks();
+  }, [loadTasks]);
 
   const deleteTask = useTaskStore((s) => s.deleteTask);
   const updateTask = useTaskStore((s) => s.updateTask);
@@ -163,34 +144,33 @@ export default function Dashboard() {
       }
     }
   }, [storeTasks.length, all.length, today, week, storeTasks]);
-  const handleStatusChange = (id: string, status: 'none' | 'done' | 'tilde') => {
-    if (process.env.NODE_ENV !== 'test')
-      console.log('Dashboard: handleStatusChange', { id, status });
-    const nowIso = new Date().toISOString();
-    const patch =
-      status === 'tilde'
-        ? { started: true, completed: false, completedAt: null }
-        : status === 'done'
-        ? { started: false, completed: true, completedAt: nowIso }
-        : { started: false, completed: false, completedAt: null };
+  const handleStatusChange = React.useCallback(
+    async (id: string, status: 'none' | 'done' | 'tilde') => {
+      if (process.env.NODE_ENV !== 'test')
+        console.log('Dashboard: handleStatusChange', { id, status });
+      const nowIso = new Date().toISOString();
+      const patch =
+        status === 'tilde'
+          ? { started: true, completed: false, completedAt: null }
+          : status === 'done'
+          ? { started: false, completed: true, completedAt: nowIso }
+          : { started: false, completed: false, completedAt: null };
 
-    const updated = updateTask(id, patch);
-    if (process.env.NODE_ENV !== 'test') console.log('Dashboard: updated task', updated);
-
-    // If the task wasn't in the store (updateTask returned undefined), fallback
-    // to adding the patched task into the store so UI reflects the change.
-    if (!updated) {
-      const base = storeTasks.find((t) => t.id === id) ?? null;
-      if (base) {
-        const patched = { ...base, ...patch } as Task;
-        // avoid duplicate ids
-        const next = [...storeTasks.filter((t) => t.id !== id), patched];
-        setTasks(next);
-        if (process.env.NODE_ENV !== 'test')
-          console.log('Dashboard: fallback setTasks added', patched);
+      try {
+        const updated = await updateTask(id, patch);
+        if (process.env.NODE_ENV !== 'test') console.log('Dashboard: updated task', updated);
+      } catch (err) {
+        console.error('Dashboard: failed to update task status', err);
+        const current = useTaskStore.getState().tasks.find((t) => t.id === id) ?? null;
+        if (current) {
+          const patched = { ...current, ...patch } as Task;
+          const next = [...useTaskStore.getState().tasks.filter((t) => t.id !== id), patched];
+          setTasks(next);
+        }
       }
-    }
-  };
+    },
+    [updateTask, setTasks],
+  );
 
   // Build activity map and details from task completions
   const { activityMap, activityDetails } = React.useMemo(() => {
@@ -226,7 +206,12 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-x-hidden">
-      {loading && <div className="text-sm text-gray-500">Loading remote tasks…</div>}
+      {tasksLoading && <div className="text-sm text-gray-500 px-4 pt-2">Loading tasks…</div>}
+      {tasksError && (
+        <div className="px-4 text-sm text-error" role="alert">
+          {tasksError}
+        </div>
+      )}
       <div className="flex items-center justify-between mb-8 px-4 pt-4">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
         <div className="flex items-center gap-2">
@@ -405,7 +390,7 @@ export default function Dashboard() {
                     const pos = positions[i];
                     merged[pos] = reordered[i] || merged[pos];
                   }
-                  useTaskStore.getState().setTasks(merged);
+                  setTasks(merged);
                 }}
                 renderItem={(t: {
                   id: string;
@@ -506,7 +491,7 @@ export default function Dashboard() {
                         const pos = positions[i];
                         merged[pos] = reordered[i] || merged[pos];
                       }
-                      useTaskStore.getState().setTasks(merged);
+                      setTasks(merged);
                     }}
                     renderItem={(t: {
                       id: string;
@@ -563,7 +548,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {all.length === 0 && !loading && (
+      {all.length === 0 && !tasksLoading && (
         <div className="text-center text-gray-500 py-12">
           No tasks found — try creating one or enable the remote DB.
         </div>

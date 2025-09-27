@@ -60,9 +60,15 @@ Local development helpers
 
   npm run prisma:generate
 
-- Seed the local DB safely (script refuses to run against non-local or production-looking DATABASE_URL):
+- Seed the local DB safely (script refuses to run against non-local or production-looking DATABASE_URL). Demo data is now opt-in:
 
+  ```bash
+  # Default: no demo projects/tasks will be inserted
   npm run seed:dev
+
+  # Opt-in demo data (temporarily) by setting SEED_DEMO_DATA=true
+  SEED_DEMO_DATA=true npm run seed:dev
+  ```
 
 Safety
 
@@ -111,6 +117,13 @@ Customizing the database URL
 
 - `.env` contains `DATABASE_URL` (defaults to `postgresql://postgres:password@localhost:5432/zenite_dev?schema=public`).
 - If you change the port or password, update `.env` accordingly and re-run `prisma migrate dev`.
+- Want to remove the original demo data from an existing database? Run the guarded cleanup script:
+
+  ```bash
+  node prisma/cleanup-seed.js
+  ```
+
+  The script performs the same safety checks as the seeder and only deletes the sample projects/tasks created by earlier seeds.
 
 Verifying the DB and schema
 

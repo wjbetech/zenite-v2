@@ -45,6 +45,52 @@ const save = (projects: Project[]) => {
   }
 };
 
+export type RemoteProject = Partial<Project> & {
+  id?: unknown;
+  name?: unknown;
+  description?: unknown;
+  createdAt?: unknown;
+  taskCount?: unknown;
+  tasks?: unknown;
+  _count?: {
+    tasks?: unknown;
+  } | null;
+};
+
+export const normalizeRemoteProject = (raw: RemoteProject): Project => {
+  const createdAtValue = raw.createdAt;
+  let createdAt: string;
+  if (typeof createdAtValue === 'string') {
+    createdAt = createdAtValue;
+  } else if (
+    createdAtValue &&
+    typeof createdAtValue === 'object' &&
+    'toISOString' in createdAtValue &&
+    typeof (createdAtValue as Date).toISOString === 'function'
+  ) {
+    createdAt = (createdAtValue as Date).toISOString();
+  } else {
+    createdAt = new Date().toISOString();
+  }
+
+  let taskCount: number | undefined = undefined;
+  if (typeof raw.taskCount === 'number') {
+    taskCount = raw.taskCount;
+  } else if (raw._count && typeof raw._count.tasks === 'number') {
+    taskCount = raw._count.tasks ?? 0;
+  } else if (Array.isArray(raw.tasks)) {
+    taskCount = raw.tasks.length;
+  }
+
+  return {
+    id: typeof raw.id === 'string' ? raw.id : '',
+    name: typeof raw.name === 'string' && raw.name.trim().length > 0 ? raw.name : 'Untitled',
+    description: typeof raw.description === 'string' ? raw.description : undefined,
+    createdAt,
+    taskCount: taskCount ?? 0,
+  };
+};
+
 const useProjectStore = create<State>((set, get) => ({
   projects: load(),
   setProjects(projects) {
@@ -101,28 +147,13 @@ const useProjectStore = create<State>((set, get) => ({
   },
   async loadRemote() {
     try {
-      if (process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true') {
-        const remote = await api.fetchProjects();
-        if (Array.isArray(remote)) {
-          const projects = (remote as Array<Partial<Project>>).map((r) => {
-            const remoteItem = r as Partial<Project> & { tasks?: unknown };
-            return {
-              id: remoteItem.id || '',
-              name: remoteItem.name || 'Untitled',
-              description: remoteItem.description,
-              createdAt: remoteItem.createdAt || new Date().toISOString(),
-              // Accept either an explicit taskCount or a tasks array from the API
-              taskCount:
-                typeof remoteItem.taskCount === 'number'
-                  ? remoteItem.taskCount
-                  : Array.isArray(remoteItem.tasks)
-                  ? remoteItem.tasks.length
-                  : undefined,
-            } as Project;
-          });
-          set({ projects });
-          save(projects);
-        }
+      const remote = await api.fetchProjects();
+      if (Array.isArray(remote)) {
+        const projects = (remote as RemoteProject[])
+          .map((item) => normalizeRemoteProject(item))
+          .filter((project): project is Project => Boolean(project.id));
+        set({ projects });
+        save(projects);
       }
     } catch (e) {
       console.error('failed to load remote projects', e);

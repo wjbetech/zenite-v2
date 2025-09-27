@@ -25,11 +25,13 @@ export default async function Page(props: unknown) {
           The DB was not found - please contact your network administrator
         </div>
         <h1 className="text-2xl font-semibold mb-4">Project not available</h1>
-        <div className="text-sm text-gray-500">Unable to load project data due to a backend error.</div>
+        <div className="text-sm text-gray-500">
+          Unable to load project data due to a backend error.
+        </div>
       </main>
     );
   }
-  
+
   if (!project) {
     return (
       <main className="p-6">
@@ -38,7 +40,7 @@ export default async function Page(props: unknown) {
       </main>
     );
   }
-  
+
   return (
     <main className="p-6">
       <h1 className="text-2xl font-semibold mb-4">{project.name}</h1>

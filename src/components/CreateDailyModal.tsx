@@ -28,7 +28,7 @@ export default function CreateDailyModal({ open, onOpenChange, onCreated }: Prop
     }
   }, [open]);
 
-  const submit = (e?: React.FormEvent) => {
+  const submit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     const payload = {
       title: (title || 'Untitled Daily').trim(),
@@ -36,9 +36,13 @@ export default function CreateDailyModal({ open, onOpenChange, onCreated }: Prop
       recurrence: 'daily',
       projectId: projectId === 'none' ? null : projectId,
     };
-    const t = createTask(payload);
-    onCreated?.(t);
-    onOpenChange(false);
+    try {
+      const created = await createTask(payload);
+      onCreated?.(created);
+      onOpenChange(false);
+    } catch (err) {
+      console.error('CreateDailyModal: failed to create daily task', err);
+    }
   };
 
   if (!open) return null;

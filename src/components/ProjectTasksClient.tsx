@@ -77,7 +77,8 @@ export default function ProjectTasksClient({ projectId }: Props) {
     );
   }
 
-  if (tasks.length === 0) return <div className="text-sm text-gray-500">No tasks for this project.</div>;
+  if (tasks.length === 0)
+    return <div className="text-sm text-gray-500">No tasks for this project.</div>;
 
   return (
     <div className="flex flex-col gap-3">

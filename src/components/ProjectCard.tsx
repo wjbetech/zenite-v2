@@ -13,10 +13,11 @@ type Props = {
     starred?: boolean;
   };
   onDelete?: (id: string) => void;
+  onEdit?: (id: string) => void;
   href?: string;
 };
 
-export default function ProjectCard({ project, onDelete, href }: Props) {
+export default function ProjectCard({ project, onDelete, onEdit, href }: Props) {
   const cardInner = (
     <div
       className={`bg-base-200 relative z-10 rounded-md shadow-sm border border-info p-4 xl:p-5 min-h-[6rem] transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md cursor-pointer`}
@@ -37,6 +38,28 @@ export default function ProjectCard({ project, onDelete, href }: Props) {
         </div>
 
         <div className="flex items-center">
+          {onEdit && (
+            <button
+              aria-label="Edit project"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onEdit(project.id);
+              }}
+              className="text-emerald-600 hover:text-emerald-700 p-3 md:p-2 rounded-md cursor-pointer h-full flex items-center justify-center"
+              title="Edit project"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M12 20h9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          )}
           {onDelete && (
             <button
               aria-label="Delete project"

@@ -41,6 +41,18 @@ export async function createProject(payload: { name: string; description?: strin
   });
 }
 
+export async function updateProject(payload: {
+  id: string;
+  name?: string;
+  description?: string | null;
+}) {
+  return request(`${API_BASE}/projects`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
 export async function deleteProject(id: string) {
   return request(`${API_BASE}/projects?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
@@ -101,6 +113,7 @@ const api = {
   fetchTasks,
   createTask,
   updateTask,
+  updateProject,
   deleteTask,
 };
 export default api;

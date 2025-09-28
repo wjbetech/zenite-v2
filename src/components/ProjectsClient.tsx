@@ -42,6 +42,8 @@ export default function ProjectsClient({ initialProjects }: Props) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!mounted) return;
@@ -179,6 +181,44 @@ export default function ProjectsClient({ initialProjects }: Props) {
     [],
   );
 
+  const handleEditProject = useCallback(
+    async (payload: { id: string; name?: string; description?: string | null }) => {
+      const trimmedName = payload.name?.trim();
+      const trimmedDescription =
+        typeof payload.description === 'string'
+          ? payload.description.trim()
+          : payload.description ?? null;
+      if (!trimmedName) throw new Error('Project name is required');
+
+      try {
+        const updated = (await api.updateProject({
+          id: payload.id,
+          name: trimmedName,
+          description: trimmedDescription,
+        })) as Record<string, unknown>;
+        const normalized = normalizeRemoteProject(updated as RemoteProject);
+        if (!normalized.id) throw new Error('Server returned invalid project');
+        // update store
+        const store = useProjectStore.getState();
+        const next = store.projects.map((p) =>
+          p.id === normalized.id ? { ...p, ...normalized } : p,
+        );
+        store.setProjects(next);
+        setDisplayedProjects(next);
+        setEditModalOpen(false);
+        setEditingProjectId(null);
+        toast.dismiss();
+        toast.success('Project updated', { autoClose: 3000, position: 'top-center' });
+      } catch (err) {
+        console.error('ProjectsClient: failed to update project', err);
+        setDbUnavailable(true);
+        if (err instanceof Error) throw err;
+        throw new Error('Failed to update project');
+      }
+    },
+    [],
+  );
+
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-x-visible px-4">
       <header className="pt-4 pb-6">
@@ -222,6 +262,10 @@ export default function ProjectsClient({ initialProjects }: Props) {
                     setPendingDeleteId(id);
                     setConfirmOpen(true);
                   }}
+                  onEdit={(id) => {
+                    setEditingProjectId(id);
+                    setEditModalOpen(true);
+                  }}
                 />
               </div>
             );
@@ -263,6 +307,18 @@ export default function ProjectsClient({ initialProjects }: Props) {
         open={createModalOpen}
         onCancel={() => setCreateModalOpen(false)}
         onSubmit={handleCreateProject}
+      />
+      <ProjectModal
+        open={editModalOpen}
+        initial={displayedProjects.find((pr) => pr.id === editingProjectId) ?? undefined}
+        onCancel={() => {
+          setEditModalOpen(false);
+          setEditingProjectId(null);
+        }}
+        onSubmit={async (payload) => {
+          if (!editingProjectId) return;
+          await handleEditProject({ id: editingProjectId, ...payload });
+        }}
       />
     </div>
   );

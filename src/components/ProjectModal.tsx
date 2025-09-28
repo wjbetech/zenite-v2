@@ -11,9 +11,11 @@ type ProjectModalProps = {
   open: boolean;
   onSubmit: (payload: ProjectModalSubmit) => Promise<void>;
   onCancel: () => void;
+  // when provided, modal acts as edit mode and will show different title/button text
+  initial?: Partial<ProjectModalSubmit>;
 };
 
-export default function ProjectModal({ open, onSubmit, onCancel }: ProjectModalProps) {
+export default function ProjectModal({ open, onSubmit, onCancel, initial }: ProjectModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -26,9 +28,15 @@ export default function ProjectModal({ open, onSubmit, onCancel }: ProjectModalP
       setError(null);
       setSubmitting(false);
     }
-  }, [open]);
+    if (open && (initial?.name || initial?.description)) {
+      setName(initial.name ?? '');
+      setDescription(initial.description ?? '');
+    }
+  }, [open, initial]);
 
   if (!open) return null;
+
+  const isEdit = Boolean(initial && (initial.name || initial.description));
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -71,7 +79,7 @@ export default function ProjectModal({ open, onSubmit, onCancel }: ProjectModalP
         className="relative z-10 w-full max-w-xl rounded-lg bg-base-100 p-6 shadow-xl"
         onSubmit={handleSubmit}
       >
-        <h2 className="text-lg font-semibold mb-4">Create project</h2>
+        <h2 className="text-lg font-semibold mb-4">{isEdit ? 'Edit project' : 'Create project'}</h2>
 
         <label className="block text-sm font-medium" htmlFor="project-name">
           Name
@@ -106,7 +114,7 @@ export default function ProjectModal({ open, onSubmit, onCancel }: ProjectModalP
             Cancel
           </button>
           <button className="btn btn-success" type="submit" disabled={submitting}>
-            {submitting ? 'Creating…' : 'Create'}
+            {submitting ? (isEdit ? 'Saving…' : 'Creating…') : isEdit ? 'Save' : 'Create'}
           </button>
         </div>
       </form>

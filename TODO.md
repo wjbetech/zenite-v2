@@ -10,6 +10,7 @@
   - The combined (project + task) flow still works unchanged when the user chooses it; tasks created with a new project are correctly linked to the new project's id.
   - Unit tests added for modal behavior and an API test for project-only creation.
   - Documentation and `implementation.md` updated to reflect the change.
+
 # Immediate TODO (curate me)
 
 NOTE: Development process — prioritize UI/UX work first, then backend production features, then polish/maintenance. Keep `TODO.md` current: review and update it on every commit/push and move completed items into `implementation.md`'s "Completed tasks" section. This policy is enforced by the team and documented in `implementation.md`.

@@ -10,6 +10,7 @@
   - The combined (project + task) flow still works unchanged when the user chooses it; tasks created with a new project are correctly linked to the new project's id.
   - Unit tests added for modal behavior and an API test for project-only creation.
   - Documentation and `TODO.md` updated to reflect the change.
+
 # 🧱 Implementation Plan for [App Name]
 
 A modern, minimalistic productivity web app.

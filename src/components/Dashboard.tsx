@@ -216,7 +216,7 @@ export default function Dashboard() {
         <h1 className="text-2xl font-semibold">Dashboard</h1>
         <div className="flex items-center gap-2">
           <button
-            className="btn btn-md btn-primary flex items-center"
+            className="btn btn-md btn-primary border-2 border-base-content flex items-center"
             type="button"
             onClick={() => {
               setEditing(undefined);
@@ -228,7 +228,7 @@ export default function Dashboard() {
             New Task
           </button>
           <button
-            className="btn btn-md btn-secondary flex items-center"
+            className="btn btn-md btn-secondary border-2 border-base-content flex items-center"
             type="button"
             onClick={() => {
               setEditing(undefined);

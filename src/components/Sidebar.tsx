@@ -99,7 +99,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
         <div className="flex flex-col h-full text-neutral">
           {/* header / collapse toggle */}
           <div className="flex items-center justify-start p-2">
-              <button
+            <button
               aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               onClick={() => setCollapsed((s) => !s)}
               className="btn btn-square btn-ghost btn-icon"
@@ -121,10 +121,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                   !!pathname && (pathname === item.href || pathname.startsWith(item.href + '/'));
                 if (effectiveLoggedIn) {
                   return (
-                    <div
-                        key={item.href}
-                        className="w-full"
-                      >
+                    <div key={item.href} className="w-full">
                       <div
                         className={`flex items-center gap-3 rounded ${
                           item.href === '/projects' ? 'px-2 py-1.5' : 'px-2 py-2'

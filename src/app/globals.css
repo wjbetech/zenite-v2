@@ -172,10 +172,6 @@ button:focus-visible {
   box-shadow: none !important;
 }
 
-/* Borders are opt-in now. Use the `border-on` utility on elements that should
-  have a solid black 2px border (e.g. <button className="btn border-on">).
-  This keeps component styles explicit and avoids global overrides. */
-
 /* Ensure focus-visible still remains accessible for keyboard users by keeping
    a subtle ring while preserving the border color. */
 .btn:focus-visible,

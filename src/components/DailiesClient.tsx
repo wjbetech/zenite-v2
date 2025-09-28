@@ -148,7 +148,7 @@ export default function DailiesClient() {
             </div>
 
             <section className="mb-[74px]">
-              <div className="transition-all duration-300 ease-in-out pt-4 pr-4 pb-2 pl-6">
+              <div className="transition-all duration-300 ease-in-out pt-4 pb-2 px-0">
                 {daily.length === 0 ? (
                   <div className="text-sm text-neutral-content">No items.</div>
                 ) : (
@@ -170,17 +170,16 @@ export default function DailiesClient() {
                       useTaskStore.getState().setTasks(reordered);
                     }}
                     renderItem={(t) => (
-                      <div className="mb-6" key={t.id}>
-                        <DailyTaskCard
-                          task={t}
-                          onToggle={toggle}
-                          onEdit={edit}
-                          onDelete={(id: string) => {
-                            const found = tasks.find((x) => x.id === id) ?? null;
-                            setDeleting(found);
-                          }}
-                        />
-                      </div>
+                      <DailyTaskCard
+                        key={t.id}
+                        task={t}
+                        onToggle={toggle}
+                        onEdit={edit}
+                        onDelete={(id: string) => {
+                          const found = tasks.find((x) => x.id === id) ?? null;
+                          setDeleting(found);
+                        }}
+                      />
                     )}
                     containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
                   />

@@ -1,8 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import DailiesClient from '../DailiesClient';
-import useTaskStore from '../../lib/taskStore';
+import useTaskStore, { type Task } from '../../lib/taskStore';
 import useProjectStore from '../../lib/projectStore';
+import api from '../../lib/api';
 
 // The repo already uses localStorage-backed zustand stores. For tests we should seed the stores directly.
 
@@ -13,6 +14,46 @@ describe('DailiesClient integration', () => {
     const projectApi = useProjectStore.getState();
     taskApi.setTasks([]);
     projectApi.setProjects([]);
+    // Ensure network calls used by the store are mocked in tests that exercise UI flows
+    jest.spyOn(api, 'createTask').mockImplementation(async (payload: Record<string, unknown>) => ({
+      id: `task-${Math.random().toString(36).slice(2, 8)}`,
+      title: payload.title,
+      description: payload.description ?? null,
+      dueDate: payload.dueDate ?? null,
+      recurrence: payload.recurrence ?? null,
+      projectId: payload.projectId ?? null,
+      createdAt: new Date().toISOString(),
+      completed: false,
+      completedAt: null,
+      started: false,
+    }));
+    // Replace store methods so UI interactions update the in-memory store immediately
+    const taskApiState = useTaskStore.getState();
+    // Define the minimal interface we need to override on the store for tests
+    type TaskStoreOverrides = {
+      updateTask: (id: string, patch: Partial<Task>) => Promise<Task | undefined>;
+      deleteTask: (id: string) => Promise<unknown>;
+    };
+    const overrides: Partial<TaskStoreOverrides> = {
+      updateTask: jest.fn(async (id: string, patch: Partial<Task>) => {
+        const s = useTaskStore.getState();
+        const tasks = s.tasks.map((t) => (t.id === id ? { ...t, ...(patch as Partial<Task>) } : t));
+        s.setTasks(tasks);
+        return tasks.find((t) => t.id === id);
+      }),
+      deleteTask: jest.fn(async (id: string) => {
+        const s = useTaskStore.getState();
+        s.setTasks(s.tasks.filter((t) => t.id !== id));
+        return {};
+      }),
+    };
+    // Assign overrides with a typed cast to the exact partial shape we defined
+    (taskApiState as unknown as TaskStoreOverrides).updateTask = overrides.updateTask!;
+    (taskApiState as unknown as TaskStoreOverrides).deleteTask = overrides.deleteTask!;
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   test('Add Daily Task button opens create modal and creates a task', async () => {
@@ -35,9 +76,16 @@ describe('DailiesClient integration', () => {
   });
 
   test('Edit button opens edit modal and saves changes', async () => {
-    // seed one daily task
+    // seed one daily task directly into the store to avoid network calls
     const taskApi = useTaskStore.getState();
-    taskApi.createTask({ title: 'Editable', recurrence: 'daily' });
+    taskApi.setTasks([
+      {
+        id: 't-edit-1',
+        title: 'Editable',
+        recurrence: 'daily',
+        createdAt: new Date().toISOString(),
+      },
+    ] as Task[]);
 
     render(<DailiesClient />);
 
@@ -61,8 +109,16 @@ describe('DailiesClient integration', () => {
   });
 
   test('Delete button opens confirm modal and deletes task', async () => {
+    // seed the store directly to avoid calling api.createTask
     const taskApi = useTaskStore.getState();
-    taskApi.createTask({ title: 'ToDelete', recurrence: 'daily' });
+    taskApi.setTasks([
+      {
+        id: 't-delete-1',
+        title: 'ToDelete',
+        recurrence: 'daily',
+        createdAt: new Date().toISOString(),
+      },
+    ] as Task[]);
 
     render(<DailiesClient />);
 
@@ -87,7 +143,15 @@ describe('DailiesClient integration', () => {
     ]);
 
     const taskApi = useTaskStore.getState();
-    taskApi.createTask({ title: 'Workout', recurrence: 'daily', projectId: 'proj-1' });
+    taskApi.setTasks([
+      {
+        id: 't-proj-1',
+        title: 'Workout',
+        recurrence: 'daily',
+        projectId: 'proj-1',
+        createdAt: new Date().toISOString(),
+      },
+    ] as Task[]);
 
     render(<DailiesClient />);
 

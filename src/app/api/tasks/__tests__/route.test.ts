@@ -81,7 +81,7 @@ describe('/api/tasks', () => {
   test('POST enforces daily limit', async () => {
     (prisma.task.count as jest.Mock).mockResolvedValue(10);
     (prisma.user.upsert as jest.Mock).mockResolvedValue({ id: 'u1' });
-    const payload = { title: 'daily', recurrence: 'daily', ownerId: 'u1' };
+    const payload = { title: 'daily', recurrence: 'daily' };
     const req = new Request('http://localhost/api/tasks', {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -109,7 +109,7 @@ describe('/api/tasks', () => {
     (prisma.task.count as jest.Mock).mockResolvedValue(3);
     (prisma.task.create as jest.Mock).mockResolvedValue(created);
 
-    const payload = { title: 'ok', recurrence: 'daily', ownerId: 'u1' };
+    const payload = { title: 'ok', recurrence: 'daily' };
     const req = new Request('http://localhost/api/tasks', {
       method: 'POST',
       body: JSON.stringify(payload),

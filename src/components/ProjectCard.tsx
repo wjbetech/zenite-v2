@@ -46,7 +46,7 @@ export default function ProjectCard({ project, onDelete, onEdit, href }: Props) 
                 e.preventDefault();
                 onEdit(project.id);
               }}
-              className="no-border text-emerald-600 hover:text-emerald-700 p-3 md:p-2 rounded-md cursor-pointer h-full flex items-center justify-center"
+              className="btn-icon text-emerald-600 hover:text-emerald-700 p-3 md:p-2 rounded-md cursor-pointer h-full flex items-center justify-center"
               title="Edit project"
             >
               <Edit className="h-6 w-6" />
@@ -60,7 +60,7 @@ export default function ProjectCard({ project, onDelete, onEdit, href }: Props) 
                 e.preventDefault();
                 onDelete(project.id);
               }}
-              className="no-border text-red-400 hover:text-red-500 p-3 md:p-2 rounded-md cursor-pointer h-full flex items-center justify-center"
+              className="btn-icon text-red-400 hover:text-red-500 p-3 md:p-2 rounded-md cursor-pointer h-full flex items-center justify-center"
               title="Delete project"
             >
               <Trash className="h-6 w-6" />

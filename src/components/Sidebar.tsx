@@ -99,10 +99,10 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
         <div className="flex flex-col h-full text-neutral">
           {/* header / collapse toggle */}
           <div className="flex items-center justify-start p-2">
-            <button
+              <button
               aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               onClick={() => setCollapsed((s) => !s)}
-              className="btn btn-square btn-ghost no-border"
+              className="btn btn-square btn-ghost btn-icon"
             >
               {collapsed ? (
                 <ChevronRight className="w-4 h-4 text-neutral" />
@@ -150,7 +150,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                             aria-expanded={projectsOpen}
                             aria-controls="sidebar-projects"
                             onClick={() => setProjectsOpen((s) => !s)}
-                            className="btn btn-ghost btn-square btn-xs no-border"
+                            className="btn btn-ghost btn-square btn-xs btn-icon"
                             title={projectsOpen ? 'Collapse projects' : 'Expand projects'}
                           >
                             <ChevronDown
@@ -207,7 +207,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                                     <button
                                       aria-pressed={!!p.starred}
                                       onClick={() => updateProject(p.id, { starred: !p.starred })}
-                                      className={`btn btn-ghost btn-xs btn-square no-border ${
+                                      className={`btn btn-ghost btn-xs btn-square btn-icon ${
                                         p.starred ? 'text-yellow-400' : 'text-neutral'
                                       }`}
                                       title={p.starred ? 'Unstar project' : 'Star project'}

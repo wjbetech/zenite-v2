@@ -196,7 +196,16 @@ button:focus-visible {
 
 /* Opt-out helper: remove enforced black border for specific controls (sidebar toggles, icons) */
 .no-border {
+  /* legacy alias kept for backward compatibility during the refactor; prefer using .btn-icon */
   border: none !important;
   box-shadow: none !important;
   background-clip: padding-box; /* keep background rendering consistent */
+}
+
+/* Tailwind utility for icon-only buttons (semantic, composable). Use `btn-icon` on icon buttons
+   to remove the enforced 1px black border while keeping layout and hover states intact. */
+@layer utilities {
+  .btn-icon {
+    @apply border-0 shadow-none bg-transparent;
+  }
 }

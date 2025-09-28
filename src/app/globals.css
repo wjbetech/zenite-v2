@@ -172,19 +172,20 @@ button:focus-visible {
   box-shadow: none !important;
 }
 
-/* Enforce a 1px black border on all buttons (DaisyUI .btn and native button elements).
-   Use a specific selector and !important to override DaisyUI theme borders where necessary. */
-.btn,
-button,
-input[type='button'],
-input[type='submit'],
-.btn-primary,
-.btn-secondary,
-.btn-ghost,
-.btn-outline {
-  border-width: 2px !important;
-  border-style: solid !important;
-  border-color: #000 !important;
+/* Previously we enforced a black border on all buttons globally. Change of plan:
+   borders are now opt-in. Use the `.border-on` utility to enable a solid black
+   2px border on any element (recommended for buttons). This keeps styles
+   explicit and composable. */
+
+/* Opt-in utility: apply a solid black 2px border when needed.
+   Prefer using this class in markup or composing it via Tailwind when
+   creating components. Example: <button className="btn border-on">...</button> */
+@layer utilities {
+  .border-on {
+    border-width: 2px !important;
+    border-style: solid !important;
+    border-color: #000 !important;
+  }
 }
 
 /* Ensure focus-visible still remains accessible for keyboard users by keeping
@@ -207,5 +208,9 @@ button:focus-visible {
 @layer utilities {
   .btn-icon {
     @apply border-0 shadow-none bg-transparent;
+  }
+  /* Backwards-compatible alias: border-on is now the explicit opt-in border utility. */
+  .border-on {
+    @apply border-solid;
   }
 }

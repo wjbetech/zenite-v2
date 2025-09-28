@@ -22,6 +22,10 @@ These are the immediate actionable items. Completed items were moved to `impleme
 
 - [ ] Enable handling some settings regarding the dailies (e.g. max number of dailies (5-10), whether the timer should show by default, etc)
 
+- [ ] Dashboard: New Project modal should accept a description
+
+  - When a user creates a project from the Dashboard 'New Project' modal, the modal must include a multiline "Description" field. Files to update: `src/components/TaskModal.tsx` (or wherever the Dashboard new-project modal lives), `src/app/dashboard/page.tsx`, and `src/lib/api.ts` to accept and forward a description on create. Acceptance criteria: (1) The modal shows a labeled Description input (textarea); (2) Description is sent to the backend `POST /api/projects` call and persisted on the Project model; (3) The newly created project's description is visible on the project details page and editable later; (4) Unit tests validate the create flow and the API payload; (5) Accessible labels and autofocus behavior for the project name input remain intact.
+
   - Add user settings to configure dailies behavior: max number of dailies (range 5-10), whether the timer shows by default, and optionally daily reset timezone behavior. Files to update/add: `src/app/settings/page.tsx`, `src/components/Settings/` (create if needed), `src/lib/themeStore.ts` or create a new `src/lib/dailiesStore.ts` for persistence, and `src/lib/api.ts` if settings are persisted to backend. Acceptance criteria: (1) Settings UI accessible from `Settings` page; (2) Changes persist to local state or backend and immediately affect Dailies UI (e.g., changing max updates the Add button state); (3) Tests cover settings changes and persistence. Implementation notes: validate numeric ranges (5-10) and update TODO for server-side storage if we decide to persist settings in the DB.
 
 ## Medium priority
@@ -37,8 +41,13 @@ These are the immediate actionable items. Completed items were moved to `impleme
   - E2E test for the modal flow (Playwright or Testing Library + jsdom)
 
 - [ ] UI polish and accessibility
+
   - Autofocus New Project input when opening the modal via New Project
   - Add proper `aria-*` attributes and keyboard handling
+
+- [ ] Auto-link tasks created together with a new project
+
+  - If a user creates a new task at the same time they're creating a new project (for example, via the Dashboard flow where the New Project modal also creates a starter task), the task should be created and assigned to the newly created project in a single atomic flow. Implementation notes: (1) Client should POST to a combined endpoint or perform a server-side transaction that creates the Project then creates any Task(s) referencing the new project's id; (2) If using separate calls, ensure the client waits for the Project create response and uses its id when creating the Task(s); (3) Rollback semantics or error handling: if task creation fails after project creation, surface an error and allow retry or cleanup; (4) Files to inspect/update: `src/components/TaskModal.tsx`, `src/lib/api.ts`, `src/pages/api/projects/route.ts` (or `src/app/api/projects/route.ts`), and `src/app/dashboard/page.tsx`. Acceptance criteria: newly-created tasks appear under the project immediately; no orphan tasks are left in the default project/state when the combined flow is used; tests validate the combined creation flow and error cases.
 
 ## Low / future
 

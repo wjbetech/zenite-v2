@@ -85,6 +85,8 @@ export default function ProjectTasksClient({ projectId }: Props) {
         dueDate: payload.dueDate ?? null,
         createdAt: payload.createdAt ?? new Date().toISOString(),
         completed: !!payload.completed,
+        // ensure we also reflect the started flag returned by the API
+        started: !!(payload as unknown as { started?: boolean }).started,
       };
       setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updatedTask } : t)));
     } catch (err) {

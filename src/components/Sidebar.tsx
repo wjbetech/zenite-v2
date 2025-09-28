@@ -122,9 +122,9 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                 if (effectiveLoggedIn) {
                   return (
                     <div
-                      key={item.href}
-                      className={`w-full ${item.href === '/projects' ? 'mb-2' : ''}`}
-                    >
+                        key={item.href}
+                        className="w-full"
+                      >
                       <div
                         className={`flex items-center gap-3 rounded ${
                           item.href === '/projects' ? 'px-2 py-1.5' : 'px-2 py-2'

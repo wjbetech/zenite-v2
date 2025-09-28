@@ -176,13 +176,13 @@ button:focus-visible {
    Use a specific selector and !important to override DaisyUI theme borders where necessary. */
 .btn,
 button,
-input[type="button"],
-input[type="submit"],
+input[type='button'],
+input[type='submit'],
 .btn-primary,
 .btn-secondary,
 .btn-ghost,
 .btn-outline {
-  border-width: 1px !important;
+  border-width: 2px !important;
   border-style: solid !important;
   border-color: #000 !important;
 }
@@ -191,5 +191,12 @@ input[type="submit"],
    a subtle ring while preserving the border color. */
 .btn:focus-visible,
 button:focus-visible {
-  box-shadow: 0 0 0 3px rgba(0,0,0,0.05) !important;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Opt-out helper: remove enforced black border for specific controls (sidebar toggles, icons) */
+.no-border {
+  border: none !important;
+  box-shadow: none !important;
+  background-clip: padding-box; /* keep background rendering consistent */
 }

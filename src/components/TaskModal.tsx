@@ -36,6 +36,7 @@ export default function TaskModal({
 
   // local state for creating a project from this modal
   const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectDescription, setNewProjectDescription] = useState('');
   const [newProjectLoading, setNewProjectLoading] = useState(false);
   const [localToast, setLocalToast] = useState<{
     type: 'error' | 'success';
@@ -72,7 +73,7 @@ export default function TaskModal({
     // create the project first so the task can reference it.
     const tryCreateProjectBeforeTask = async (): Promise<string | null> => {
       if (allowCreateProject && newProjectName.trim() && !projectId) {
-        return await createAndSelectProject(newProjectName.trim());
+        return await createAndSelectProject(newProjectName.trim(), newProjectDescription.trim());
       }
       return null;
     };
@@ -120,7 +121,10 @@ export default function TaskModal({
     }
   }
 
-  async function createAndSelectProject(name: string): Promise<string | null> {
+  async function createAndSelectProject(
+    name: string,
+    description?: string,
+  ): Promise<string | null> {
     // avoid duplicate checks if already exist
     const storeProjects = useProjectStore.getState().projects;
     const exists = storeProjects.some((p) => p.name.trim().toLowerCase() === name.toLowerCase());
@@ -135,8 +139,13 @@ export default function TaskModal({
     setNewProjectLoading(true);
     try {
       const store = useProjectStore.getState();
-      if (process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true') {
-        const created = (await api.createProject({ name })) as {
+      // Try remote-first: prefer creating the project via the API so it persists.
+      // Fall back to local store if the API is unavailable or returns no id.
+      let createdRemote: RemoteProject | null = null;
+      // Always attempt remote creation first so projects persist. If the
+      // network/API fails for any reason, we'll fall back to the local store.
+      try {
+        const created = (await api.createProject({ name, description })) as {
           id?: unknown;
           name?: unknown;
           description?: unknown;
@@ -144,22 +153,36 @@ export default function TaskModal({
           taskCount?: unknown;
           _count?: { tasks?: unknown } | null;
         };
-        const normalized = normalizeRemoteProject(created as RemoteProject);
-        if (!normalized.id) {
-          throw new Error('Failed to create project: missing id in response');
+        createdRemote = created as RemoteProject;
+      } catch (e) {
+        console.warn('createAndSelectProject: remote create failed, falling back to local', e);
+        createdRemote = null;
+      }
+
+      if (createdRemote) {
+        const normalized = normalizeRemoteProject(createdRemote as RemoteProject);
+        if (normalized.id) {
+          const updated = [
+            normalized,
+            ...store.projects.filter((project) => project.id !== normalized.id),
+          ];
+          store.setProjects(updated);
+          setProjectId(normalized.id);
+        } else {
+          // remote returned no id - fall back to local
+          const p = store.createProject(name);
+          store.setProjects([p, ...store.projects.filter((project) => project.id !== p.id)]);
+          setProjectId(p.id);
         }
-        const updated = [
-          normalized,
-          ...store.projects.filter((project) => project.id !== normalized.id),
-        ];
-        store.setProjects(updated);
-        setProjectId(normalized.id);
       } else {
         const p = store.createProject(name);
+        // set description on local fallback project
+        p.description = description || undefined;
         store.setProjects([p, ...store.projects.filter((project) => project.id !== p.id)]);
         setProjectId(p.id);
       }
       setNewProjectName('');
+      setNewProjectDescription('');
       // mark that we created a new project from this modal so we can show the 'New Task' subheader
       setNewProjectCreated(true);
       // do NOT show a toast here; callers will display a single standardized toast
@@ -187,7 +210,7 @@ export default function TaskModal({
         return;
       }
 
-      await createAndSelectProject(name);
+      await createAndSelectProject(name, newProjectDescription.trim());
     })();
   }
 
@@ -230,6 +253,21 @@ export default function TaskModal({
               }}
               className="input w-full mb-2 rounded-lg"
               disabled={newProjectLoading}
+            />
+            <label
+              className="block mt-2 mb-2 text-sm font-medium"
+              htmlFor="new-project-description"
+            >
+              Description <span className="text-xs text-gray-500">(optional)</span>
+            </label>
+            <textarea
+              id="new-project-description"
+              value={newProjectDescription}
+              onChange={(e) => setNewProjectDescription(e.target.value)}
+              className="textarea w-full rounded-lg bg-base-100"
+              rows={3}
+              disabled={newProjectLoading}
+              placeholder="Optional description for the project"
             />
           </div>
         )}

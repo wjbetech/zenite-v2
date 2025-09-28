@@ -1,5 +1,6 @@
 import prisma from '../../../lib/prisma';
 import ProjectTasksClient from '../../../components/ProjectTasksClient';
+import { projectSlug } from '../../../lib/utils';
 
 export default async function Page(props: unknown) {
   // `params` can be a promise in some Next.js environments — await it before
@@ -8,16 +9,15 @@ export default async function Page(props: unknown) {
   const { params } = props as { params: { slug: string } | Promise<{ slug: string }> };
   const { slug } = (await params) as { slug: string };
 
-  // naive inverse of slug logic used in ProjectsClient
-  const name = slug.replace(/-/g, ' ');
-
-  // Try to find a project by slugified name.
+  // Resolve slug by computing the canonical slug for each project name
+  // using the same `projectSlug` helper so hyphens and unicode characters
+  // are normalized consistently.
   let project = null;
   try {
     const projects = await prisma.project.findMany({
-      where: { name: { contains: name, mode: 'insensitive' } },
+      select: { id: true, name: true, description: true },
     });
-    project = projects[0] ?? null;
+    project = projects.find((p) => projectSlug(p.name ?? '') === slug) ?? null;
   } catch (err) {
     // If DB is down, show a clear warning instead of demo data so users don't get
     // confused by placeholders that may not reflect real data.

@@ -121,7 +121,10 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                   !!pathname && (pathname === item.href || pathname.startsWith(item.href + '/'));
                 if (effectiveLoggedIn) {
                   return (
-                    <div key={item.href} className="w-full">
+                    <div
+                      key={item.href}
+                      className={`w-full ${item.href === '/projects' ? 'mb-2' : ''}`}
+                    >
                       <div
                         className={`flex items-center gap-3 rounded ${
                           item.href === '/projects' ? 'px-2 py-1.5' : 'px-2 py-2'
@@ -163,7 +166,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                       {item.href === '/projects' && !collapsed && (
                         <div
                           id="sidebar-projects"
-                          className={`ml-3 mt-0 w-full pr-3 overflow-hidden origin-top transition-[max-height,opacity,transform] duration-200 ease-out ${
+                          className={`ml-3 mt-1 w-full pr-3 overflow-hidden origin-top transition-[max-height,opacity,transform] duration-200 ease-out ${
                             projectsOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0'
                           }`}
                           style={{ maxHeight: projectsOpen ? '20rem' : 0 }}

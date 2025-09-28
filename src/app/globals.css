@@ -172,21 +172,9 @@ button:focus-visible {
   box-shadow: none !important;
 }
 
-/* Previously we enforced a black border on all buttons globally. Change of plan:
-   borders are now opt-in. Use the `.border-on` utility to enable a solid black
-   2px border on any element (recommended for buttons). This keeps styles
-   explicit and composable. */
-
-/* Opt-in utility: apply a solid black 2px border when needed.
-   Prefer using this class in markup or composing it via Tailwind when
-   creating components. Example: <button className="btn border-on">...</button> */
-@layer utilities {
-  .border-on {
-    border-width: 2px !important;
-    border-style: solid !important;
-    border-color: #000 !important;
-  }
-}
+/* Borders are opt-in now. Use the `border-on` utility on elements that should
+  have a solid black 2px border (e.g. <button className="btn border-on">).
+  This keeps component styles explicit and avoids global overrides. */
 
 /* Ensure focus-visible still remains accessible for keyboard users by keeping
    a subtle ring while preserving the border color. */
@@ -197,10 +185,10 @@ button:focus-visible {
 
 /* Opt-out helper: remove enforced black border for specific controls (sidebar toggles, icons) */
 .no-border {
-  /* legacy alias kept for backward compatibility during the refactor; prefer using .btn-icon */
+  /* Legacy alias — prefer `.btn-icon` for icon-only buttons. */
   border: none !important;
   box-shadow: none !important;
-  background-clip: padding-box; /* keep background rendering consistent */
+  background-clip: padding-box;
 }
 
 /* Tailwind utility for icon-only buttons (semantic, composable). Use `btn-icon` on icon buttons
@@ -209,8 +197,11 @@ button:focus-visible {
   .btn-icon {
     @apply border-0 shadow-none bg-transparent;
   }
-  /* Backwards-compatible alias: border-on is now the explicit opt-in border utility. */
+  /* Opt-in solid black border for elements. Use in markup as `border-on`.
+     We set explicit properties to ensure it overrides theme defaults. */
   .border-on {
-    @apply border-solid;
+    border-width: 2px !important;
+    border-style: solid !important;
+    border-color: #000 !important;
   }
 }

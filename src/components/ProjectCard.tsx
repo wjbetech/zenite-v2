@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Trash } from 'lucide-react';
+import { Trash, Edit } from 'lucide-react';
 
 type Props = {
   project: {
@@ -49,15 +49,7 @@ export default function ProjectCard({ project, onDelete, onEdit, href }: Props) 
               className="text-emerald-600 hover:text-emerald-700 p-3 md:p-2 rounded-md cursor-pointer h-full flex items-center justify-center"
               title="Edit project"
             >
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M12 20h9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <path
-                  d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <Edit className="h-5 w-5" />
             </button>
           )}
           {onDelete && (

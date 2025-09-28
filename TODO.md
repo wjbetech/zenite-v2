@@ -61,6 +61,36 @@ These are the immediate actionable items. Completed items were moved to `impleme
 
 ---
 
+## User-requested items (added 2025-09-28)
+
+- [ ] Change the border color of all buttons to be black
+
+  - Update global button styles so primary/secondary/ghost buttons use a 1px black border by default. Update snapshots for affected components.
+
+- [ ] Fix the activity tracker to persist history (not only current day)
+
+  - Ensure activity data is recorded and returned for historical dates. Update backend aggregation and heatmap rendering.
+
+- [ ] Fix Settings page defaults handling
+
+  - Provide and persist sane defaults for theme, dailies cap, timer visibility, and other toggles. Gracefully handle missing backend settings by falling back to client defaults.
+
+- [ ] Verify Dashboard components
+
+  - Smoke test and add/adjust unit tests for Dashboard components: `ActivityHeatmap`, `TimerWidget`, task buckets, and `DashboardStats` placeholder.
+
+- [ ] Create dashboard graphing/statistics
+
+  - Add `DashboardStats` component and server endpoints to provide aggregated metrics (activity over time, completed tasks per period). Evaluate and add a lightweight charting library and tests for aggregations.
+
+- [ ] Refactor `.no-border` to Tailwind utility classes
+
+  - Replace the global `.no-border` CSS rule with a semantic Tailwind utility (e.g., `btn-icon` or `btn-no-border`) using `@apply` or a small `tailwind.config.cjs` plugin. Update components using `.no-border` to the new utility.
+
+- [ ] Restore Projects/Settings sidebar gap
+
+  - Add a small vertical gap between Projects and Settings nav items in the Sidebar. Update tests if they rely on specific DOM structure or spacing.
+
 If you want, I can start working on the top item now: add the Prisma `Project` model and create the migration.
 
 - [ ] Build out drag and drop for the dailies page so that items can be reshuffled.

@@ -105,7 +105,7 @@ export default function DailiesClient() {
             <div className="hidden md:flex items-center gap-3">
               <button
                 onClick={() => setTimerOpen((s) => !s)}
-                className="text-sm text-gray-500 hover:text-gray-700"
+                className="no-border text-sm text-gray-500 hover:text-gray-700"
                 aria-expanded={timerOpen}
               >
                 {timerOpen ? 'Hide timer' : 'Show timer'}
@@ -114,7 +114,7 @@ export default function DailiesClient() {
                 onClick={() => {
                   setCreating(true);
                 }}
-                className="btn btn-success btn-sm"
+                className="btn btn-success btn-md"
                 aria-label="Add daily task"
               >
                 + Add Daily Task

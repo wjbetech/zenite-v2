@@ -95,7 +95,7 @@ export default function DailyTaskCard({ task, onToggle, onEdit, onDelete }: Prop
                   e.stopPropagation();
                   onEdit(task);
                 }}
-                className="p-1 rounded-md text-info  cursor-pointer"
+                className="p-1 rounded-md text-info  cursor-pointer no-border"
               >
                 <Edit className="h-4 w-4 text-info " />
               </button>
@@ -107,7 +107,7 @@ export default function DailyTaskCard({ task, onToggle, onEdit, onDelete }: Prop
                   e.stopPropagation();
                   onDelete(task.id);
                 }}
-                className="p-1 rounded-md text-error cursor-pointer"
+                className="p-1 rounded-md text-error cursor-pointer no-border"
               >
                 <Trash className="h-4 w-4 text-error" />
               </button>

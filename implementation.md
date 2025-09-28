@@ -159,6 +159,54 @@ Design principles:
 
 ---
 
+## 📌 Requested follow-ups (from user)
+
+These items were requested to be added to the implementation/TODO documentation and prioritized for follow-up work.
+
+1. Change the border color of all buttons to be black
+
+- Scope: Update global button styles so every primary/secondary/ghost button uses a black 1px border by default while keeping current background and hover behavior.
+- Files likely affected: `src/styles/` (global CSS), `tailwind.config.cjs`, and components that override button styles (e.g., `src/components/*Button*.tsx`).
+- Acceptance criteria: All buttons visually display a black border in both light and dark themes; snapshots for key components updated.
+
+2. Fix the activity tracker so that it tracks for history and not only the current day
+
+- Scope: Ensure activity recording persists daily history (multiple dates), not only the current day. Update backfill/migrations if needed.
+- Files likely affected: `src/components/ActivityHeatmap.tsx`, `src/lib/api.ts`, `src/lib/utils.ts` (date normalization), and server-side activity logging endpoints/stores.
+- Acceptance criteria: Heatmap and activity lists show historical activity across dates; tests validate history retrieval and rendering.
+
+3. Fix the settings page to handle default settings for lots of the websites elements
+
+- Scope: The Settings page should provide and persist sane defaults for theme, dailies caps, timer visibility, and other toggles. Provide fallbacks when backend settings are missing.
+- Files likely affected: `src/app/settings/page.tsx`, `src/components/Settings/*`, `src/lib/themeStore.ts`, `src/lib/api.ts` (settings endpoints), and any store that persists settings.
+- Acceptance criteria: Settings UI shows defaults when none are saved; changing settings updates behavior immediately and persists (localStorage or backend depending on config).
+
+4. Double check that the dashboard components work
+
+- Scope: Verify Dashboard components render correctly and are wired to the server, including `Dashboard.tsx`, `ActivityHeatmap`, `TimerWidget`, task buckets, and graphing components.
+- Files likely affected: `src/components/Dashboard.tsx`, `src/components/ActivityHeatmap.tsx`, `src/components/TimerWidget.tsx`, `src/components/Dashboard/*` tests.
+- Acceptance criteria: Manual smoke test (run dev server) shows dashboard with live data; unit tests for key components pass and snapshots updated if needed.
+
+5. Create graphing/statistics for the Dashboard data
+
+- Scope: Add a dashboard statistics area with graphs (e.g., activity over time, completed tasks per week, productivity heatmap). Choose a lightweight charting library (e.g., `chart.js` or `recharts`) and implement server endpoints to return aggregated stats.
+- Files to add/update: `src/components/DashboardStats.tsx`, `src/lib/api.ts` (new endpoints such as `/api/stats/activity`), server aggregation helpers, and tests.
+- Acceptance criteria: Charts render with realistic data; endpoints return aggregated metrics; both server and client have tests for aggregation logic and rendering.
+
+6. Refactor `.no-border` helper into Tailwind utility classes
+
+- Scope: Replace the global `.no-border` CSS opt-out with a semantic Tailwind utility (e.g., `btn-icon` or `no-border-icon`) implemented either via `@apply` or a small plugin/config in `tailwind.config.cjs`. The goal is to avoid global overrides and instead compose classes on icon-only buttons.
+- Files likely affected: `src/app/globals.css`, `tailwind.config.cjs`, and components that use `.no-border` (e.g., `src/components/Sidebar.tsx`, `src/components/TaskCard.tsx`, `src/components/DailyTaskCard.tsx`).
+- Acceptance criteria: The `.no-border` global rule is removed; icon-only buttons use the Tailwind utility consistently; visual parity remains the same and tests pass.
+
+7. Restore the Projects / Settings sidebar gap
+
+- Scope: The gap between the Projects link and the Settings item in the Sidebar should be restored (small vertical spacing), matching the project's nav spacing conventions. This is likely a spacing change in `src/components/Sidebar.tsx` and associated CSS/classes.
+- Files likely affected: `src/components/Sidebar.tsx`, `src/components/__tests__/Sidebar.test.tsx` (update if tests expect a specific layout), and `src/styles/` if global spacing variables exist.
+- Acceptance criteria: Sidebar shows a small gap (e.g., `mt-1` or `mb-2`) between Projects and Settings; tests that check DOM presence or layout continue to pass or are updated accordingly.
+
+---
+
 ## ✅ Completed tasks
 
 The following items were completed and moved from `TODO.md` on 2025-09-17 to keep the todo list focused on next actionable work.

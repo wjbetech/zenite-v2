@@ -1,8 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import { nanoid } from 'nanoid/non-secure';
-import api from './api';
+import api, { UpdateTaskPayload } from './api';
 
 export type Task = {
   id: string;
@@ -12,176 +11,184 @@ export type Task = {
   recurrence?: string | null;
   createdAt: string;
   completed?: boolean;
-  // ISO timestamp when task was marked completed. Optional for older/local tasks.
   completedAt?: string | null;
   started?: boolean;
   projectId?: string | null;
   ownerId?: string;
 };
 
+export type CreateTaskInput = {
+  title: string;
+  notes?: string;
+  dueDate?: string | null;
+  recurrence?: string | null;
+  projectId?: string | null;
+  started?: boolean;
+  completed?: boolean;
+  completedAt?: string | null;
+};
+
 type State = {
   tasks: Task[];
-  createTask: (payload: Omit<Task, 'id' | 'createdAt'>) => Task;
-  updateTask: (id: string, patch: Partial<Task>) => Task | undefined;
-  deleteTask: (id: string) => void;
+  loading: boolean;
+  error?: string | null;
   setTasks: (tasks: Task[]) => void;
-  // Reset helpers for daily recurrence handling
-  resetDailiesIfNeeded: () => void;
-  resetDailiesNow: () => void;
-  loadRemote?: () => Promise<void>;
+  loadTasks: () => Promise<void>;
+  createTask: (payload: CreateTaskInput) => Promise<Task>;
+  updateTask: (id: string, patch: Partial<Task>) => Promise<Task>;
+  deleteTask: (id: string) => Promise<void>;
+  resetDailiesIfNeeded: () => Promise<void>;
+  resetDailiesNow: () => Promise<void>;
 };
 
-const STORAGE_KEY = 'zenite:tasks:v1';
 const LAST_DAILY_RESET_KEY = 'zenite:dailies:lastReset:v1';
-
-const load = (): Task[] => {
-  try {
-    const raw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-    if (!raw) return [];
-    return JSON.parse(raw) as Task[];
-  } catch (e) {
-    console.error('failed to load tasks', e);
-    return [];
-  }
-};
-
-const save = (tasks: Task[]) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-  } catch (e) {
-    console.error('failed to save tasks', e);
-  }
-};
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
 
-export const useTaskStore = create<State>((set, get) => {
-  // Load tasks and perform an initial daily reset if needed without calling set during module init
-  const initial = load();
-  let startingTasks = initial;
-  try {
-    if (typeof window !== 'undefined') {
-      const last = localStorage.getItem(LAST_DAILY_RESET_KEY);
+const mapRemoteTask = (remote: Record<string, unknown>): Task => ({
+  id: (remote.id as string) ?? '',
+  title: (remote.title as string) ?? 'Untitled',
+  notes: (remote.notes as string) ?? undefined,
+  dueDate: (remote.dueDate as string | null | undefined) ?? null,
+  recurrence: (remote.recurrence as string | null | undefined) ?? null,
+  createdAt: (remote.createdAt as string) ?? new Date().toISOString(),
+  completed: remote.completed === true,
+  completedAt: (remote.completedAt as string | null | undefined) ?? null,
+  started: remote.started === true,
+  projectId: (remote.projectId as string | null | undefined) ?? null,
+  ownerId: (remote.ownerId as string | undefined) ?? undefined,
+});
+
+const useTaskStore = create<State>((set, get) => ({
+  tasks: [],
+  loading: false,
+  error: null,
+
+  setTasks(tasks) {
+    set({ tasks });
+  },
+
+  async loadTasks() {
+    set({ loading: true, error: null });
+    try {
+      const remote = await api.fetchTasks();
+      if (!Array.isArray(remote)) {
+        throw new Error('Unexpected response while loading tasks');
+      }
+      const tasks = remote.map((item) => mapRemoteTask(item as Record<string, unknown>));
+      set({ tasks, loading: false });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load tasks';
+      console.error('taskStore.loadTasks failed', err);
+      set({ error: message, loading: false });
+    }
+  },
+
+  async createTask(payload) {
+    const response = await api.createTask({
+      title: payload.title,
+      description: payload.notes,
+      dueDate: payload.dueDate ?? null,
+      recurrence: payload.recurrence ?? null,
+      projectId: payload.projectId ?? null,
+      started: payload.started,
+      completed: payload.completed,
+      completedAt: payload.completedAt ?? null,
+    });
+    const created = mapRemoteTask(response as Record<string, unknown>);
+    set({ tasks: [created, ...get().tasks] });
+    return created;
+  },
+
+  async updateTask(id, patch) {
+    const payload: UpdateTaskPayload = { id };
+
+    if (patch.title !== undefined) {
+      payload.title = patch.title;
+    }
+    if (patch.notes !== undefined) {
+      payload.notes = patch.notes;
+      payload.description = patch.notes;
+    }
+    if (patch.dueDate !== undefined) {
+      payload.dueDate = patch.dueDate;
+    }
+    if (patch.recurrence !== undefined) {
+      payload.recurrence = patch.recurrence;
+    }
+    if (patch.projectId !== undefined) {
+      payload.projectId = patch.projectId;
+    }
+    if (patch.ownerId !== undefined) {
+      payload.ownerId = patch.ownerId;
+    }
+    if (patch.started !== undefined) {
+      payload.started = patch.started;
+    }
+    if (patch.completed !== undefined) {
+      payload.completed = patch.completed;
+    }
+    if (patch.completedAt !== undefined) {
+      payload.completedAt = patch.completedAt;
+    }
+
+    const response = await api.updateTask(payload);
+    const updated = mapRemoteTask(response as Record<string, unknown>);
+    const tasks = get().tasks.map((t) => (t.id === id ? { ...t, ...updated } : t));
+    set({ tasks });
+    return updated;
+  },
+
+  async deleteTask(id) {
+    await api.deleteTask(id);
+    const tasks = get().tasks.filter((t) => t.id !== id);
+    set({ tasks });
+  },
+
+  async resetDailiesIfNeeded() {
+    if (typeof window === 'undefined') return;
+    try {
+      const last = window.localStorage.getItem(LAST_DAILY_RESET_KEY);
       const today = todayKey();
       if (last !== today) {
-        startingTasks = initial.map((t) =>
-          (t.recurrence ?? 'once') === 'daily' ? { ...t, completed: false, started: false } : t,
-        );
-        save(startingTasks);
-        try {
-          localStorage.setItem(LAST_DAILY_RESET_KEY, today);
-        } catch {
-          // ignore
-        }
+        await get().resetDailiesNow();
       }
+    } catch (err) {
+      console.error('resetDailiesIfNeeded failed', err);
     }
-  } catch {
-    // ignore
-  }
+  },
 
-  return {
-    tasks: startingTasks,
-
-    setTasks(tasks) {
-      set({ tasks });
-      save(tasks);
-    },
-
-    createTask(payload) {
-      const t: Task = {
-        id: nanoid(),
-        createdAt: new Date().toISOString(),
-        completed: false,
-        started: false,
-        ...payload,
-      };
-      const tasks = [t, ...get().tasks];
-      set({ tasks });
-      save(tasks);
-      return t;
-    },
-
-    updateTask(id, patch) {
-      const tasks = get().tasks.map((t) => {
-        if (t.id !== id) return t;
-        // compute completedAt semantics: if patch explicitly provides completedAt, use it.
-        // Otherwise, if patch.completed === true and task was not previously completed, set completedAt to now.
-        // If patch.completed === false, clear completedAt.
-        const next = { ...t, ...patch } as Task;
-        if (patch.completed === true && !t.completed && patch.completedAt === undefined) {
-          next.completedAt = new Date().toISOString();
-        }
-        if (patch.completed === false && patch.completedAt === undefined) {
-          next.completedAt = null;
-        }
-        return next;
-      });
-      set({ tasks });
-      save(tasks);
-      return tasks.find((t) => t.id === id);
-    },
-
-    deleteTask(id) {
-      const tasks = get().tasks.filter((t) => t.id !== id);
-      set({ tasks });
-      save(tasks);
-    },
-
-    resetDailiesIfNeeded() {
-      try {
-        if (typeof window === 'undefined') return;
-        const last = localStorage.getItem(LAST_DAILY_RESET_KEY);
-        const today = todayKey();
-        if (last !== today) {
-          get().resetDailiesNow();
-        }
-      } catch {
-        // ignore
-      }
-    },
-
-    resetDailiesNow() {
-      const today = todayKey();
-      const tasks = get().tasks.map((t) =>
-        (t.recurrence ?? 'once') === 'daily' ? { ...t, completed: false, started: false } : t,
+  async resetDailiesNow() {
+    const today = todayKey();
+    const dailyTasks = get().tasks.filter((t) => (t.recurrence ?? 'once') === 'daily');
+    try {
+      await Promise.all(
+        dailyTasks.map((task) =>
+          api.updateTask({
+            id: task.id,
+            started: false,
+            completed: false,
+            completedAt: null,
+          }),
+        ),
       );
-      set({ tasks });
-      save(tasks);
-      try {
-        localStorage.setItem(LAST_DAILY_RESET_KEY, today);
-      } catch {
-        // ignore
+    } catch (err) {
+      console.error('resetDailiesNow sync failed', err);
+    }
+    const refreshed = get().tasks.map((t) =>
+      (t.recurrence ?? 'once') === 'daily'
+        ? { ...t, started: false, completed: false, completedAt: null }
+        : t,
+    );
+    set({ tasks: refreshed });
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(LAST_DAILY_RESET_KEY, today);
       }
-    },
-
-    async loadRemote() {
-      try {
-        if (process.env.NEXT_PUBLIC_USE_REMOTE_DB === 'true') {
-          const remote = await api.fetchTasks();
-          if (Array.isArray(remote)) {
-            const arr = remote as Array<Record<string, unknown>>;
-            const tasks = arr.map((r) => {
-              return {
-                id: (r.id as string) || '',
-                title: (r.title as string) || 'Untitled',
-                notes: (r.description as string) || (r.notes as string) || undefined,
-                createdAt: (r.createdAt as string) || new Date().toISOString(),
-                completed: !!r.completed,
-                completedAt: (r.completedAt as string) || null,
-                projectId: (r.projectId as string) ?? null,
-                recurrence: (r.recurrence as string) ?? null,
-                ownerId: (r.ownerId as string) ?? undefined,
-              } as Partial<Task> as Task;
-            });
-            set({ tasks });
-            save(tasks);
-          }
-        }
-      } catch (e) {
-        console.error('failed to load remote tasks', e);
-      }
-    },
-  };
-});
+    } catch (err) {
+      console.error('resetDailiesNow persist failed', err);
+    }
+  },
+}));
 
 export default useTaskStore;

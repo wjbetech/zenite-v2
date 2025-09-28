@@ -95,14 +95,33 @@ export default function DailiesClient() {
   // deletion is handled from the task card directly; modal no longer supports delete
 
   return (
-    <main className="p-6">
-      <div className="flex flex-col gap-4">
-        {/* Header: title centered on mobile, left aligned on desktop. Toggle on the right for md+. */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl md:text-2xl font-semibold mb-0 text-center md:text-left md:pl-4 w-full md:w-auto">
-            Dailies
-          </h1>
-          <div className="hidden md:flex items-center gap-3">
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+      <header className="px-4 pt-4">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h1 className="text-3xl md:text-2xl font-semibold mb-0 text-center md:text-left w-full md:w-auto">
+              Dailies
+            </h1>
+            <div className="hidden md:flex items-center gap-3">
+              <button
+                onClick={() => setTimerOpen((s) => !s)}
+                className="text-sm text-gray-500 hover:text-gray-700"
+                aria-expanded={timerOpen}
+              >
+                {timerOpen ? 'Hide timer' : 'Show timer'}
+              </button>
+              <button
+                onClick={() => {
+                  setCreating(true);
+                }}
+                className="btn btn-success btn-sm"
+                aria-label="Add daily task"
+              >
+                + Add Daily Task
+              </button>
+            </div>
+          </div>
+          <div className="flex md:hidden items-center justify-end gap-3">
             <button
               onClick={() => setTimerOpen((s) => !s)}
               className="text-sm text-gray-500 hover:text-gray-700"
@@ -110,19 +129,6 @@ export default function DailiesClient() {
             >
               {timerOpen ? 'Hide timer' : 'Show timer'}
             </button>
-            <button
-              onClick={() => {
-                // open create modal; after creation we'll allow editing
-                setCreating(true);
-              }}
-              className="btn btn-success btn-sm"
-              aria-label="Add daily task"
-            >
-              + Add Daily Task
-            </button>
-          </div>
-          {/* mobile add button - small and visible on md:hidden */}
-          <div className="flex md:hidden items-center gap-3">
             <button
               onClick={() => setCreating(true)}
               className="btn btn-ghost btn-sm"
@@ -132,17 +138,17 @@ export default function DailiesClient() {
             </button>
           </div>
         </div>
+      </header>
 
-        {/* Content area: on mobile the timer sits above the cards (stacked). On md+ it's a row with tasks on the left and the timer as a right column (max width ~300px). */}
-        <div className="flex flex-col">
-          {/* Timer sits above cards always; on md+ it's right-aligned with a max width */}
-          <div className="pt-4 pl-4 pr-4 pb-2 w-full">
-            <TimerWidget open={timerOpen} onOpenChange={(v) => setTimerOpen(v)} />
-          </div>
+      <div className="flex-1 min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-4 pb-10">
+          <div className="space-y-6">
+            <div className="max-w-md">
+              <TimerWidget open={timerOpen} onOpenChange={(v) => setTimerOpen(v)} />
+            </div>
 
-          <div className="mt-4">
             <section className="mb-[74px]">
-              <div className="overflow-y-auto transition-all duration-300 ease-in-out pt-4 pl-4 pr-4 pb-2">
+              <div className="transition-all duration-300 ease-in-out pt-4 pr-4 pb-2 pl-6">
                 {daily.length === 0 ? (
                   <div className="text-sm text-neutral-content">No items.</div>
                 ) : (
@@ -157,12 +163,10 @@ export default function DailiesClient() {
                       projectName: projects.find((p) => p.id === t.projectId)?.name,
                     }))}
                     onReorder={(next) => {
-                      // next is array of DailyTask-like objects in new order; map back to Task order
                       const idOrder = next.map((n) => n.id);
                       const reordered = idOrder
                         .map((id) => tasks.find((t) => t.id === id))
                         .filter(Boolean) as typeof tasks;
-                      // persist ordering in store
                       useTaskStore.getState().setTasks(reordered);
                     }}
                     renderItem={(t) => (
@@ -186,6 +190,7 @@ export default function DailiesClient() {
           </div>
         </div>
       </div>
+
       <EditTaskModal
         open={!!editing}
         onOpenChange={(v) => !v && setEditing(null)}
@@ -203,6 +208,6 @@ export default function DailiesClient() {
           setDeleting(null);
         }}
       />
-    </main>
+    </div>
   );
 }

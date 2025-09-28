@@ -37,6 +37,7 @@ jest.mock('../../lib/taskStore', () => {
       },
     ],
     createTask: jest.fn(),
+    loadTasks: jest.fn(),
     updateTask: jest.fn(),
     deleteTask: jest.fn(),
     setTasks: jest.fn(),

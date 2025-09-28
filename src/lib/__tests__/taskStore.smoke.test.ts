@@ -1,4 +1,15 @@
 import useTaskStore, { Task } from '../taskStore';
+import api from '../api';
+
+// Mock network API calls used by taskStore so tests run offline
+jest.mock('../api', () => ({
+  __esModule: true,
+  default: {
+    updateTask: jest.fn().mockResolvedValue({}),
+    createTask: jest.fn().mockResolvedValue({}),
+    fetchTasks: jest.fn().mockResolvedValue([]),
+  },
+}));
 
 const LAST_DAILY_RESET_KEY = 'zenite:dailies:lastReset:v1';
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -9,7 +20,7 @@ beforeEach(() => {
   useTaskStore.setState({ tasks: [] });
 });
 
-test('resetDailiesNow resets completed/started for daily tasks and sets last-reset key', () => {
+test('resetDailiesNow resets completed/started for daily tasks and sets last-reset key', async () => {
   const createdAt = new Date().toISOString();
   const tasks: Task[] = [
     {
@@ -30,12 +41,12 @@ test('resetDailiesNow resets completed/started for daily tasks and sets last-res
     },
   ];
 
-  // seed tasks
+  // seed tasks directly in the store (avoid createTask network path)
   const { setTasks, resetDailiesNow } = useTaskStore.getState();
   setTasks(tasks);
 
-  // call the helper under test
-  resetDailiesNow();
+  // call the helper under test and await
+  await resetDailiesNow();
 
   const stateTasks = useTaskStore.getState().tasks;
   const daily = stateTasks.find((t) => t.id === 'daily-1');
@@ -54,7 +65,7 @@ test('resetDailiesNow resets completed/started for daily tasks and sets last-res
   expect(localStorage.getItem(LAST_DAILY_RESET_KEY)).toBe(todayKey());
 });
 
-test('resetDailiesIfNeeded triggers only when last reset is not today', () => {
+test('resetDailiesIfNeeded triggers only when last reset is not today', async () => {
   const createdAt = new Date().toISOString();
   const tasks: Task[] = [
     {
@@ -74,7 +85,8 @@ test('resetDailiesIfNeeded triggers only when last reset is not today', () => {
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   localStorage.setItem(LAST_DAILY_RESET_KEY, yesterday);
 
-  resetDailiesIfNeeded();
+  // call and await to ensure the async reset runs
+  await resetDailiesIfNeeded();
 
   const daily = useTaskStore.getState().tasks.find((t) => t.id === 'daily-2');
   expect(daily).toBeDefined();

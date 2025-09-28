@@ -64,7 +64,7 @@ model Task {
   updatedAt     DateTime     @updatedAt
   deletedAt     DateTime?
   projectId     String?
-  project       Project?     @relation(fields: [projectId], references: [id])
+  project       Project?     @relation("ProjectTasks", fields: [projectId], references: [id])
 
   @@index([ownerId])
   @@index([status])
@@ -117,7 +117,7 @@ model Project {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  tasks Task[]
+  tasks Task[] @relation("ProjectTasks")
 }
 
 // Models required by NextAuth.js

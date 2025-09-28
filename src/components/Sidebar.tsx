@@ -19,6 +19,7 @@ import {
 import useProjectStore from '../lib/projectStore';
 import { Star } from 'lucide-react';
 import { useEffect } from 'react';
+import { projectSlug } from '../lib/utils';
 
 // ...existing code...
 
@@ -120,7 +121,10 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                   !!pathname && (pathname === item.href || pathname.startsWith(item.href + '/'));
                 if (effectiveLoggedIn) {
                   return (
-                    <div key={item.href} className="w-full">
+                    <div
+                      key={item.href}
+                      className={`w-full ${item.href === '/projects' ? 'mb-2' : ''}`}
+                    >
                       <div
                         className={`flex items-center gap-3 rounded ${
                           item.href === '/projects' ? 'px-2 py-1.5' : 'px-2 py-2'
@@ -162,7 +166,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                       {item.href === '/projects' && !collapsed && (
                         <div
                           id="sidebar-projects"
-                          className={`ml-3 mt-0 w-full pr-3 overflow-hidden origin-top transition-[max-height,opacity,transform] duration-200 ease-out ${
+                          className={`ml-3 mt-1 w-full pr-3 overflow-hidden origin-top transition-[max-height,opacity,transform] duration-200 ease-out ${
                             projectsOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0'
                           }`}
                           style={{ maxHeight: projectsOpen ? '20rem' : 0 }}
@@ -178,40 +182,45 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                             {projects
                               .slice()
                               .sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0))
-                              .map((p) => (
-                                <div
-                                  key={p.id}
-                                  className={`flex items-center justify-between gap-2 px-2 py-2 rounded ${
-                                    pathname === `/projects/${p.id}`
-                                      ? 'bg-success-content/20'
-                                      : 'hover:bg-base-300'
-                                  }`}
-                                >
-                                  <Link
-                                    href={`/projects/${p.id}`}
-                                    className="text-sm truncate pr-2 flex-1 min-w-0"
-                                  >
-                                    <span className="inline-flex items-center gap-2">
-                                      <FolderOpen className="w-4 h-4" />
-                                      <span className="truncate">{p.name}</span>
-                                    </span>
-                                  </Link>
-                                  <button
-                                    aria-pressed={!!p.starred}
-                                    onClick={() => updateProject(p.id, { starred: !p.starred })}
-                                    className={`btn btn-ghost btn-xs btn-square ${
-                                      p.starred ? 'text-yellow-400' : 'text-neutral'
+                              .map((p) => {
+                                const slug = projectSlug(p.name ?? '');
+                                const projectPath = `/projects/${slug}`;
+                                const isActiveProject = pathname === projectPath;
+                                return (
+                                  <div
+                                    key={p.id}
+                                    className={`flex items-center justify-between gap-2 px-2 py-2 rounded ${
+                                      isActiveProject
+                                        ? 'bg-success-content/20'
+                                        : 'hover:bg-base-300'
                                     }`}
-                                    title={p.starred ? 'Unstar project' : 'Star project'}
                                   >
-                                    <Star
-                                      className="w-4 h-4"
-                                      fill={p.starred ? 'currentColor' : 'none'}
-                                      aria-hidden
-                                    />
-                                  </button>
-                                </div>
-                              ))}
+                                    <Link
+                                      href={projectPath}
+                                      className="text-sm truncate pr-2 flex-1 min-w-0"
+                                    >
+                                      <span className="inline-flex items-center gap-2">
+                                        <FolderOpen className="w-4 h-4" />
+                                        <span className="truncate">{p.name}</span>
+                                      </span>
+                                    </Link>
+                                    <button
+                                      aria-pressed={!!p.starred}
+                                      onClick={() => updateProject(p.id, { starred: !p.starred })}
+                                      className={`btn btn-ghost btn-xs btn-square ${
+                                        p.starred ? 'text-yellow-400' : 'text-neutral'
+                                      }`}
+                                      title={p.starred ? 'Unstar project' : 'Star project'}
+                                    >
+                                      <Star
+                                        className="w-4 h-4"
+                                        fill={p.starred ? 'currentColor' : 'none'}
+                                        aria-hidden
+                                      />
+                                    </button>
+                                  </div>
+                                );
+                              })}
                           </div>
                         </div>
                       )}

@@ -1,3 +1,15 @@
+## 📌 New Project Modal Updates
+
+8. Dashboard — New Project modal: optional project-only flow
+
+- Scope: Update the Dashboard New Project flow (currently implemented in `TaskModal.tsx` / Dashboard modal wiring) so that creating a new project can optionally be done without simultaneously creating a task. The modal should expose a toggle (or choose the flow via separate "Create only project" button) that will only create the Project when selected and skip task creation. This helps users who want to add project containers without an immediate starter task.
+- Files to update: `src/components/TaskModal.tsx` (split or add option), `src/app/dashboard/page.tsx`, `src/lib/api.ts` (ensure `POST /api/projects` handles a project-only payload), and any client stores that expect both objects to be created together (e.g., `projectStore.ts`, `taskStore.ts`). If the combined creation flow remains supported, ensure the client performs the createProject -> createTask flow atomically (server-side transaction preferred).
+- Acceptance criteria:
+  - The New Project modal includes a clear option to create a project without creating a task (toggle or distinct UI path).
+  - When the project-only option is selected, the client sends a `POST /api/projects` call and does NOT create a task; the new project appears in the sidebar and `/projects` view immediately after creation.
+  - The combined (project + task) flow still works unchanged when the user chooses it; tasks created with a new project are correctly linked to the new project's id.
+  - Unit tests added for modal behavior and an API test for project-only creation.
+  - Documentation and `implementation.md` updated to reflect the change.
 # Immediate TODO (curate me)
 
 NOTE: Development process — prioritize UI/UX work first, then backend production features, then polish/maintenance. Keep `TODO.md` current: review and update it on every commit/push and move completed items into `implementation.md`'s "Completed tasks" section. This policy is enforced by the team and documented in `implementation.md`.

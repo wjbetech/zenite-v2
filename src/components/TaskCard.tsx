@@ -150,7 +150,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
                     e.preventDefault();
                     onEdit(task);
                   }}
-                  className="cursor-pointer text-emerald-600 hover:text-emerald-600/80"
+                  className="cursor-pointer text-emerald-600 hover:text-emerald-600/80 no-border"
                   title="Edit"
                 >
                   <Edit className="h-5 w-5" />
@@ -165,7 +165,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
                     e.preventDefault();
                     onDelete(task.id);
                   }}
-                  className="cursor-pointer text-red-600 hover:text-red-600/80"
+                  className="cursor-pointer text-red-600 hover:text-red-600/80 no-border"
                   title="Delete"
                 >
                   <Trash className="h-5 w-5" />

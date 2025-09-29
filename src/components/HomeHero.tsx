@@ -40,7 +40,7 @@ export default function HomeHero() {
           {isSignedIn && (
             <div className="absolute left-1/2 transform -translate-x-1/2 bottom-8 sm:bottom-16">
               <button
-                className="btn btn-primary px-4 py-2 inline-flex items-center gap-2"
+                className="btn btn-primary border-on px-4 py-2 inline-flex items-center gap-2"
                 onClick={() => {
                   router.push('/dashboard');
                 }}

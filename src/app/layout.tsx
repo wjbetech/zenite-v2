@@ -34,6 +34,21 @@ export default async function RootLayout({
   const sidebarCollapsed = cookieStore.get('zenite.sidebarCollapsed')?.value === 'true';
   const initialSidebarWidth = sidebarCollapsed ? '64px' : '208px';
 
+  // DEV-only: log SSR-derived values to help debug serialization problems
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      // stringify defensively so any non-plain values are visible without throwing
+
+      console.debug('[SSR Debug] ssrDaisyTheme=', JSON.stringify(ssrDaisyTheme));
+
+      console.debug('[SSR Debug] sidebarCollapsed=', JSON.stringify(sidebarCollapsed));
+
+      console.debug('[SSR Debug] initialSidebarWidth=', JSON.stringify(initialSidebarWidth));
+    } catch (e) {
+      console.warn('[SSR Debug] failed to stringify SSR values', e);
+    }
+  }
+
   return (
     <html
       lang="en"

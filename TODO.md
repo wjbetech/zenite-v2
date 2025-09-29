@@ -116,6 +116,38 @@ These are the immediate actionable items. Completed items were moved to `impleme
 
 If you want, I can start working on the top item now: add the Prisma `Project` model and create the migration.
 
+## Added 2025-09-29
+
+- [ ] Ensure activity tracker persists daily history
+
+  - Scope: Make the activity tracker persist per-day statistics long-term (not only current-day). Normalize date keys to YYYY-MM-DD and ensure server storage exposes historical ranges.
+  - Files: `src/components/ActivityHeatmap.tsx`, `src/components/ActivityTracker.tsx`, `src/lib/api.ts`, server activity endpoints.
+  - Acceptance criteria: Heatmap and history views render multi-day data; tests added for retrieval across ranges and timezone handling.
+
+- [ ] Bind activity stats to Dashboard charts
+
+  - Scope: Provide aggregated endpoints (daily/weekly/monthly) for per-user activity and render charts in `DashboardStats`.
+  - Files: `src/app/api/stats/*`, `src/components/DashboardStats.tsx`, `src/components/Dashboard.tsx`.
+  - Acceptance criteria: endpoints and chart components exist; tests validate aggregation and rendering.
+
+- [ ] Sidebar truncation for project/task names
+
+  - Scope: Truncate long names with ellipsis before icons and provide a `title` for full text.
+  - Files: `src/components/Sidebar.tsx`, `src/components/ProjectSidebar.tsx`.
+  - Acceptance criteria: names truncate without layout break; tooltip/title shows full text; unit tests added.
+
+- [ ] Dashboard tabs: add `bg-base-100` backgrounds
+
+  - Scope: Apply `bg-base-100` to the Dashboard tabs controlling which task view is shown to visually separate them.
+  - Files: `src/components/Dashboard.tsx`, `src/components/DashboardTabs.tsx`.
+  - Acceptance criteria: tabs use `bg-base-100`, remain keyboard accessible, tests updated.
+
+- [ ] Consider refactor: Dashboard -> Projects-dropdown + multi-page
+
+  - Scope: Evaluate and prototype refactoring Dashboard into a Projects-style dropdown with multiple pages (Tasks, Stats, Activity). Produce an ADR and prototype.
+  - Files (proposal): `src/components/Dashboard/*`, `src/app/dashboard/*`.
+  - Acceptance criteria: ADR and prototype; follow-up tickets created if agreed.
+
 - [ ] Build out drag and drop for the dailies page so that items can be reshuffled.
 
 ---

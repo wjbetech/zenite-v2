@@ -273,3 +273,35 @@ This repository follows a small, repeatable process to keep work focused and pro
 3. When tasks are finished, mark them completed in `TODO.md` and move the completed checklist items into `implementation.md` under "Completed tasks" with a short date/note.
 
 Follow these rules during development and in pull requests. If you'd like, I can add a lightweight Git commit hook or GitHub Action to remind authors to update `TODO.md` on PR creation.
+
+## 📌 Followups added 2025-09-29
+
+1. Ensure activity tracker persists daily history
+
+- Scope: Make the activity tracker persist per-day statistics long-term (not just for the current day). Normalize date keys to YYYY-MM-DD server- and client-side.
+- Files: `src/components/ActivityHeatmap.tsx`, `src/components/ActivityTracker.tsx`, `src/lib/api.ts`, server activity endpoints.
+- Acceptance criteria: multi-day activity can be recorded and retrieved; heatmap and history views render days spanning months; tests cover timezone normalization.
+
+2. Bind activity stats to Dashboard charts
+
+- Scope: Add server endpoints that aggregate per-user activity (daily/weekly/monthly) and wire `DashboardStats` to render charts using that data.
+- Files: `src/app/api/stats/*`, `src/components/DashboardStats.tsx`, `src/components/Dashboard.tsx`.
+- Acceptance criteria: aggregated endpoints exist and charts render with realistic data; tests for aggregation and chart wiring.
+
+3. Sidebar truncation for project/task names
+
+- Scope: Fix the Sidebar so long project/task names truncate with ellipsis before the star icon and preserve a `title` attribute for full text.
+- Files: `src/components/Sidebar.tsx`, `src/components/ProjectSidebar.tsx`.
+- Acceptance criteria: UI truncates long names without layout breakage; tooltip or `title` exposes full name; unit tests added.
+
+4. Dashboard tab backgrounds
+
+- Scope: Add `bg-base-100` (and optionally `border-base-content`) to Dashboard tabs (New / Today / This Week) to improve contrast and separation.
+- Files: `src/components/Dashboard.tsx`, `src/components/DashboardTabs.tsx`.
+- Acceptance criteria: tabs render with `bg-base-100`, keyboard navigation remains accessible, tests updated.
+
+5. Evaluate Dashboard refactor to multi-page Projects-style
+
+- Scope: Consider refactoring the dashboard into a Projects-style dropdown with multiple pages (Tasks, Stats, Activity). Produce an ADR and a small prototype.
+- Files (proposal): `src/components/Dashboard/*`, routing under `src/app/dashboard/*`.
+- Acceptance criteria: ADR produced with migration plan; prototype demonstrates feasibility.

@@ -343,4 +343,35 @@ Follow these rules during development and in pull requests. If you'd like, I can
   - The page is protected — non-signed-in visitors are redirected to `/login` or shown a Sign in CTA.
   - Tests: unit tests for the header and a small integration test for the page data fetching (mocked) are added.
 
+3. Profile page: feature roadmap (added 2025-09-30)
+
+- Google sync integration
+
+  - Goal: Allow users to connect Google (Calendar/Tasks) and show sync status on the Profile page.
+  - Scope: OAuth server flow to request scopes, securely store refresh tokens server-side, cron or on-demand sync endpoints, and UI to display status and manual sync control.
+  - Acceptance criteria:
+    - Profile shows Google as connected/disconnected and last sync timestamp.
+    - User can connect/disconnect and trigger a manual sync; sync errors are surfaced.
+
+- Avatar change flow
+
+  - Goal: Enable users to upload/change avatars from the Profile page.
+  - Scope: Client upload UI, optional cropping, server-side storage or Clerk profile update call, and update of the client UI after save.
+  - Acceptance criteria:
+    - Avatar upload preview + save works; avatar propagates across app; file validation present.
+
+- Billing & subscription area
+
+  - Goal: Show plan and billing information on profile; initially reflect Free plan.
+  - Scope: Billing card UI and placeholder invoices list; server endpoints can be stubbed until billing is added.
+  - Acceptance criteria:
+    - A clear Free plan is displayed with a future Upgrade CTA; invoices area shows an empty state.
+
+- Team permissions & shared projects spike
+
+  - Goal: Research architecture for teams, shared projects/tasks, invite flows, and permissions.
+  - Scope: ADR + small schema spike and sample UI components for invites/roles.
+  - Acceptance criteria:
+    - ADR document created; spike outlines migration steps and sample API/permission checks.
+
 ---

@@ -195,6 +195,43 @@ If you want, I can start working on the top item now: add the Prisma `Project` m
 
 All tests pass locally after these changes.
 
+## Profile page enhancements (added 2025-09-30)
+
+1. Add Google sync functionality and information to the profile page
+
+- Scope: Surface Google sync/connect status on the Profile page. Provide controls to connect/disconnect Google (calendar/tasks), show last sync time and sync status, and allow the user to initiate a manual sync. This requires an OAuth flow (additional Google scopes) and server-side storage of refresh tokens (securely stored). Add UI to indicate sync status and any failures.
+- Files to update: `src/app/profile/page.tsx`, `src/app/profile/GoogleSync.tsx` (new), server OAuth endpoints (e.g., `src/app/api/integrations/google/*`), and DB fields for storing integration tokens (Prisma schema).
+- Acceptance criteria:
+  - Profile shows whether Google is connected and when last sync occurred.
+  - User can connect/disconnect Google and trigger a manual sync.
+  - Sync errors are surfaced in the Profile UI.
+
+2. Allow users to change their avatar in the Profile page
+
+- Scope: Provide an avatar upload/change flow on the Profile page that updates the Clerk user profile (or a DB-backed avatar if you prefer storing images separately). Support drag-and-drop or file picker, preview, and save. Keep image size limits and crop/resize guidelines.
+- Files to update: `src/app/profile/page.tsx`, `src/app/profile/AvatarEditor.tsx` (new), update Clerk profile via server route or Clerk SDK as appropriate.
+- Acceptance criteria:
+  - User can upload a new avatar and see a preview before saving.
+  - Saved avatar updates the header/navbar avatar across the app.
+  - Files are validated for size/type and errors are shown to the user.
+
+3. Add billing and subscription information to the Profile page
+
+- Scope: Display current plan status, trial info, and invoices area. Since the app is currently free, show a clear "Free" plan state and a CTA to upgrade in the future. Add placeholder UI that can be wired to a billing provider later.
+- Files to update: `src/app/profile/page.tsx`, `src/app/profile/BillingCard.tsx` (new), and potentially server endpoints for billing data (stubbed now).
+- Acceptance criteria:
+  - Profile shows a billing card with current plan = Free and a short description.
+  - Placeholder invoices area lists none/empty state with CTA to add billing method (disabled for now).
+
+4. Look into team permissions / shared Projects & Tasks
+
+- Scope: Research and draft an approach for multi-user team support (shared projects/tasks, roles/permissions). This is an investigative ticket: add an ADR (architecture decision record) and a small spike to prototype schema changes (Project.members, Project.ownerId, role enums) and permission checks on APIs.
+- Files to update: create `docs/adr/team-permissions.md`, an exploratory migration `prisma/2025XXXX_add_team_tables/`, and spike UI in `src/app/profile/team-spike.md` or a draft page.
+- Acceptance criteria:
+  - ADR describes tradeoffs (shared vs. owned projects, invitation flows, permission granularity).
+  - Spike identifies required DB schema changes, migration plan, and sample UI components for invitations and role assignment.
+
+
 ## Suggested next steps
 
 - Address `zustand` deprecation warnings by switching store files to the named `create` export.

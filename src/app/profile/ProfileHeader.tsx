@@ -53,7 +53,7 @@ export default function ProfileHeader() {
 
       <div className="ml-auto">
         <SignOutButton>
-          <button className="btn btn-ghost">Sign out</button>
+          <button className="btn border-on btn-accent cursor-pointer">Sign out</button>
         </SignOutButton>
       </div>
     </div>

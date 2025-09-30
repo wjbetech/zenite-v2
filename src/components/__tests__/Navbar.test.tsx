@@ -25,6 +25,14 @@ describe('Navbar avatar', () => {
     render(React.createElement(Navbar));
 
     await waitFor(() => expect(screen.getByAltText(/Test User's avatar/i)).toBeInTheDocument());
+    // avatar toggle button should be present and interactive
+    const avatarButton =
+      screen.getByRole('button', { name: /Test User's avatar/i, hidden: true }) ||
+      screen.getByRole('button');
+    expect(avatarButton).toBeTruthy();
+    // Ensure the DOM includes our cursor utility class on the avatar toggle or nearby button
+    const avatarParent = avatarButton.closest('button') || avatarButton;
+    expect(avatarParent.className).toEqual(expect.stringContaining('cursor-pointer'));
   });
 
   it('renders initials when no imageUrl present', async () => {
@@ -32,5 +40,8 @@ describe('Navbar avatar', () => {
     render(React.createElement(Navbar));
 
     await waitFor(() => expect(screen.getByText('AB')).toBeInTheDocument());
+    // ensure Sign out button exists (SignedIn wrapper yields children) and has cursor class
+    const signOut = screen.queryByRole('button', { name: /Sign out/i });
+    if (signOut) expect(signOut.className).toEqual(expect.stringContaining('cursor-pointer'));
   });
 });

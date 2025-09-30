@@ -305,3 +305,13 @@ Follow these rules during development and in pull requests. If you'd like, I can
 - Scope: Consider refactoring the dashboard into a Projects-style dropdown with multiple pages (Tasks, Stats, Activity). Produce an ADR and a small prototype.
 - Files (proposal): `src/components/Dashboard/*`, routing under `src/app/dashboard/*`.
 - Acceptance criteria: ADR produced with migration plan; prototype demonstrates feasibility.
+
+6. Refactor Clerk avatar menu to use DaisyUI components
+
+- Scope: Replace custom/hand-rolled avatar menu markup in the header (currently in `src/components/Navbar.tsx`) with DaisyUI's dropdown/menu primitives where possible so the profile menu visually and behaviorally matches the rest of the app across themes. Ensure keyboard accessibility (Escape to close, arrow navigation where appropriate) and maintain Clerk sign-in/out behavior.
+- Files to update: `src/components/Navbar.tsx` (primary), small helpers if needed (e.g., `src/components/ThemeDropdown.tsx`), and tests in `src/components/__tests__/Navbar.test.tsx`.
+- Acceptance criteria:
+  - The avatar/profile menu uses DaisyUI classes (e.g., `dropdown`, `menu`, `dropdown-content`) or equivalent components so it inherits theme styles consistently.
+  - Menu items (Profile, Settings, Sign out) are keyboard accessible and visually consistent with other menus in the app.
+  - The Sign out action continues to call Clerk's sign-out flow; Profile/Settings items link to the appropriate routes.
+  - Unit tests updated to assert the menu structure and accessibility landmarks (role/menu, aria attributes) and visual snapshots where applicable.

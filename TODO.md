@@ -150,6 +150,18 @@ If you want, I can start working on the top item now: add the Prisma `Project` m
 
 - [ ] Build out drag and drop for the dailies page so that items can be reshuffled.
 
+## Avatar / Header TODO
+
+- [ ] Refactor Clerk avatar menu to use DaisyUI components
+
+  - Scope: Replace the custom avatar/menu markup in `src/components/Navbar.tsx` with DaisyUI dropdown/menu primitives where possible so the profile menu inherits theme styles and behavior. Improve keyboard accessibility (Escape to close, arrow navigation) and ensure menu items link to Profile/Settings and sign-out via Clerk.
+  - Files: `src/components/Navbar.tsx`, `src/components/__tests__/Navbar.test.tsx` (update/add tests), and any small helper components introduced for menu items.
+  - Acceptance criteria:
+    - Avatar menu uses DaisyUI `dropdown` / `menu` classes and looks consistent across DaisyUI themes.
+    - Menu is keyboard accessible and closes when clicking outside or pressing Escape.
+    - Sign out still triggers Clerk sign out and no runtime serialization issues are introduced.
+    - Tests added/updated to assert menu presence, ARIA attributes, and interaction.
+
 ---
 
 ## Recent progress (2025-09-22)

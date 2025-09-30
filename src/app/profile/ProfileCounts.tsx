@@ -43,9 +43,40 @@ export default function ProfileCounts() {
         // Project count is the length of the projects array
         setProjectCount(projects.length);
 
-        // Task count is the number of tasks owned by this user
+        // Task count is the number of tasks owned by this user.
+        // In some dev setups the DB user id (ownerId) doesn't match the Clerk user.id
+        // (seeded data may use a different user record). Try the straightforward
+        // filter first; if that yields 0, and we have the user's email, call
+        // the server counts endpoint with ownerEmail to resolve the correct owner.
         const owned = tasks.filter((t) => t.ownerId === uid);
-        setTaskCount(owned.length);
+        if (owned.length > 0) {
+          setTaskCount(owned.length);
+        } else if (user?.primaryEmailAddress?.emailAddress) {
+          try {
+            const countsRes = await fetch(
+              `/api/profile/counts?ownerEmail=${encodeURIComponent(
+                user.primaryEmailAddress.emailAddress,
+              )}`,
+            );
+            if (countsRes.ok) {
+              const counts = await countsRes.json();
+              // counts.taskCount is a number when resolved by server
+              if (typeof counts?.taskCount === 'number') {
+                setTaskCount(counts.taskCount);
+              } else {
+                // Fallback to the local filter result (0)
+                setTaskCount(owned.length);
+              }
+            } else {
+              setTaskCount(owned.length);
+            }
+          } catch (_) {
+            // If the fallback call fails, don't block the UI — use the local count
+            setTaskCount(owned.length);
+          }
+        } else {
+          setTaskCount(owned.length);
+        }
 
         setError(null);
       } catch (err: unknown) {

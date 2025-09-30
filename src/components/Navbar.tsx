@@ -35,8 +35,17 @@ export default function Navbar() {
         setOpen(false);
       }
     }
+
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+
     document.addEventListener('click', onDoc);
-    return () => document.removeEventListener('click', onDoc);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('click', onDoc);
+      document.removeEventListener('keydown', onKey);
+    };
   }, []);
 
   return (
@@ -58,15 +67,24 @@ export default function Navbar() {
           <SignedIn>
             <div className="flex items-center gap-4 ">
               <div
-                className="relative hover:bg-base-300 transition-colors duration-150  rounded-md"
+                className="dropdown dropdown-end"
                 ref={menuRef}
+                onClick={(e) => {
+                  // If the click was inside the dropdown-content (menu items), don't force-open.
+                  const target = e.target as Node;
+                  const ul = menuRef.current?.querySelector('ul');
+                  if (ul && ul.contains(target)) return;
+                  // Ensure the menu is open when clicking the container/button area.
+                  setOpen(true);
+                }}
               >
                 <button
+                  tabIndex={0}
                   type="button"
                   aria-haspopup="menu"
                   aria-expanded={open}
                   onClick={() => setOpen((s) => !s)}
-                  className="flex items-center focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-md px-2 py-1 cursor-pointer"
+                  className="flex items-center focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-md px-2 py-1 cursor-pointer hover:bg-base-300 transition-colors duration-150"
                 >
                   <div className="flex items-center gap-3">
                     {profileImage ? (
@@ -89,27 +107,25 @@ export default function Navbar() {
                   </div>
                 </button>
 
-                {open && (
-                  <div
-                    role="menu"
-                    aria-label="Profile menu"
-                    className="absolute right-0 mt-2 w-40 bg-base-100 border rounded shadow-md py-1 z-50"
-                  >
-                    {/* Placeholder menu items */}
-                    <button
-                      role="menuitem"
-                      className="w-full text-left px-3 py-2 hover:bg-base-200"
-                    >
+                <ul
+                  tabIndex={0}
+                  role="menu"
+                  aria-label="Profile menu"
+                  className={`menu menu-sm dropdown-content mt-2 p-2 shadow bg-base-100 rounded-box w-40 ${
+                    open ? 'block' : 'hidden'
+                  }`}
+                >
+                  <li>
+                    <button role="menuitem" onClick={() => setOpen(false)}>
                       Profile
                     </button>
-                    <button
-                      role="menuitem"
-                      className="w-full text-left px-3 py-2 hover:bg-base-200"
-                    >
+                  </li>
+                  <li>
+                    <button role="menuitem" onClick={() => setOpen(false)}>
                       Settings
                     </button>
-                  </div>
-                )}
+                  </li>
+                </ul>
               </div>
 
               <SignOutButton>

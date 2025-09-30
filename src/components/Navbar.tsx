@@ -116,30 +116,25 @@ export default function Navbar() {
                   }`}
                 >
                   <li>
-                      <Link href="/profile">
-                        <a
-                          role="menuitem"
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            try {
-                              const res = await fetch('/profile', { method: 'HEAD' });
-                              if (res.ok) {
-                                setOpen(false);
-                                // use full navigation to avoid requiring next/router in tests
-                                window.location.assign('/profile');
-                              } else {
-                                alert('Profile page is not available yet.');
-                              }
-                            } catch {
-                              // network or missing page
-                              alert('Profile page is not available yet.');
-                            }
-                          }}
-                          className="w-full text-left"
-                        >
-                          Profile
-                        </a>
-                      </Link>
+                    <button
+                      role="menuitem"
+                      onClick={async () => {
+                        try {
+                          const res = await fetch('/profile', { method: 'HEAD' });
+                          if (res.ok) {
+                            setOpen(false);
+                            window.location.assign('/profile');
+                          } else {
+                            alert('Profile page is not available yet.');
+                          }
+                        } catch {
+                          alert('Profile page is not available yet.');
+                        }
+                      }}
+                      className="w-full text-left"
+                    >
+                      Profile
+                    </button>
                   </li>
                   <li>
                     <button role="menuitem" onClick={() => setOpen(false)}>

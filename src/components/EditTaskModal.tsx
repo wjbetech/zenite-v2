@@ -16,6 +16,11 @@ export default function EditTaskModal({ open, onOpenChange, task, onSave }: Prop
   const [notes, setNotes] = React.useState('');
   const [projectId, setProjectId] = React.useState<string | 'none'>('none');
   const projects = useProjectStore((s) => s.projects);
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   React.useEffect(() => {
     if (task) {
@@ -77,11 +82,13 @@ export default function EditTaskModal({ open, onOpenChange, task, onSave }: Prop
             aria-label="Select project"
           >
             <option value="none">— None —</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
+            {/* Only render project options after client mount to avoid SSR/client hydration mismatches */}
+            {mounted &&
+              projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
           </select>
 
           <div className="modal-action mt-4">

@@ -27,7 +27,7 @@ export default function ProfileHeader() {
   })();
 
   return (
-    <div className="flex items-center gap-4 p-4 bg-base-100 rounded-md">
+    <div className="flex items-center gap-4 py-4 pr-4 pl-0 bg-base-100 rounded-md">
       <div className="w-16 h-16 rounded-full overflow-hidden bg-emerald-600 flex items-center justify-center text-white text-xl font-semibold">
         {user.imageUrl ? (
           <Image

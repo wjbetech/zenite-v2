@@ -25,7 +25,7 @@ export default function ProfileCounts() {
       return;
     }
 
-  const uid = user.id;
+    const uid = user.id;
     let cancelled = false;
 
     async function load() {

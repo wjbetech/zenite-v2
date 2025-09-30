@@ -17,7 +17,10 @@ export async function GET(request: Request) {
     if (!ownerId) {
       const taskCount = await prisma.task.count();
       // Count distinct projectIds across all tasks (excluding null)
-      const projects = await prisma.task.findMany({ select: { projectId: true }, where: { projectId: { not: null } } });
+      const projects = await prisma.task.findMany({
+        select: { projectId: true },
+        where: { projectId: { not: null } },
+      });
       const uniqueProjectIds = new Set(projects.map((p) => p.projectId));
       const projectCount = uniqueProjectIds.size;
       return NextResponse.json({ taskCount, projectCount });

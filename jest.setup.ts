@@ -72,3 +72,21 @@ if (typeof (global as unknown as { Response?: unknown }).Response === 'undefined
   // @ts-ignore
   (global as unknown as { Response?: unknown }).Response = TestResponse;
 }
+
+// Provide a lightweight global.fetch if not provided by the Node/JSDOM environment.
+// Tests that need specific fetch behavior should mock fetch per-test.
+if (typeof (global as unknown as { fetch?: unknown }).fetch === 'undefined') {
+  // a minimal fetch mock that test files can spyOn/mockImplementation as needed
+  // it returns a Response-like object with ok=false by default
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  global.fetch = async () => {
+    // default simulated network response
+    // shape matches what's used by src/lib/api.safeJson (res.ok and res.json())
+    return {
+      ok: false,
+      status: 500,
+      json: async () => ({}),
+    } as unknown as Response;
+  };
+}

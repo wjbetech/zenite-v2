@@ -34,6 +34,21 @@ export default async function RootLayout({
   const sidebarCollapsed = cookieStore.get('zenite.sidebarCollapsed')?.value === 'true';
   const initialSidebarWidth = sidebarCollapsed ? '64px' : '208px';
 
+  // DEV-only: log SSR-derived values to help debug serialization problems
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      // stringify defensively so any non-plain values are visible without throwing
+
+      console.debug('[SSR Debug] ssrDaisyTheme=', JSON.stringify(ssrDaisyTheme));
+
+      console.debug('[SSR Debug] sidebarCollapsed=', JSON.stringify(sidebarCollapsed));
+
+      console.debug('[SSR Debug] initialSidebarWidth=', JSON.stringify(initialSidebarWidth));
+    } catch (e) {
+      console.warn('[SSR Debug] failed to stringify SSR values', e);
+    }
+  }
+
   return (
     <html
       lang="en"
@@ -104,11 +119,9 @@ export default async function RootLayout({
           <Navbar />
           {/* spacer for fixed navbar height (kept for layout), use CSS var '--nav-height' for precise centering */}
           <div style={{ height: 72 }} />
-          <div className="flex">
+          <div className="flex h-[calc(100vh-72px)]">
             <Sidebar isLoggedIn={isLoggedIn} />
-            {/* spacer so fixed-position sidebar doesn't overlap the flex content */}
-            <div style={{ width: 'var(--sidebar-width)', minWidth: 'var(--sidebar-width)' }} />
-            <main className="flex-1 p-6">{children}</main>
+            <main className="flex-1 p-6 h-full flex flex-col min-h-0">{children}</main>
           </div>
         </Providers>
       </body>

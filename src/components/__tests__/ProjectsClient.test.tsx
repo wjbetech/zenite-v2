@@ -50,39 +50,53 @@ jest.mock('react-toastify', () => ({
   },
 }));
 
+// mock api to avoid real fetch calls during tests
+jest.mock('../../lib/api', () => ({
+  __esModule: true,
+  default: {
+    deleteProject: jest.fn().mockResolvedValue({}),
+    createProject: jest.fn().mockResolvedValue({}),
+    updateProject: jest.fn().mockResolvedValue({}),
+    fetchTasks: jest.fn().mockResolvedValue([]),
+  },
+}));
+
 import ProjectsClient from '../ProjectsClient';
 import { toast } from 'react-toastify';
+import { Project } from '../../lib/projectStore';
 
 describe('ProjectsClient (smoke)', () => {
   it('renders empty state gracefully', () => {
-    const projects: Array<{ id: string; name: string; createdAt: string }> = [];
+    const projects: Project[] = [];
     render(React.createElement(ProjectsClient, { initialProjects: projects }));
-    expect(screen.queryByText(/no projects yet/i)).toBeTruthy();
+    return waitFor(() => expect(screen.queryByText(/no projects yet/i)).toBeTruthy());
   });
 
   it('renders list of projects', () => {
-    const projects: Array<{ id: string; name: string; createdAt: string }> = [
-      { id: 'p1', name: 'A', createdAt: new Date().toISOString() },
-      { id: 'p2', name: 'B', createdAt: new Date().toISOString() },
+    const projects: Project[] = [
+      { id: 'p1', name: 'A', createdAt: new Date().toISOString(), taskCount: 0 },
+      { id: 'p2', name: 'B', createdAt: new Date().toISOString(), taskCount: 0 },
     ];
     render(React.createElement(ProjectsClient, { initialProjects: projects }));
-    expect(screen.getByText('A')).toBeTruthy();
-    expect(screen.getByText('B')).toBeTruthy();
+    return waitFor(() => {
+      expect(screen.getByText('A')).toBeTruthy();
+      expect(screen.getByText('B')).toBeTruthy();
+    });
   });
 
   it('shows confirm modal, deletes project, shows toast, and removes it from view', async () => {
     const projects = [{ id: 'p1', name: 'ToDelete', createdAt: new Date().toISOString() }];
     render(React.createElement(ProjectsClient, { initialProjects: projects }));
 
-    // initial project exists
-    expect(screen.getByText('ToDelete')).toBeTruthy();
+    // wait for initial render
+    await waitFor(() => expect(screen.getByText('ToDelete')).toBeTruthy());
 
     // click the delete button on the project card
     const deleteBtn = screen.getByRole('button', { name: /delete project/i });
     fireEvent.click(deleteBtn);
 
     // modal should appear
-    const dialog = screen.getByRole('dialog');
+    const dialog = await waitFor(() => screen.getByRole('dialog'));
     expect(dialog).toBeTruthy();
 
     // find confirm button within dialog and click it
@@ -91,7 +105,7 @@ describe('ProjectsClient (smoke)', () => {
 
     // wait for toast success to be called
     await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith('Project has been deleted', expect.any(Object));
+      expect(toast.success).toHaveBeenCalledWith('Project has been deleted', expect.anything());
     });
 
     // project should be removed from view

@@ -4,8 +4,24 @@ import { createProjectSchema, updateProjectSchema } from '../../../lib/validator
 
 export async function GET() {
   try {
-    const projects = await prisma.project.findMany({ orderBy: { createdAt: 'desc' } });
-    return NextResponse.json(projects);
+    const projects = await prisma.project.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+      include: { _count: { select: { tasks: true } } },
+    });
+
+    const serialized = projects.map((p) => {
+      const projectWithCount = p as typeof p & { _count?: { tasks?: number } };
+      return {
+        id: projectWithCount.id,
+        name: projectWithCount.name,
+        description: projectWithCount.description ?? undefined,
+        createdAt: projectWithCount.createdAt.toISOString(),
+        taskCount: projectWithCount._count?.tasks ?? 0,
+      };
+    });
+
+    return NextResponse.json(serialized);
   } catch (err) {
     return NextResponse.json(
       { error: 'Failed to fetch projects', details: String(err) },

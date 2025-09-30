@@ -6,6 +6,7 @@ jest.mock('../../lib/taskStore', () => {
   const mockState = {
     tasks: [],
     createTask: jest.fn(),
+    loadTasks: jest.fn(),
     updateTask: jest.fn(),
     deleteTask: jest.fn(),
     setTasks: jest.fn(),
@@ -80,7 +81,10 @@ describe('Dashboard modals', () => {
     const modal = within(form as HTMLElement);
 
     // The New project input exists inside the modal form
-    const newProjInput = modal.getByRole('textbox');
+    // There may be multiple textboxes (input + textarea), pick the first which is the project name input
+    const textboxes = modal.getAllByRole('textbox');
+    expect(textboxes.length).toBeGreaterThan(0);
+    const newProjInput = textboxes[0];
     expect(newProjInput).toBeTruthy();
 
     // The 'Create task' toggle checkbox labeled 'Create task' should be present inside the modal

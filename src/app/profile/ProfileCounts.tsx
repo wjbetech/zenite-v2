@@ -25,13 +25,17 @@ export default function ProfileCounts() {
       return;
     }
 
-    const uid = user.id;
+  const uid = user.id;
+  const email = user.primaryEmailAddress?.emailAddress;
     let cancelled = false;
 
     async function load() {
       setLoading(true);
       try {
-        const res = await fetch(`/api/profile/counts?ownerId=${encodeURIComponent(uid)}`);
+        const qs = email
+          ? `ownerEmail=${encodeURIComponent(email)}`
+          : `ownerId=${encodeURIComponent(uid)}`;
+        const res = await fetch(`/api/profile/counts?${qs}`);
         if (!res.ok) throw new Error(`fetch /api/profile/counts failed: ${res.status}`);
         const body: { taskCount: number; projectCount: number } = await res.json();
         if (cancelled) return;

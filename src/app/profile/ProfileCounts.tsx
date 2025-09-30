@@ -26,21 +26,27 @@ export default function ProfileCounts() {
     }
 
   const uid = user.id;
-  const email = user.primaryEmailAddress?.emailAddress;
     let cancelled = false;
 
     async function load() {
       setLoading(true);
       try {
-        const qs = email
-          ? `ownerEmail=${encodeURIComponent(email)}`
-          : `ownerId=${encodeURIComponent(uid)}`;
-        const res = await fetch(`/api/profile/counts?${qs}`);
-        if (!res.ok) throw new Error(`fetch /api/profile/counts failed: ${res.status}`);
-        const body: { taskCount: number; projectCount: number } = await res.json();
+        // Fetch both resources in parallel
+        const [projRes, taskRes] = await Promise.all([fetch('/api/projects'), fetch('/api/tasks')]);
+        if (!projRes.ok) throw new Error(`/api/projects failed: ${projRes.status}`);
+        if (!taskRes.ok) throw new Error(`/api/tasks failed: ${taskRes.status}`);
+
+        const projects = (await projRes.json()) as Array<unknown>;
+        const tasks = (await taskRes.json()) as TaskShape[];
         if (cancelled) return;
-        setTaskCount(body.taskCount ?? 0);
-        setProjectCount(body.projectCount ?? 0);
+
+        // Project count is the length of the projects array
+        setProjectCount(projects.length);
+
+        // Task count is the number of tasks owned by this user
+        const owned = tasks.filter((t) => t.ownerId === uid);
+        setTaskCount(owned.length);
+
         setError(null);
       } catch (err: unknown) {
         if (cancelled) return;

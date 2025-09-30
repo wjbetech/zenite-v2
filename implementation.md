@@ -315,3 +315,32 @@ Follow these rules during development and in pull requests. If you'd like, I can
   - Menu items (Profile, Settings, Sign out) are keyboard accessible and visually consistent with other menus in the app.
   - The Sign out action continues to call Clerk's sign-out flow; Profile/Settings items link to the appropriate routes.
   - Unit tests updated to assert the menu structure and accessibility landmarks (role/menu, aria attributes) and visual snapshots where applicable.
+
+---
+
+## 📌 New followups added 2025-09-30
+
+1. Add a real `/profile` route and wire the avatar menu
+
+- Scope: Wire the 'Profile' menu item in the avatar dropdown (Navbar) to navigate to a real profile route at `/profile`. The dropdown should use client-side navigation (Next's `Link` or `useRouter().push`) so it doesn't cause a full page reload.
+- Files to update: `src/components/Navbar.tsx` (change Profile menu item to a Link or handler), add a route file `src/app/profile/page.tsx` (server or client component as appropriate).
+- Acceptance criteria:
+  - Clicking Profile in the avatar dropdown navigates the user to `/profile` client-side.
+  - The dropdown closes on navigation.
+  - Unit tests updated to assert the Profile menu item exists and triggers a navigation (mock router in tests).
+
+2. Implement the Profile page integrating Clerk + DB data
+
+- Scope: Create a user Profile page that displays Clerk-provided user info (name, email, avatar) and enrich it with related data from the app (recent projects, recent tasks, preferences). The page should fetch data server-side where appropriate, and gracefully handle loading and missing data. Protect the page so only authenticated users can view it (redirect to login if not signed in).
+- Files to add/update:
+  - `src/app/profile/page.tsx` — main route UI (can be a Server Component that fetches from DB plus Clerk info passed from Client component), or a Client Component using Clerk hooks and SWR/React Query to fetch DB data.
+  - `src/app/profile/components/ProfileHeader.tsx` — small component showing avatar, name, and quick actions (Edit profile, Sign out).
+  - `src/app/profile/components/RecentActivity.tsx` — shows recent tasks/projects pulled from API.
+  - `src/lib/api.ts` or add server function `src/app/api/profile/route.ts` to return DB data for the signed-in user.
+- Acceptance criteria:
+  - Profile page shows Clerk user info (avatar with initials fallback), primary email, and a short bio (if present).
+  - Profile page displays a list of recent projects and recent tasks pulled from the database for the current user; if none exist, show an empty state with helpful CTAs.
+  - The page is protected — non-signed-in visitors are redirected to `/login` or shown a Sign in CTA.
+  - Tests: unit tests for the header and a small integration test for the page data fetching (mocked) are added.
+
+---

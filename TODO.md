@@ -162,6 +162,27 @@ If you want, I can start working on the top item now: add the Prisma `Project` m
     - Sign out still triggers Clerk sign out and no runtime serialization issues are introduced.
     - Tests added/updated to assert menu presence, ARIA attributes, and interaction.
 
+### New followups (added 2025-09-30)
+
+- [ ] Add real `/profile` route and wire avatar menu
+
+  - Scope: Make the 'Profile' menu item in the Navbar's avatar dropdown navigate to `/profile` using client-side navigation. The dropdown should close on navigation.
+  - Files to update: `src/components/Navbar.tsx`, add `src/app/profile/page.tsx`.
+  - Acceptance criteria:
+    - Clicking Profile navigates user client-side to `/profile`.
+    - The dropdown closes on navigation.
+    - Tests updated to mock/verify navigation.
+
+- [ ] Implement Profile page (Clerk + DB integration)
+
+  - Scope: Create a Profile page that displays Clerk user info and related app data (recent projects/tasks). Protect the page so only signed-in users can view it. Provide loading and empty states.
+  - Files to add/update: `src/app/profile/page.tsx`, `src/app/profile/components/*`, server API route(s) to fetch user DB data.
+  - Acceptance criteria:
+    - Profile header shows avatar (with initials fallback), name, and email.
+    - Recent projects and recent tasks are displayed (or an empty state CTA).
+    - Non-signed-in users are redirected to login or shown a Sign in CTA.
+    - Unit tests added for the header and a mocked data fetch integration test for the page.
+
 ---
 
 ## Recent progress (2025-09-22)

@@ -31,7 +31,7 @@ type SidebarProps = {
 
 export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
   const pathname = usePathname();
-  const allowedPrefixes = ['/dashboard', '/dailies', '/projects', '/settings'];
+  const allowedPrefixes = ['/dashboard', '/dailies', '/projects', '/settings', '/profile'];
   const showSidebar = Boolean(
     pathname &&
       allowedPrefixes.some(

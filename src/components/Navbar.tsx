@@ -154,8 +154,7 @@ export default function Navbar() {
               <button className="btn border-on btn-ghost cursor-pointer">Login</button>
             </SignInButton>
             <SignInButton mode="modal">
-              <button className="btn border-on btn-md btn-warning cursor-pointer">Sign up</button>
-            </SignInButton>
+              <button className="btn border-on btn-md btn-warning cursor-pointer">Sign up</button>            </SignInButton>
           </SignedOut>
         </div>
       </div>

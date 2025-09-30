@@ -231,7 +231,6 @@ All tests pass locally after these changes.
   - ADR describes tradeoffs (shared vs. owned projects, invitation flows, permission granularity).
   - Spike identifies required DB schema changes, migration plan, and sample UI components for invitations and role assignment.
 
-
 ## Suggested next steps
 
 - Address `zustand` deprecation warnings by switching store files to the named `create` export.

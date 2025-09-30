@@ -1,5 +1,6 @@
 import React from 'react';
 import ProfileHeader from './ProfileHeader';
+import ProfileCounts from './ProfileCounts';
 
 export const metadata = {
   title: 'Profile - Zenite',
@@ -11,15 +12,7 @@ export default function ProfilePage() {
       <h1 className="text-2xl font-bold mb-4">Profile</h1>
       <ProfileHeader />
 
-      <section className="mt-8">
-        <h2 className="text-lg font-semibold mb-2">Recent projects</h2>
-        <p className="text-sm text-muted-foreground">(Coming soon — DB integration)</p>
-      </section>
-
-      <section className="mt-6">
-        <h2 className="text-lg font-semibold mb-2">Recent tasks</h2>
-        <p className="text-sm text-muted-foreground">(Coming soon — DB integration)</p>
-      </section>
+      <ProfileCounts />
     </main>
   );
 }

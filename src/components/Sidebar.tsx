@@ -102,7 +102,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
             <button
               aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               onClick={() => setCollapsed((s) => !s)}
-              className="btn btn-square btn-ghost no-border"
+              className="btn btn-square btn-ghost btn-icon"
             >
               {collapsed ? (
                 <ChevronRight className="w-4 h-4 text-neutral" />
@@ -121,10 +121,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                   !!pathname && (pathname === item.href || pathname.startsWith(item.href + '/'));
                 if (effectiveLoggedIn) {
                   return (
-                    <div
-                        key={item.href}
-                        className="w-full"
-                      >
+                    <div key={item.href} className="w-full">
                       <div
                         className={`flex items-center gap-3 rounded ${
                           item.href === '/projects' ? 'px-2 py-1.5' : 'px-2 py-2'
@@ -150,7 +147,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                             aria-expanded={projectsOpen}
                             aria-controls="sidebar-projects"
                             onClick={() => setProjectsOpen((s) => !s)}
-                            className="btn btn-ghost btn-square btn-xs no-border"
+                            className="btn btn-ghost btn-square btn-xs btn-icon"
                             title={projectsOpen ? 'Collapse projects' : 'Expand projects'}
                           >
                             <ChevronDown
@@ -207,7 +204,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                                     <button
                                       aria-pressed={!!p.starred}
                                       onClick={() => updateProject(p.id, { starred: !p.starred })}
-                                      className={`btn btn-ghost btn-xs btn-square no-border ${
+                                      className={`btn btn-ghost btn-xs btn-square btn-icon ${
                                         p.starred ? 'text-yellow-400' : 'text-neutral'
                                       }`}
                                       title={p.starred ? 'Unstar project' : 'Star project'}

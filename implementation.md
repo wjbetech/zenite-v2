@@ -1,3 +1,15 @@
+## 📌 Requested follow-ups (from user)
+
+4. Home button & header polish (added 2025-09-29)
+
+- Scope: Polish the home route (`/`) by applying consistent border styling to the call-to-action buttons, updating the 'To Dashboard' icon to be thematically accurate, and showing the user's Google profile image in the header when available.
+- Files to update: `src/app/page.tsx` (home), `src/components/Header.tsx` or wherever the logged-in user display is rendered, and any small helper components for the home CTA (e.g., `src/components/HomeButton.tsx` if present). Also update tests for home route render.
+- Acceptance criteria:
+  - The 'To Dashboard', 'Sign in', and 'Sign out' buttons on `/` include `border-2 border-base-content` (or `border-on` combined with `border-base-content` where appropriate) so they visually match other bordered controls.
+  - The 'To Dashboard' CTA uses a more semantically appropriate icon (suggestion: `Home`, `Grid`, or `ArrowRightSquare` from `lucide-react`) and the icon aligns correctly with button text.
+  - If the user is logged in via Google, the header shows the Google profile image avatar (from OAuth profile data). If no image is available, show a fallback avatar with initials.
+  - Unit/visual tests updated: ensure home CTA buttons render with the new border classes and header shows profile image when present.
+
 ## 📌 New Project Modal Updates
 
 8. Dashboard — New Project modal: optional project-only flow
@@ -10,6 +22,7 @@
   - The combined (project + task) flow still works unchanged when the user chooses it; tasks created with a new project are correctly linked to the new project's id.
   - Unit tests added for modal behavior and an API test for project-only creation.
   - Documentation and `TODO.md` updated to reflect the change.
+
 # 🧱 Implementation Plan for [App Name]
 
 A modern, minimalistic productivity web app.
@@ -260,3 +273,74 @@ This repository follows a small, repeatable process to keep work focused and pro
 3. When tasks are finished, mark them completed in `TODO.md` and move the completed checklist items into `implementation.md` under "Completed tasks" with a short date/note.
 
 Follow these rules during development and in pull requests. If you'd like, I can add a lightweight Git commit hook or GitHub Action to remind authors to update `TODO.md` on PR creation.
+
+## 📌 Followups added 2025-09-29
+
+1. Ensure activity tracker persists daily history
+
+- Scope: Make the activity tracker persist per-day statistics long-term (not just for the current day). Normalize date keys to YYYY-MM-DD server- and client-side.
+- Files: `src/components/ActivityHeatmap.tsx`, `src/components/ActivityTracker.tsx`, `src/lib/api.ts`, server activity endpoints.
+- Acceptance criteria: multi-day activity can be recorded and retrieved; heatmap and history views render days spanning months; tests cover timezone normalization.
+
+2. Bind activity stats to Dashboard charts
+
+- Scope: Add server endpoints that aggregate per-user activity (daily/weekly/monthly) and wire `DashboardStats` to render charts using that data.
+- Files: `src/app/api/stats/*`, `src/components/DashboardStats.tsx`, `src/components/Dashboard.tsx`.
+- Acceptance criteria: aggregated endpoints exist and charts render with realistic data; tests for aggregation and chart wiring.
+
+3. Sidebar truncation for project/task names
+
+- Scope: Fix the Sidebar so long project/task names truncate with ellipsis before the star icon and preserve a `title` attribute for full text.
+- Files: `src/components/Sidebar.tsx`, `src/components/ProjectSidebar.tsx`.
+- Acceptance criteria: UI truncates long names without layout breakage; tooltip or `title` exposes full name; unit tests added.
+
+4. Dashboard tab backgrounds
+
+- Scope: Add `bg-base-100` (and optionally `border-base-content`) to Dashboard tabs (New / Today / This Week) to improve contrast and separation.
+- Files: `src/components/Dashboard.tsx`, `src/components/DashboardTabs.tsx`.
+- Acceptance criteria: tabs render with `bg-base-100`, keyboard navigation remains accessible, tests updated.
+
+5. Evaluate Dashboard refactor to multi-page Projects-style
+
+- Scope: Consider refactoring the dashboard into a Projects-style dropdown with multiple pages (Tasks, Stats, Activity). Produce an ADR and a small prototype.
+- Files (proposal): `src/components/Dashboard/*`, routing under `src/app/dashboard/*`.
+- Acceptance criteria: ADR produced with migration plan; prototype demonstrates feasibility.
+
+6. Refactor Clerk avatar menu to use DaisyUI components
+
+- Scope: Replace custom/hand-rolled avatar menu markup in the header (currently in `src/components/Navbar.tsx`) with DaisyUI's dropdown/menu primitives where possible so the profile menu visually and behaviorally matches the rest of the app across themes. Ensure keyboard accessibility (Escape to close, arrow navigation where appropriate) and maintain Clerk sign-in/out behavior.
+- Files to update: `src/components/Navbar.tsx` (primary), small helpers if needed (e.g., `src/components/ThemeDropdown.tsx`), and tests in `src/components/__tests__/Navbar.test.tsx`.
+- Acceptance criteria:
+  - The avatar/profile menu uses DaisyUI classes (e.g., `dropdown`, `menu`, `dropdown-content`) or equivalent components so it inherits theme styles consistently.
+  - Menu items (Profile, Settings, Sign out) are keyboard accessible and visually consistent with other menus in the app.
+  - The Sign out action continues to call Clerk's sign-out flow; Profile/Settings items link to the appropriate routes.
+  - Unit tests updated to assert the menu structure and accessibility landmarks (role/menu, aria attributes) and visual snapshots where applicable.
+
+---
+
+## 📌 New followups added 2025-09-30
+
+1. Add a real `/profile` route and wire the avatar menu
+
+- Scope: Wire the 'Profile' menu item in the avatar dropdown (Navbar) to navigate to a real profile route at `/profile`. The dropdown should use client-side navigation (Next's `Link` or `useRouter().push`) so it doesn't cause a full page reload.
+- Files to update: `src/components/Navbar.tsx` (change Profile menu item to a Link or handler), add a route file `src/app/profile/page.tsx` (server or client component as appropriate).
+- Acceptance criteria:
+  - Clicking Profile in the avatar dropdown navigates the user to `/profile` client-side.
+  - The dropdown closes on navigation.
+  - Unit tests updated to assert the Profile menu item exists and triggers a navigation (mock router in tests).
+
+2. Implement the Profile page integrating Clerk + DB data
+
+- Scope: Create a user Profile page that displays Clerk-provided user info (name, email, avatar) and enrich it with related data from the app (recent projects, recent tasks, preferences). The page should fetch data server-side where appropriate, and gracefully handle loading and missing data. Protect the page so only authenticated users can view it (redirect to login if not signed in).
+- Files to add/update:
+  - `src/app/profile/page.tsx` — main route UI (can be a Server Component that fetches from DB plus Clerk info passed from Client component), or a Client Component using Clerk hooks and SWR/React Query to fetch DB data.
+  - `src/app/profile/components/ProfileHeader.tsx` — small component showing avatar, name, and quick actions (Edit profile, Sign out).
+  - `src/app/profile/components/RecentActivity.tsx` — shows recent tasks/projects pulled from API.
+  - `src/lib/api.ts` or add server function `src/app/api/profile/route.ts` to return DB data for the signed-in user.
+- Acceptance criteria:
+  - Profile page shows Clerk user info (avatar with initials fallback), primary email, and a short bio (if present).
+  - Profile page displays a list of recent projects and recent tasks pulled from the database for the current user; if none exist, show an empty state with helpful CTAs.
+  - The page is protected — non-signed-in visitors are redirected to `/login` or shown a Sign in CTA.
+  - Tests: unit tests for the header and a small integration test for the page data fetching (mocked) are added.
+
+---

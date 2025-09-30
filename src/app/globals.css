@@ -172,21 +172,6 @@ button:focus-visible {
   box-shadow: none !important;
 }
 
-/* Enforce a 1px black border on all buttons (DaisyUI .btn and native button elements).
-   Use a specific selector and !important to override DaisyUI theme borders where necessary. */
-.btn,
-button,
-input[type='button'],
-input[type='submit'],
-.btn-primary,
-.btn-secondary,
-.btn-ghost,
-.btn-outline {
-  border-width: 2px !important;
-  border-style: solid !important;
-  border-color: #000 !important;
-}
-
 /* Ensure focus-visible still remains accessible for keyboard users by keeping
    a subtle ring while preserving the border color. */
 .btn:focus-visible,
@@ -196,7 +181,23 @@ button:focus-visible {
 
 /* Opt-out helper: remove enforced black border for specific controls (sidebar toggles, icons) */
 .no-border {
+  /* Legacy alias — prefer `.btn-icon` for icon-only buttons. */
   border: none !important;
   box-shadow: none !important;
-  background-clip: padding-box; /* keep background rendering consistent */
+  background-clip: padding-box;
+}
+
+/* Tailwind utility for icon-only buttons (semantic, composable). Use `btn-icon` on icon buttons
+   to remove the enforced 1px black border while keeping layout and hover states intact. */
+@layer utilities {
+  .btn-icon {
+    @apply border-0 shadow-none bg-transparent;
+  }
+  /* Opt-in solid black border for elements. Use in markup as `border-on`.
+     We set explicit properties to ensure it overrides theme defaults. */
+  .border-on {
+    border-width: 2px !important;
+    border-style: solid !important;
+    border-color: #000 !important;
+  }
 }

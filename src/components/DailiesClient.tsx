@@ -105,7 +105,7 @@ export default function DailiesClient() {
             <div className="hidden md:flex items-center gap-3">
               <button
                 onClick={() => setTimerOpen((s) => !s)}
-                className="no-border text-sm text-gray-500 hover:text-gray-700"
+                className="btn-icon text-sm text-gray-500 hover:text-gray-700"
                 aria-expanded={timerOpen}
               >
                 {timerOpen ? 'Hide timer' : 'Show timer'}

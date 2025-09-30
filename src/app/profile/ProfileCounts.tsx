@@ -107,12 +107,12 @@ export default function ProfileCounts() {
   return (
     <div className="mt-6 grid grid-cols-2 gap-4">
       <div className="p-4 rounded-md bg-base-100">
-        <div className="text-sm text-muted-foreground">Projects</div>
+  <div className="text-lg text-muted-foreground">Projects</div>
         <div className="text-2xl font-semibold">{loading ? '…' : projectCount ?? '—'}</div>
       </div>
 
       <div className="p-4 rounded-md bg-base-100">
-        <div className="text-sm text-muted-foreground">Tasks</div>
+  <div className="text-lg text-muted-foreground">Tasks</div>
         <div className="text-2xl font-semibold">{loading ? '…' : taskCount ?? '—'}</div>
       </div>
 

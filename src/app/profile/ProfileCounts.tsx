@@ -1,6 +1,7 @@
-'use client';
+"use client";
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 
 type TaskShape = {
@@ -70,7 +71,7 @@ export default function ProfileCounts() {
             } else {
               setTaskCount(owned.length);
             }
-          } catch (_) {
+          } catch {
             // If the fallback call fails, don't block the UI — use the local count
             setTaskCount(owned.length);
           }
@@ -104,17 +105,25 @@ export default function ProfileCounts() {
     );
   }
 
+  const ownerParam = user?.primaryEmailAddress?.emailAddress
+    ? `ownerEmail=${encodeURIComponent(user.primaryEmailAddress.emailAddress)}`
+    : `ownerId=${encodeURIComponent(user.id)}`;
+
   return (
     <div className="mt-6 grid grid-cols-2 gap-4">
-      <div className="p-4 rounded-md bg-base-200">
-        <div className="text-lg text-muted-foreground">Projects</div>
-        <div className="text-2xl font-semibold">{loading ? '…' : projectCount ?? '—'}</div>
-      </div>
+      <Link href={`/projects?${ownerParam}`} className="block">
+        <div className="p-4 rounded-md bg-base-200">
+          <div className="text-lg text-muted-foreground">Projects</div>
+          <div className="text-2xl font-semibold">{loading ? '…' : projectCount ?? '—'}</div>
+        </div>
+      </Link>
 
-      <div className="p-4 rounded-md bg-base-200">
-        <div className="text-lg text-muted-foreground">Tasks</div>
-        <div className="text-2xl font-semibold">{loading ? '…' : taskCount ?? '—'}</div>
-      </div>
+      <Link href={`/tasks?${ownerParam}`} className="block">
+        <div className="p-4 rounded-md bg-base-200">
+          <div className="text-lg text-muted-foreground">Tasks</div>
+          <div className="text-2xl font-semibold">{loading ? '…' : taskCount ?? '—'}</div>
+        </div>
+      </Link>
 
       {error ? (
         <div className="col-span-2 text-sm text-error">Error loading counts: {error}</div>

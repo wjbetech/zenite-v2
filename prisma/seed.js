@@ -25,7 +25,15 @@ async function safeConfirm() {
 async function main() {
   await safeConfirm();
 
-  console.log('Running dev/test seed...');
+  const shouldSeedDemo = process.env.SEED_DEMO_DATA === 'true';
+  console.log(`Running dev/test seed (demo data ${shouldSeedDemo ? 'enabled' : 'disabled'}).`);
+
+  if (!shouldSeedDemo) {
+    console.log(
+      'Skipping demo projects and tasks. Set SEED_DEMO_DATA=true if you want sample data inserted.',
+    );
+    return;
+  }
 
   // Create a default user if not exists
   const user = await prisma.user.upsert({
@@ -76,6 +84,8 @@ async function main() {
           projectId: p.id,
         });
       }
+      // Type-checking in JS files can flag Prisma enum types; allow this runtime call
+      // @ts-expect-error Allow using string enum values in createMany JS call
       await prisma.task.createMany({ data: toCreate });
     }
   }
@@ -86,7 +96,43 @@ async function main() {
     await prisma.task.updateMany({ where: { projectId: null }, data: { projectId: gs.id } });
   }
 
-  console.log('Seeding complete.');
+  // Create a few unassigned tasks with dueDate values so Today/Week lists display
+  const now = new Date();
+  /**
+   * @param {Date} d
+   */
+  const iso = (d) => d.toISOString();
+  const sampleDueDates = [
+    new Date(now),
+    new Date(now.getTime() + 24 * 60 * 60 * 1000),
+    new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
+    new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000),
+  ];
+  for (let i = 0; i < sampleDueDates.length; i++) {
+    const title = `Due Sample ${i + 1}`;
+    const exists = await prisma.task.findFirst({ where: { title } });
+    if (exists) {
+      // If a sample task already exists from a previous seed run, refresh its dueDate
+      await prisma.task.update({
+        where: { id: exists.id },
+        data: { dueDate: iso(sampleDueDates[i]) },
+      });
+    } else {
+      await prisma.task.create({
+        data: {
+          title,
+          description: `Auto-generated due-date sample ${i + 1}`,
+          status: 'TODO',
+          priority: 'LOW',
+          ownerId: user.id,
+          projectId: gs ? gs.id : null,
+          dueDate: iso(sampleDueDates[i]),
+        },
+      });
+    }
+  }
+
+  console.log('Demo data seeding complete.');
 }
 
 main()

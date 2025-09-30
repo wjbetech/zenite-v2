@@ -4,9 +4,17 @@ const mockProject = {
   delete: jest.fn(),
 };
 
+const mockTask = {
+  findMany: jest.fn(),
+  create: jest.fn(),
+  delete: jest.fn(),
+  count: jest.fn(),
+};
+
 const prisma = {
   project: mockProject,
+  task: mockTask,
 };
 
 export default prisma;
-export { mockProject as __mockProject };
+export { mockProject as __mockProject, mockTask as __mockTask };

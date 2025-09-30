@@ -19,18 +19,18 @@ export default function AuthRedirect() {
     if (pushedRef.current) return;
     // don't redirect if already on dashboard or deeper dashboard routes
     if (!pathname) return;
-    // Only auto-redirect when the user landed on the root or an auth/signin page.
-    // This prevents forcing navigation when the user intentionally visits other routes
-    // (for example, /dailies or /projects) before client auth hydrates.
-    const shouldRedirect =
-      pathname === '/' ||
+    // Only auto-redirect when the user explicitly navigated to an auth/signin
+    // page or the dedicated sign-in routes. We intentionally avoid redirecting
+    // users who land on the root (`/`) so that returning users can stay on the
+    // landing page or be routed by server-side logic.
+    const shouldRedirectToDashboard =
       pathname === '/signin' ||
       pathname === '/sign-in' ||
       pathname === '/auth' ||
       pathname.startsWith('/auth') ||
       pathname.startsWith('/sign-in');
 
-    if (!shouldRedirect) return;
+    if (!shouldRedirectToDashboard) return;
 
     pushedRef.current = true;
     router.push('/dashboard');

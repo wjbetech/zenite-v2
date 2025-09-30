@@ -1,15 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 declare module 'src/lib/prisma' {
-  type MockFn = jest.Mock<Promise<unknown>, unknown[]>;
-
-  const prisma: {
-    project: {
-      findUnique: MockFn;
-      update: MockFn;
-      delete: MockFn;
-      create?: MockFn;
-      findMany?: MockFn;
-    };
-  };
+  // Use very permissive any types for the mocked prisma client used in tests
+  const prisma: any;
 
   export default prisma;
 }

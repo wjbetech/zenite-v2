@@ -126,11 +126,12 @@ describe('Sidebar behavior', () => {
     const nestedLink2 = screen.getByRole('link', { name: /two/i });
     expect(nestedLink1).toBeTruthy();
     expect(nestedLink2).toBeTruthy();
+    // Links now use slugified project names
     expect(nestedLink1.getAttribute('href') || (nestedLink1 as HTMLAnchorElement).href).toMatch(
-      /\/projects\/p1$/,
+      /\/projects\/one$/,
     );
     expect(nestedLink2.getAttribute('href') || (nestedLink2 as HTMLAnchorElement).href).toMatch(
-      /\/projects\/p2$/,
+      /\/projects\/two$/,
     );
   });
 });

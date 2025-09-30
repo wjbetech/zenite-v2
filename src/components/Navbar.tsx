@@ -116,9 +116,15 @@ export default function Navbar() {
                   }`}
                 >
                   <li>
-                    <button role="menuitem" onClick={() => setOpen(false)}>
-                      Profile
-                    </button>
+                    <Link href="/profile">
+                      <a
+                        role="menuitem"
+                        onClick={() => setOpen(false)}
+                        className="w-full text-left"
+                      >
+                        Profile
+                      </a>
+                    </Link>
                   </li>
                   <li>
                     <button role="menuitem" onClick={() => setOpen(false)}>

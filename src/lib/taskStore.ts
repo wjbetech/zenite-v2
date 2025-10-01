@@ -162,6 +162,23 @@ const useTaskStore = create<State>((set, get) => ({
     const today = todayKey();
     const dailyTasks = get().tasks.filter((t) => (t.recurrence ?? 'once') === 'daily');
     try {
+      // Snapshot today's completions for activity tracking before resetting.
+      const completedItems = dailyTasks
+        .filter((t) => t.completed)
+        .map((t) => ({ taskId: t.id, taskTitle: t.title, ownerId: t.ownerId }));
+      if (completedItems.length > 0) {
+        try {
+          // post to /api/activity to persist today's completed daily tasks
+          await fetch('/api/activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date: today, items: completedItems }),
+          });
+        } catch (err) {
+          console.error('resetDailiesNow: failed to persist activity snapshot', err);
+        }
+      }
+
       await Promise.all(
         dailyTasks.map((task) =>
           api.updateTask({

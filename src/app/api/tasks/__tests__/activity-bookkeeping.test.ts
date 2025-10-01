@@ -28,6 +28,13 @@ import prisma from 'src/lib/prisma';
 describe('PATCH /api/tasks activity bookkeeping', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Freeze time to a deterministic value (server local date isn't relevant in tests; use UTC)
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2025-10-01T12:34:56Z'));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   test('creates an activity row for today when marking completed', async () => {
@@ -56,8 +63,8 @@ describe('PATCH /api/tasks activity bookkeeping', () => {
 
     expect(prisma.task.findUnique).toHaveBeenCalledWith({ where: { id: 't1' } });
     // create should be called once for today's bucket
-    expect(prisma.activity.findFirst).toHaveBeenCalled();
-    expect(prisma.activity.create).toHaveBeenCalled();
+    expect(prisma.activity.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { taskId: 't1', date: '2025-10-01' } }));
+    expect(prisma.activity.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ taskId: 't1', date: '2025-10-01' }) }));
     expect(body).toHaveProperty('id', 't1');
   });
 
@@ -85,7 +92,7 @@ describe('PATCH /api/tasks activity bookkeeping', () => {
     const res = await handlers.PATCH(req as unknown as Request);
     const body = await res.json();
 
-    expect(prisma.activity.deleteMany).toHaveBeenCalled();
+    expect(prisma.activity.deleteMany).toHaveBeenCalledWith(expect.objectContaining({ where: { taskId: 't1', date: '2025-10-01' } }));
     expect(body).toHaveProperty('id', 't1');
   });
 });

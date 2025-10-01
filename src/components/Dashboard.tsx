@@ -173,15 +173,46 @@ export default function Dashboard() {
   );
 
   // Build activity map and details from task completions
+  const [persistedActivity, setPersistedActivity] = React.useState<
+    Record<string, { count: number; titles: string[] }>
+  >({});
+
+  React.useEffect(() => {
+    // Fetch recent persisted activity (last 90 days) to merge with in-memory task completions
+    (async () => {
+      try {
+        const res = await fetch('/api/activity');
+        if (!res.ok) return;
+        const rows = (await res.json()) as Array<Record<string, unknown>>;
+        const agg: Record<string, { count: number; titles: string[] }> = {};
+        for (const r of rows) {
+          const date = String(r.date ?? '');
+          const title = String(r.taskTitle ?? 'Untitled');
+          if (!date) continue;
+          if (!agg[date]) agg[date] = { count: 0, titles: [] };
+          agg[date].count += 1;
+          agg[date].titles.push(title);
+        }
+        setPersistedActivity(agg);
+      } catch {
+        // ignore
+      }
+    })();
+  }, []);
+
   const { activityMap, activityDetails } = React.useMemo(() => {
     const map: Record<string, number> = {};
     const details: Record<string, string[]> = {};
+    // Start with persisted snapshots
+    for (const [date, info] of Object.entries(persistedActivity)) {
+      map[date] = (map[date] || 0) + info.count;
+      details[date] = [...(details[date] ?? []), ...info.titles];
+    }
+    // Merge live task completions
     for (const t of storeTasks) {
       if (!t.completed) continue;
-      // Prefer completedAt if present, otherwise use createdAt as fallback
       const when = t.completedAt || t.createdAt;
       if (!when) continue;
-      // Normalize to local YYYY-MM-DD to match ActivityHeatmap's local keys
       let date: string;
       if (/^\d{4}-\d{2}-\d{2}$/.test(when)) {
         date = when;
@@ -197,7 +228,7 @@ export default function Dashboard() {
       details[date].push(t.title || 'Untitled');
     }
     return { activityMap: map, activityDetails: details };
-  }, [storeTasks]);
+  }, [storeTasks, persistedActivity]);
 
   if (!mounted) {
     // render a simple placeholder during SSR so server and client markup match

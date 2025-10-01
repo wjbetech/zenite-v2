@@ -77,7 +77,7 @@ export default function DailiesClient() {
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('focus', onFocus);
     };
-  }, [resetIfNeeded, resetNow]);
+  }, [resetIfNeeded, resetNow, loadTasks]);
 
   const toggle = (id: string) => {
     const t = tasks.find((x) => x.id === id);

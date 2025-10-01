@@ -31,6 +31,13 @@ export default function Dashboard() {
   const tasksLoading = useTaskStore((s) => s.loading);
   const tasksError = useTaskStore((s) => s.error);
   const [heatmapOpen, setHeatmapOpen] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  // On mount, read persisted activity open state from cookie so Dashboard
+  // reflects the user's last choice. We do this in an effect to avoid SSR
+  // hydration mismatches.
+  // track client mount for SSR guard
+  useEffect(() => setMounted(true), []);
+
   // On mount, read persisted activity open state from cookie so Dashboard
   // reflects the user's last choice. We do this in an effect to avoid SSR
   // hydration mismatches.
@@ -55,7 +62,6 @@ export default function Dashboard() {
     }
   }, [heatmapOpen]);
   // avoid rendering client-only dynamic data during SSR to prevent hydration mismatches
-  const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);

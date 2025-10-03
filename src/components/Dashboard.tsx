@@ -214,14 +214,20 @@ export default function Dashboard() {
       map[date] = (map[date] || 0) + info.count;
       details[date] = [...(details[date] ?? []), ...info.titles];
     }
-    // Merge live task completions
+    // Merge live task completions only into today's bucket so past days remain locked
+    const now = new Date();
+    const todayY = now.getFullYear();
+    const todayM = `${now.getMonth() + 1}`.padStart(2, '0');
+    const todayD = `${now.getDate()}`.padStart(2, '0');
+    const todayKey = `${todayY}-${todayM}-${todayD}`;
     for (const t of storeTasks) {
       if (!t.completed) continue;
+      // Only count live completions that belong to today; previous days must come from persistedActivity
       const when = t.completedAt || t.createdAt;
       if (!when) continue;
       let date: string;
       if (/^\d{4}-\d{2}-\d{2}$/.test(when)) {
-        date = when;
+        date = when as string;
       } else {
         const d = new Date(when);
         const y = d.getFullYear();
@@ -229,6 +235,7 @@ export default function Dashboard() {
         const day = `${d.getDate()}`.padStart(2, '0');
         date = `${y}-${m}-${day}`;
       }
+      if (date !== todayKey) continue;
       map[date] = (map[date] || 0) + 1;
       if (!details[date]) details[date] = [];
       details[date].push(t.title || 'Untitled');

@@ -1,6 +1,5 @@
 import useTaskStore, { Task } from '../taskStore';
 
-
 // Mock network API calls used by taskStore so tests run offline
 jest.mock('../api', () => ({
   __esModule: true,

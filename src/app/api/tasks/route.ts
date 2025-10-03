@@ -144,10 +144,9 @@ export async function PATCH(request: Request) {
 
   // load existing task so we can make decisions about completedAt preservation
   const existing = await prisma.task.findUnique({ where: { id } });
-  // prisma.activity will exist after running migrations; use a local any-cast to avoid TS errors
-  // until the client is regenerated.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const _prisma: any = prisma;
+  // prisma.activity is available after running migrations and generating the client;
+  // use the typed prisma client directly.
+  const _prisma = prisma;
 
   if (typeof body.title === 'string') data.title = body.title.trim();
   if ('notes' in body || 'description' in body) {

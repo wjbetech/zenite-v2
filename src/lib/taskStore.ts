@@ -170,7 +170,11 @@ const useTaskStore = create<State>((set, get) => ({
       const completedDailyItems = dailyTasks
         .filter((t) => t.completed)
         .map((t) => ({ taskId: t.id, taskTitle: t.title, ownerId: t.ownerId }));
-      const completedOneOffItems = completedOneOff.map((t) => ({ taskId: t.id, taskTitle: t.title, ownerId: t.ownerId }));
+      const completedOneOffItems = completedOneOff.map((t) => ({
+        taskId: t.id,
+        taskTitle: t.title,
+        ownerId: t.ownerId,
+      }));
 
       // Post daily completions (persisted as historical activity)
       if (completedDailyItems.length > 0) {
@@ -194,7 +198,10 @@ const useTaskStore = create<State>((set, get) => ({
             body: JSON.stringify({ date: today, items: completedOneOffItems }),
           });
         } catch (err) {
-          console.error('resetDailiesNow: failed to persist one-off completed activity snapshot', err);
+          console.error(
+            'resetDailiesNow: failed to persist one-off completed activity snapshot',
+            err,
+          );
         }
       }
 
@@ -210,15 +217,13 @@ const useTaskStore = create<State>((set, get) => ({
         ),
       );
       // Delete one-off completed tasks on the server
-      await Promise.all(
-        completedOneOff.map((task) => api.deleteTask(task.id)),
-      );
+      await Promise.all(completedOneOff.map((task) => api.deleteTask(task.id)));
     } catch (err) {
       console.error('resetDailiesNow sync failed', err);
     }
     // Refresh client-side tasks: reset daily tasks, and remove completed one-off tasks
-    const refreshed = get().tasks
-      .filter((t) => !completedOneOff.find((o) => o.id === t.id))
+    const refreshed = get()
+      .tasks.filter((t) => !completedOneOff.find((o) => o.id === t.id))
       .map((t) =>
         (t.recurrence ?? 'once') === 'daily'
           ? { ...t, started: false, completed: false, completedAt: null }

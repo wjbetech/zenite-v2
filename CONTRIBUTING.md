@@ -1,5 +1,4 @@
-Branching & Push Policy
-========================
+# Branching & Push Policy
 
 - main is the primary development branch. All feature branches and PRs should target `main`.
 - master is the deployment branch and must NOT be pushed to without explicit permission from the repository owner.

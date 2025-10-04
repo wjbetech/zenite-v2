@@ -12,7 +12,9 @@ export default function ProfileHeader() {
       <div className="p-4 rounded-md bg-base-100">
         <p className="mb-2">You are not signed in.</p>
         <SignInButton mode="modal">
-          <button className="btn btn-primary">Sign in</button>
+          <span>
+            <button className="btn btn-primary">Sign in</button>
+          </span>
         </SignInButton>
       </div>
     );

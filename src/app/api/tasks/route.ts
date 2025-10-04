@@ -142,6 +142,12 @@ export async function PATCH(request: Request) {
   const data: Record<string, unknown> = {};
   let projectIdToAssign: string | null | undefined = undefined;
 
+  // load existing task so we can make decisions about completedAt preservation
+  const existing = await prisma.task.findUnique({ where: { id } });
+  // prisma.activity is available after running migrations and generating the client;
+  // use the typed prisma client directly.
+  const _prisma = prisma;
+
   if (typeof body.title === 'string') data.title = body.title.trim();
   if ('notes' in body || 'description' in body) {
     data.description = normalizeNotes(body) ?? null;
@@ -201,7 +207,32 @@ export async function PATCH(request: Request) {
       data.completedAt = new Date();
     }
     if (body.completed === false && body.completedAt === undefined) {
-      data.completedAt = null;
+      // Only null out completedAt if the previous completedAt was today; otherwise
+      // preserve the previous completedAt so historical activity isn't lost.
+      try {
+        if (existing && existing.completedAt) {
+          const prev = new Date(existing.completedAt);
+          const y = prev.getFullYear();
+          const m = `${prev.getMonth() + 1}`.padStart(2, '0');
+          const d = `${prev.getDate()}`.padStart(2, '0');
+          const prevKey = `${y}-${m}-${d}`;
+          const now = new Date();
+          const ny = now.getFullYear();
+          const nm = `${now.getMonth() + 1}`.padStart(2, '0');
+          const nd = `${now.getDate()}`.padStart(2, '0');
+          const todayKey = `${ny}-${nm}-${nd}`;
+          if (prevKey === todayKey) {
+            data.completedAt = null;
+          } else {
+            // preserve previous completedAt by leaving it unset in the update payload
+          }
+        } else {
+          data.completedAt = null;
+        }
+      } catch {
+        // if anything goes wrong, be conservative and null it
+        data.completedAt = null;
+      }
     }
   }
   if (body.started === true || body.started === false) {
@@ -223,10 +254,45 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    const updated = await prisma.task.update({
-      where: { id },
-      data,
-    });
+    const updated = await prisma.task.update({ where: { id }, data });
+
+    // Manage activity snapshots: when marking completed -> create activity row for the completion date;
+    // when marking uncompleted -> remove today's activity rows for this task only.
+    try {
+      if (shouldUpdateStatus && 'completed' in statusFlags) {
+        const completedFlag = Boolean(statusFlags.completed);
+        // Use server's local date for activity bucketing so activity always reflects the
+        // day the status change occurred on the server.
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = `${now.getMonth() + 1}`.padStart(2, '0');
+        const nd = `${now.getDate()}`.padStart(2, '0');
+        const todayKey = `${y}-${m}-${nd}`;
+
+        if (completedFlag) {
+          // avoid duplicate for today's bucket
+          const exists = await _prisma.activity.findFirst({
+            where: { taskId: id, date: todayKey },
+          });
+          if (!exists) {
+            await _prisma.activity.create({
+              data: {
+                date: todayKey,
+                taskId: id,
+                taskTitle: updated.title,
+                ownerId: updated.ownerId,
+              },
+            });
+          }
+        } else {
+          // remove only today's activity rows for this task
+          await _prisma.activity.deleteMany({ where: { taskId: id, date: todayKey } });
+        }
+      }
+    } catch (err) {
+      console.error('PATCH /api/tasks: activity book-keeping failed', err);
+    }
+
     return NextResponse.json(serializeTask(updated));
   } catch (error) {
     console.error('PATCH /api/tasks failed', error);

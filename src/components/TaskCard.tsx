@@ -12,6 +12,8 @@ export type Task = {
   createdAt: string;
   completed?: boolean;
   started?: boolean;
+  recurrence?: string | null;
+  completedAt?: string | null;
 };
 
 type Props = {
@@ -25,6 +27,8 @@ type Props = {
 
 // Small helper to compute classes per status so intent is clear
 function getStatusClasses(isStarted: boolean, isDone: boolean) {
+  // detect stale completed one-off tasks (completed on a previous day and not recurring)
+  // the caller may set isStarted/isDone; we'll also inspect the task passed in outer scope
   // default: base (not started)
   if (!isStarted && !isDone) {
     return {
@@ -72,6 +76,28 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
     icon: iconClass,
   } = getStatusClasses(isStarted, isDone);
 
+  // Determine if this is a one-off completed task completed on a previous day
+  let isStaleCompleted = false;
+  try {
+    if (task.completed && !(task.recurrence === 'daily' || task.recurrence === 'weekly')) {
+      if (task.completedAt) {
+        const comp = new Date(task.completedAt);
+        const now = new Date();
+        if (
+          comp.getFullYear() !== now.getFullYear() ||
+          comp.getMonth() !== now.getMonth() ||
+          comp.getDate() !== now.getDate()
+        ) {
+          isStaleCompleted = true;
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  const finalWrapper = isStaleCompleted ? 'bg-red-500/20 text-red-700' : bgClass;
+
   const cycleStatus = () => {
     // debug/logging to verify handler is called in the browser
     console.log('TaskCard: cycleStatus', { id: task.id, isStarted, isDone });
@@ -91,7 +117,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
 
   const cardInner = (
     <div
-      className={`${bgClass} relative z-10 rounded-md shadow-sm border ${borderClass} p-2 xl:p-4 transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
+      className={`${finalWrapper} relative z-10 rounded-md shadow-sm border ${borderClass} p-2 xl:p-4 transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">

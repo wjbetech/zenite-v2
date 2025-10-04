@@ -1,6 +1,5 @@
 import useTaskStore, { Task } from '../taskStore';
 
-
 // Mock network API calls used by taskStore so tests run offline
 jest.mock('../api', () => ({
   __esModule: true,
@@ -8,6 +7,7 @@ jest.mock('../api', () => ({
     updateTask: jest.fn().mockResolvedValue({}),
     createTask: jest.fn().mockResolvedValue({}),
     fetchTasks: jest.fn().mockResolvedValue([]),
+    deleteTask: jest.fn().mockResolvedValue({}),
   },
 }));
 
@@ -56,10 +56,8 @@ test('resetDailiesNow resets completed/started for daily tasks and sets last-res
   expect(daily?.completed).toBe(false);
   expect(daily?.started).toBe(false);
 
-  // non-daily tasks should remain unchanged
-  expect(once).toBeDefined();
-  expect(once?.completed).toBe(true);
-  expect(once?.started).toBe(true);
+  // non-daily completed tasks are snapshot and removed during reset
+  expect(once).toBeUndefined();
 
   // last reset key should be set to today's date
   expect(localStorage.getItem(LAST_DAILY_RESET_KEY)).toBe(todayKey());

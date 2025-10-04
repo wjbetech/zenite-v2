@@ -116,7 +116,23 @@ export default function Navbar() {
                   }`}
                 >
                   <li>
-                    <button role="menuitem" onClick={() => setOpen(false)}>
+                    <button
+                      role="menuitem"
+                      onClick={async () => {
+                        try {
+                          const res = await fetch('/profile', { method: 'HEAD' });
+                          if (res.ok) {
+                            setOpen(false);
+                            window.location.assign('/profile');
+                          } else {
+                            alert('Profile page is not available yet.');
+                          }
+                        } catch {
+                          alert('Profile page is not available yet.');
+                        }
+                      }}
+                      className="w-full text-left"
+                    >
                       Profile
                     </button>
                   </li>
@@ -138,8 +154,7 @@ export default function Navbar() {
               <button className="btn border-on btn-ghost cursor-pointer">Login</button>
             </SignInButton>
             <SignInButton mode="modal">
-              <button className="btn border-on btn-md btn-warning cursor-pointer">Sign up</button>
-            </SignInButton>
+              <button className="btn border-on btn-md btn-warning cursor-pointer">Sign up</button>            </SignInButton>
           </SignedOut>
         </div>
       </div>

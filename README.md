@@ -188,3 +188,16 @@ Troubleshooting
 - Ports already in use: change the host port in `docker-compose.yml` (left side of `"5432:5432"`).
 
 If anything fails, paste the output of `docker compose ps` and `docker compose logs --tail=200 db` and I can help debug.
+
+## Branching policy
+
+Please do not push directly to the `master` branch. The repository uses `main` as the primary development branch. The `master` branch is reserved for production/deployment and should only be updated by maintainers via approved releases or special deploy workflows.
+
+To help prevent accidental pushes to `master`, the repo includes a local pre-push hook that rejects pushes to `master` unless explicitly allowed. Install the hooks locally after cloning:
+
+```bash
+# install git hooks (runs the local pre-push guard)
+npm run install:hooks
+```
+
+See `CONTRIBUTING.md` for more details about the branching policy and how to request a release/deploy.

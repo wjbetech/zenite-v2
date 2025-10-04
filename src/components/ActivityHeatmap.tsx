@@ -199,10 +199,11 @@ export default function ActivityHeatmap({
 }) {
   // Controlled/uncontrolled pattern: if openProp is provided, component is controlled.
   const isControlled = typeof openProp === 'boolean';
+  // Default: hidden. If the cookie explicitly exists and equals '1', respect it; otherwise start closed.
   const [uncontrolledOpen, setUncontrolledOpen] = useState<boolean>(() => {
     if (isControlled) return !!openProp;
     const cookieVal = readActivityOpenFromCookie();
-    return cookieVal !== null ? cookieVal : false;
+    return cookieVal === true;
   });
   const effectiveOpen = isControlled ? !!openProp : uncontrolledOpen;
 

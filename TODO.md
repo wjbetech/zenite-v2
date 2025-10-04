@@ -78,165 +78,48 @@ These are the immediate actionable items. Completed items were moved to `impleme
 
 ## Low / future
 
-- [ ] Consider splitting `TaskModal` into `NewTaskModal` and `NewProjectModal`
+# Project priorities
 
-  - Create an ADR describing pros/cons of duplication vs conditional logic
+Replace this file with the following prioritized tasks. Tackle them in order and update progress here.
 
-- [ ] Add CI workflows (typecheck, lint, tests)
+1.  Hook deployed app to Render Postgres (high priority)
 
-- [ ] Add project tagging, permissions, and owner relationships
+    - Ensure Vercel (frontend) and any server-side code can reach the Render Postgres instance.
+    - Verify `DATABASE_URL` is set correctly in the Vercel Environment (and Render service if applicable).
+    - Run `npx prisma migrate deploy` against the Render DB to apply migrations.
+    - Verify API routes (projects, tasks, activity) succeed on the deployed site.
 
----
+2.  Fix Clerk production environment on deployed app (high priority)
 
-## User-requested items (added 2025-09-28)
+    - Rotate Clerk keys if they were exposed; generate new keys in Clerk dashboard.
+    - Add `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` to Vercel (and Render) environment settings.
+    - Configure allowed origins and redirect URLs in Clerk for `https://zenite.life`.
+    - Redeploy frontend after env vars are set and confirm Clerk logs show production keys.
 
-- [ ] Change the border color of all buttons to be black
+3.  Improve home page UX when signed out (medium priority)
 
-  - Update global button styles so primary/secondary/ghost buttons use a 1px black border by default. Update snapshots for affected components.
+    - Replace the blank CTA for signed-out users with a visible `Get Started` button linking to `/signup`.
+    - Reduce the vertical size of the second slide (HomeFeatures) to avoid excessive scrolling on small screens.
 
-- [ ] Fix the activity tracker to persist history (not only current day)
+4.  Buttons and borders (medium priority)
 
-  - Ensure activity data is recorded and returned for historical dates. Update backend aggregation and heatmap rendering.
+    - Audit key call-to-action buttons and ensure they include `border-on` or `border-black` where appropriate.
+    - Apply quick, low-risk fixes for important CTAs; record remaining stylistic work for manual polish.
 
-- [ ] Fix Settings page defaults handling
+5.  Activity tracker behavior (low/medium priority)
 
-  - Provide and persist sane defaults for theme, dailies cap, timer visibility, and other toggles. Gracefully handle missing backend settings by falling back to client defaults.
+    - Hidden by default for new visitors (do not auto-open the tracker unless the user previously opened it).
+    - Add a toggle in Settings to opt-in to showing the activity tracker by default.
 
-- [ ] Verify Dashboard components
+6.  Visual depth and layering (low priority)
+    - Add subtle background layers using `bg-base-100`, `bg-base-200`, `bg-base-300` in main layout and major panels to create depth.
+    - Avoid heavy changes; prefer small incremental steps and document any design choices.
 
-  - Smoke test and add/adjust unit tests for Dashboard components: `ActivityHeatmap`, `TimerWidget`, task buckets, and `DashboardStats` placeholder.
+Notes
 
-- [ ] Create dashboard graphing/statistics
+- After fixing production env issues (DB and Clerk), validate flows on `https://zenite.life` with an incognito window.
+- If secrets were committed to `master`, rotate them immediately and consider removing them from git history later.
 
-  - Add `DashboardStats` component and server endpoints to provide aggregated metrics (activity over time, completed tasks per period). Evaluate and add a lightweight charting library and tests for aggregations.
-
-- [ ] Refactor `.no-border` to Tailwind utility classes
-
-  - Replace the global `.no-border` CSS rule with a semantic Tailwind utility (e.g., `btn-icon` or `btn-no-border`) using `@apply` or a small `tailwind.config.cjs` plugin. Update components using `.no-border` to the new utility.
+When a task is done, update this file with a short status line and date.
 
 - [ ] Restore Projects/Settings sidebar gap
-
-  - Add a small vertical gap between Projects and Settings nav items in the Sidebar. Update tests if they rely on specific DOM structure or spacing.
-
-If you want, I can start working on the top item now: add the Prisma `Project` model and create the migration.
-
-## Added 2025-09-29
-
-- [ ] Ensure activity tracker persists daily history
-
-  - Scope: Make the activity tracker persist per-day statistics long-term (not only current-day). Normalize date keys to YYYY-MM-DD and ensure server storage exposes historical ranges.
-  - Files: `src/components/ActivityHeatmap.tsx`, `src/components/ActivityTracker.tsx`, `src/lib/api.ts`, server activity endpoints.
-  - Acceptance criteria: Heatmap and history views render multi-day data; tests added for retrieval across ranges and timezone handling.
-
-- [ ] Bind activity stats to Dashboard charts
-
-  - Scope: Provide aggregated endpoints (daily/weekly/monthly) for per-user activity and render charts in `DashboardStats`.
-  - Files: `src/app/api/stats/*`, `src/components/DashboardStats.tsx`, `src/components/Dashboard.tsx`.
-  - Acceptance criteria: endpoints and chart components exist; tests validate aggregation and rendering.
-
-- [ ] Sidebar truncation for project/task names
-
-  - Scope: Truncate long names with ellipsis before icons and provide a `title` for full text.
-  - Files: `src/components/Sidebar.tsx`, `src/components/ProjectSidebar.tsx`.
-  - Acceptance criteria: names truncate without layout break; tooltip/title shows full text; unit tests added.
-
-- [ ] Dashboard tabs: add `bg-base-100` backgrounds
-
-  - Scope: Apply `bg-base-100` to the Dashboard tabs controlling which task view is shown to visually separate them.
-  - Files: `src/components/Dashboard.tsx`, `src/components/DashboardTabs.tsx`.
-  - Acceptance criteria: tabs use `bg-base-100`, remain keyboard accessible, tests updated.
-
-- [ ] Consider refactor: Dashboard -> Projects-dropdown + multi-page
-
-  - Scope: Evaluate and prototype refactoring Dashboard into a Projects-style dropdown with multiple pages (Tasks, Stats, Activity). Produce an ADR and prototype.
-  - Files (proposal): `src/components/Dashboard/*`, `src/app/dashboard/*`.
-  - Acceptance criteria: ADR and prototype; follow-up tickets created if agreed.
-
-- [ ] Build out drag and drop for the dailies page so that items can be reshuffled.
-
-## Avatar / Header TODO
-
-- [ ] Refactor Clerk avatar menu to use DaisyUI components
-
-  - Scope: Replace the custom avatar/menu markup in `src/components/Navbar.tsx` with DaisyUI dropdown/menu primitives where possible so the profile menu inherits theme styles and behavior. Improve keyboard accessibility (Escape to close, arrow navigation) and ensure menu items link to Profile/Settings and sign-out via Clerk.
-  - Files: `src/components/Navbar.tsx`, `src/components/__tests__/Navbar.test.tsx` (update/add tests), and any small helper components introduced for menu items.
-  - Acceptance criteria:
-    - Avatar menu uses DaisyUI `dropdown` / `menu` classes and looks consistent across DaisyUI themes.
-    - Menu is keyboard accessible and closes when clicking outside or pressing Escape.
-    - Sign out still triggers Clerk sign out and no runtime serialization issues are introduced.
-    - Tests added/updated to assert menu presence, ARIA attributes, and interaction.
-
-### New followups (added 2025-09-30)
-
-- [ ] Add real `/profile` route and wire avatar menu
-
-  - Scope: Make the 'Profile' menu item in the Navbar's avatar dropdown navigate to `/profile` using client-side navigation. The dropdown should close on navigation.
-  - Files to update: `src/components/Navbar.tsx`, add `src/app/profile/page.tsx`.
-  - Acceptance criteria:
-    - Clicking Profile navigates user client-side to `/profile`.
-    - The dropdown closes on navigation.
-    - Tests updated to mock/verify navigation.
-
-- [ ] Implement Profile page (Clerk + DB integration)
-
-  - Scope: Create a Profile page that displays Clerk user info and related app data (recent projects/tasks). Protect the page so only signed-in users can view it. Provide loading and empty states.
-  - Files to add/update: `src/app/profile/page.tsx`, `src/app/profile/components/*`, server API route(s) to fetch user DB data.
-  - Acceptance criteria:
-    - Profile header shows avatar (with initials fallback), name, and email.
-    - Recent projects and recent tasks are displayed (or an empty state CTA).
-    - Non-signed-in users are redirected to login or shown a Sign in CTA.
-    - Unit tests added for the header and a mocked data fetch integration test for the page.
-
----
-
-## Recent progress (2025-09-22)
-
-- Merged `feature/activity-refactor` into `main` with the following highlights:
-  - Activity heatmap refactor and tooltip/details wiring.
-  - Guarded dev console diagnostics in `Dashboard.tsx` to keep test/CI output clean.
-  - Added `src/components/__tests__/Dashboard.buckets.test.tsx` to validate Today and This Week bucketing logic.
-  - Removed unused test locals and updated Sidebar spacing for Projects (aligns nested items with other nav items).
-
-All tests pass locally after these changes.
-
-## Profile page enhancements (added 2025-09-30)
-
-1. Add Google sync functionality and information to the profile page
-
-- Scope: Surface Google sync/connect status on the Profile page. Provide controls to connect/disconnect Google (calendar/tasks), show last sync time and sync status, and allow the user to initiate a manual sync. This requires an OAuth flow (additional Google scopes) and server-side storage of refresh tokens (securely stored). Add UI to indicate sync status and any failures.
-- Files to update: `src/app/profile/page.tsx`, `src/app/profile/GoogleSync.tsx` (new), server OAuth endpoints (e.g., `src/app/api/integrations/google/*`), and DB fields for storing integration tokens (Prisma schema).
-- Acceptance criteria:
-  - Profile shows whether Google is connected and when last sync occurred.
-  - User can connect/disconnect Google and trigger a manual sync.
-  - Sync errors are surfaced in the Profile UI.
-
-2. Allow users to change their avatar in the Profile page
-
-- Scope: Provide an avatar upload/change flow on the Profile page that updates the Clerk user profile (or a DB-backed avatar if you prefer storing images separately). Support drag-and-drop or file picker, preview, and save. Keep image size limits and crop/resize guidelines.
-- Files to update: `src/app/profile/page.tsx`, `src/app/profile/AvatarEditor.tsx` (new), update Clerk profile via server route or Clerk SDK as appropriate.
-- Acceptance criteria:
-  - User can upload a new avatar and see a preview before saving.
-  - Saved avatar updates the header/navbar avatar across the app.
-  - Files are validated for size/type and errors are shown to the user.
-
-3. Add billing and subscription information to the Profile page
-
-- Scope: Display current plan status, trial info, and invoices area. Since the app is currently free, show a clear "Free" plan state and a CTA to upgrade in the future. Add placeholder UI that can be wired to a billing provider later.
-- Files to update: `src/app/profile/page.tsx`, `src/app/profile/BillingCard.tsx` (new), and potentially server endpoints for billing data (stubbed now).
-- Acceptance criteria:
-  - Profile shows a billing card with current plan = Free and a short description.
-  - Placeholder invoices area lists none/empty state with CTA to add billing method (disabled for now).
-
-4. Look into team permissions / shared Projects & Tasks
-
-- Scope: Research and draft an approach for multi-user team support (shared projects/tasks, roles/permissions). This is an investigative ticket: add an ADR (architecture decision record) and a small spike to prototype schema changes (Project.members, Project.ownerId, role enums) and permission checks on APIs.
-- Files to update: create `docs/adr/team-permissions.md`, an exploratory migration `prisma/2025XXXX_add_team_tables/`, and spike UI in `src/app/profile/team-spike.md` or a draft page.
-- Acceptance criteria:
-  - ADR describes tradeoffs (shared vs. owned projects, invitation flows, permission granularity).
-  - Spike identifies required DB schema changes, migration plan, and sample UI components for invitations and role assignment.
-
-## Suggested next steps
-
-- Address `zustand` deprecation warnings by switching store files to the named `create` export.
-- Add a small visual regression/smoke test for `Sidebar` to assert padding/spacing for the Projects item.
-- Add CI steps (typecheck, lint, tests) so these regressions are caught in PRs.

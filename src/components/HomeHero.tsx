@@ -13,8 +13,8 @@ export default function HomeHero() {
 
   return (
     <section
-      className="relative overflow-hidden flex items-center py-8"
-      style={{ minHeight: 'calc(100vh - var(--nav-height) - 48px)' }}
+      className="relative overflow-hidden flex items-center py-8 bg-base-100"
+      style={{ minHeight: 'calc(80vh - var(--nav-height))' }}
     >
       <div className="container mx-auto px-6 lg:px-12">
         <div className="max-w-4xl mx-auto text-center grid place-items-center gap-6 sm:gap-8">
@@ -37,8 +37,8 @@ export default function HomeHero() {
           </div>
 
           {/* Absolutely positioned button so it doesn't move page content when adjusted. */}
-          {isSignedIn && (
-            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-8 sm:bottom-16">
+          <div className="absolute left-1/2 transform -translate-x-1/2 bottom-8 sm:bottom-16">
+            {isSignedIn ? (
               <button
                 className="btn btn-primary border-on px-4 py-2 inline-flex items-center gap-2"
                 onClick={() => {
@@ -49,8 +49,16 @@ export default function HomeHero() {
                 <LayoutDashboard size={16} aria-hidden="true" />
                 <span>To Dashboard</span>
               </button>
-            </div>
-          )}
+            ) : (
+              <button
+                className="btn btn-primary border-on px-4 py-2 inline-flex items-center gap-2"
+                onClick={() => router.push('/signup')}
+                aria-label="Get started"
+              >
+                <span>Get Started</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </section>

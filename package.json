@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "ci": "npm run lint && npm run typecheck && npm run prisma:generate && npm run build",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && sh ./scripts/install-git-hooks.sh",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev --name init",
     "prisma:db:push": "prisma db push",
@@ -25,7 +25,6 @@
     "test": "jest --passWithNoTests --runInBand",
     "install:hooks": "sh ./scripts/install-git-hooks.sh"
   },
-  
   "prisma": {
     "schema": "./prisma/schema.prisma"
   },

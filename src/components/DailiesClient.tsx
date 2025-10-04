@@ -17,6 +17,7 @@ export default function DailiesClient() {
   const projects = useProjectStore((s) => s.projects);
   const resetIfNeeded = useTaskStore((s) => s.resetDailiesIfNeeded);
   const resetNow = useTaskStore((s) => s.resetDailiesNow);
+  const loadTasks = useTaskStore((s) => s.loadTasks);
   const [editing, setEditing] = React.useState<Task | null>(null);
   const [deleting, setDeleting] = React.useState<Task | null>(null);
   const [creating, setCreating] = React.useState(false);
@@ -33,6 +34,11 @@ export default function DailiesClient() {
 
   // Run reset check on mount, on visibility/focus, and schedule next midnight reset
   React.useEffect(() => {
+    // Ensure tasks are loaded when visiting Dailies. Previously only Dashboard
+    // triggered `loadTasks()` which caused /dailies to be empty until Dashboard
+    // was visited. Call loadTasks here to keep behavior consistent.
+    void loadTasks();
+
     // initial check
     try {
       resetIfNeeded();
@@ -71,7 +77,7 @@ export default function DailiesClient() {
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('focus', onFocus);
     };
-  }, [resetIfNeeded, resetNow]);
+  }, [resetIfNeeded, resetNow, loadTasks]);
 
   const toggle = (id: string) => {
     const t = tasks.find((x) => x.id === id);

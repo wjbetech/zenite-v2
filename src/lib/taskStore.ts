@@ -161,7 +161,77 @@ const useTaskStore = create<State>((set, get) => ({
   async resetDailiesNow() {
     const today = todayKey();
     const dailyTasks = get().tasks.filter((t) => (t.recurrence ?? 'once') === 'daily');
+    // Also capture completed one-off tasks so we can snapshot them and remove them
+    const completedOneOff = get()
+      .tasks.filter((t) => (t.recurrence ?? 'once') !== 'daily')
+      .filter((t) => t.completed);
     try {
+      // Snapshot today's completions for activity tracking before resetting.
+      const completedDailyItems = dailyTasks
+        .filter((t) => t.completed)
+        .map((t) => ({ taskId: t.id, taskTitle: t.title, ownerId: t.ownerId }));
+      const completedOneOffItems = completedOneOff.map((t) => ({
+        taskId: t.id,
+        taskTitle: t.title,
+        ownerId: t.ownerId,
+      }));
+
+      // Post daily completions (persisted as historical activity)
+      if (completedDailyItems.length > 0) {
+        try {
+          await fetch('/api/activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date: today, items: completedDailyItems }),
+          });
+        } catch (err) {
+          console.error('resetDailiesNow: failed to persist daily activity snapshot', err);
+        }
+      }
+
+      // Post completed one-off tasks as part of today's activity then delete them from the client list
+      if (completedOneOffItems.length > 0) {
+        try {
+          await fetch('/api/activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date: today, items: completedOneOffItems }),
+          });
+        } catch (err) {
+          console.error(
+            'resetDailiesNow: failed to persist one-off completed activity snapshot',
+            err,
+          );
+        }
+      }
+
+      // Persist a local snapshot as a fallback so the dashboard can show history if server POST fails.
+      try {
+        if (typeof window !== 'undefined') {
+          const SNAP_KEY = `zenite:activity:snapshots:v1:${today}`;
+          const existingRaw = window.localStorage.getItem(SNAP_KEY);
+          const existing = existingRaw ? JSON.parse(existingRaw) : [];
+          const merged = [...existing, ...completedDailyItems, ...completedOneOffItems];
+          window.localStorage.setItem(SNAP_KEY, JSON.stringify(merged));
+
+          // Prune old snapshots older than 90 days
+          const now = new Date();
+          for (let i = 0; i < 95; i++) {
+            const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+            const key = `zenite:activity:snapshots:v1:${d.toISOString().slice(0, 10)}`;
+            // Keep only last 90 days; remove older keys
+            if (i >= 90) {
+              try {
+                window.localStorage.removeItem(key);
+              } catch {}
+            }
+          }
+        }
+      } catch (err) {
+        console.error('resetDailiesNow: failed to persist local activity snapshot', err);
+      }
+
+      // Reset daily tasks on the server
       await Promise.all(
         dailyTasks.map((task) =>
           api.updateTask({
@@ -172,14 +242,19 @@ const useTaskStore = create<State>((set, get) => ({
           }),
         ),
       );
+      // Delete one-off completed tasks on the server
+      await Promise.all(completedOneOff.map((task) => api.deleteTask(task.id)));
     } catch (err) {
       console.error('resetDailiesNow sync failed', err);
     }
-    const refreshed = get().tasks.map((t) =>
-      (t.recurrence ?? 'once') === 'daily'
-        ? { ...t, started: false, completed: false, completedAt: null }
-        : t,
-    );
+    // Refresh client-side tasks: reset daily tasks, and remove completed one-off tasks
+    const refreshed = get()
+      .tasks.filter((t) => !completedOneOff.find((o) => o.id === t.id))
+      .map((t) =>
+        (t.recurrence ?? 'once') === 'daily'
+          ? { ...t, started: false, completed: false, completedAt: null }
+          : t,
+      );
     set({ tasks: refreshed });
     try {
       if (typeof window !== 'undefined') {

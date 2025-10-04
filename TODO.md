@@ -1,3 +1,7 @@
+IMPORTANT NOTE: Branch policy
+
+- main is the primary development branch. Do not push to `master` unless explicitly instructed by the repository owner.
+
 4. Home button & header polish (added 2025-09-29)
 
 - Scope: Polish the home route (`/`) by applying consistent border styling to the call-to-action buttons, updating the 'To Dashboard' icon to be thematically accurate, and showing the user's Google profile image in the header when available.

@@ -199,6 +199,34 @@ export default function Dashboard() {
           agg[date].count += 1;
           agg[date].titles.push(title);
         }
+        // Merge with any local snapshots; local snapshots are fallbacks when server POST failed.
+        try {
+          if (typeof window !== 'undefined') {
+            // find local snapshot keys for last 90 days
+            const now = new Date();
+            for (let i = 0; i < 90; i++) {
+              const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+              const key = `zenite:activity:snapshots:v1:${d.toISOString().slice(0, 10)}`;
+              const raw = window.localStorage.getItem(key);
+              if (!raw) continue;
+              try {
+                const items = JSON.parse(raw) as Array<Record<string, unknown>>;
+                for (const it of items) {
+                  const date = String(it.date ?? d.toISOString().slice(0, 10));
+                  const title = String(it.taskTitle ?? it.taskTitle ?? 'Untitled');
+                  if (!agg[date]) agg[date] = { count: 0, titles: [] };
+                  // local items should be counted but server rows (from `rows`) will override if present
+                  agg[date].count += 1;
+                  agg[date].titles.push(title);
+                }
+              } catch {
+                // ignore parse errors
+              }
+            }
+          }
+        } catch {
+          // ignore local snapshot errors
+        }
         setPersistedActivity(agg);
       } catch {
         // ignore

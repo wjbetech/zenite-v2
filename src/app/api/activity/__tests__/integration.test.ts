@@ -38,10 +38,20 @@ describe('POST/GET /api/activity and tasks bookkeeping integration', () => {
 
   test('posts activity items, reads them back, then task uncomplete removes today rows', async () => {
     // Arrange: mock activity.create to return created rows
-    (prisma.activity.create as jest.Mock).mockImplementation(async ({ data }: any) => ({
-      id: `a-${data.taskId ?? 'x'}`,
-      ...data,
-    }));
+    (prisma.activity.create as jest.Mock).mockImplementation(
+      async (args: {
+        data: { date?: string; taskId?: string; taskTitle?: string; ownerId?: string };
+      }) => {
+        const d = args.data;
+        return {
+          id: `a-${d.taskId ?? 'x'}`,
+          date: d.date,
+          taskId: d.taskId,
+          taskTitle: d.taskTitle,
+          ownerId: d.ownerId,
+        };
+      },
+    );
     (prisma.activity.findMany as jest.Mock).mockResolvedValue([
       { id: 'a-t1', date: '2025-10-01', taskId: 't1', taskTitle: 'T1', ownerId: 'u1' },
     ]);

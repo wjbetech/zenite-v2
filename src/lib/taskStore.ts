@@ -205,6 +205,32 @@ const useTaskStore = create<State>((set, get) => ({
         }
       }
 
+      // Persist a local snapshot as a fallback so the dashboard can show history if server POST fails.
+      try {
+        if (typeof window !== 'undefined') {
+          const SNAP_KEY = `zenite:activity:snapshots:v1:${today}`;
+          const existingRaw = window.localStorage.getItem(SNAP_KEY);
+          const existing = existingRaw ? JSON.parse(existingRaw) : [];
+          const merged = [...existing, ...completedDailyItems, ...completedOneOffItems];
+          window.localStorage.setItem(SNAP_KEY, JSON.stringify(merged));
+
+          // Prune old snapshots older than 90 days
+          const now = new Date();
+          for (let i = 0; i < 95; i++) {
+            const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+            const key = `zenite:activity:snapshots:v1:${d.toISOString().slice(0, 10)}`;
+            // Keep only last 90 days; remove older keys
+            if (i >= 90) {
+              try {
+                window.localStorage.removeItem(key);
+              } catch {}
+            }
+          }
+        }
+      } catch (err) {
+        console.error('resetDailiesNow: failed to persist local activity snapshot', err);
+      }
+
       // Reset daily tasks on the server
       await Promise.all(
         dailyTasks.map((task) =>

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Prevent accidental pushes to 'master' unless ALLOW_PUSH_MASTER=1 is set
+set -euo pipefail
+
+while read local_ref local_sha remote_ref remote_sha; do
+  branch=$(echo "$remote_ref" | awk -F'/' '{print $NF}')
+  if [ "$branch" = "master" ]; then
+    if [ "${ALLOW_PUSH_MASTER:-0}" != "1" ]; then
+      echo "Refusing to push to 'master' from local script."
+      echo "If you really need to push to master, set ALLOW_PUSH_MASTER=1 in your environment and retry."
+      exit 1
+    fi
+  fi
+done
+
+exit 0

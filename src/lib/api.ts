@@ -106,6 +106,20 @@ export async function deleteTask(id: string) {
   return request(`${API_BASE}/tasks?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
+export async function fetchActivity(date?: string) {
+  return request(`${API_BASE}/activity${date ? `?date=${encodeURIComponent(date)}` : ''}`);
+}
+
+export type ActivitySnapshotItem = { taskId?: string; taskTitle: string; ownerId?: string };
+
+export async function postActivity(date: string, items: ActivitySnapshotItem[]) {
+  return request(`${API_BASE}/activity`, {
+    method: 'POST',
+    body: JSON.stringify({ date, items }),
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
 const api = {
   fetchProjects,
   createProject,

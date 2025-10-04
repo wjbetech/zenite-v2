@@ -31,6 +31,13 @@ export default function Dashboard() {
   const tasksLoading = useTaskStore((s) => s.loading);
   const tasksError = useTaskStore((s) => s.error);
   const [heatmapOpen, setHeatmapOpen] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  // On mount, read persisted activity open state from cookie so Dashboard
+  // reflects the user's last choice. We do this in an effect to avoid SSR
+  // hydration mismatches.
+  // track client mount for SSR guard
+  useEffect(() => setMounted(true), []);
+
   // On mount, read persisted activity open state from cookie so Dashboard
   // reflects the user's last choice. We do this in an effect to avoid SSR
   // hydration mismatches.
@@ -55,7 +62,6 @@ export default function Dashboard() {
     }
   }, [heatmapOpen]);
   // avoid rendering client-only dynamic data during SSR to prevent hydration mismatches
-  const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -173,18 +179,95 @@ export default function Dashboard() {
   );
 
   // Build activity map and details from task completions
+  const [persistedActivity, setPersistedActivity] = React.useState<
+    Record<string, { count: number; titles: string[] }>
+  >({});
+
+  React.useEffect(() => {
+    // Fetch recent persisted activity (last 90 days) to merge with in-memory task completions
+    (async () => {
+      try {
+        const res = await fetch('/api/activity');
+        if (!res.ok) return;
+        const rows = (await res.json()) as Array<Record<string, unknown>>;
+        const agg: Record<string, { count: number; titles: string[] }> = {};
+        // Track which taskIds the server already reported for each date so we can
+        // avoid double-counting local snapshot items that are duplicates.
+        const serverSeen: Record<string, Set<string>> = {};
+        for (const r of rows) {
+          const date = String(r.date ?? '');
+          const title = String(r.taskTitle ?? 'Untitled');
+          const taskId = String(r.taskId ?? '');
+          if (!date) continue;
+          if (!agg[date]) agg[date] = { count: 0, titles: [] };
+          agg[date].count += 1;
+          agg[date].titles.push(title);
+          if (taskId) {
+            serverSeen[date] = serverSeen[date] ?? new Set();
+            serverSeen[date].add(taskId);
+          }
+        }
+
+        // Merge with any local snapshots; local snapshots are fallbacks when server POST failed.
+        // We prefer server data for a given date/taskId, but still include local-only items.
+        try {
+          if (typeof window !== 'undefined') {
+            // find local snapshot keys for last 90 days
+            const now = new Date();
+            for (let i = 0; i < 90; i++) {
+              const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+              const key = `zenite:activity:snapshots:v1:${d.toISOString().slice(0, 10)}`;
+              const raw = window.localStorage.getItem(key);
+              if (!raw) continue;
+              try {
+                const items = JSON.parse(raw) as Array<Record<string, unknown>>;
+                for (const it of items) {
+                  const date = String(it.date ?? d.toISOString().slice(0, 10));
+                  const title = String(it.taskTitle ?? 'Untitled');
+                  const taskId = String(it.taskId ?? '');
+                  // If the server already reported this taskId for the same date, skip it.
+                  if (taskId && serverSeen[date] && serverSeen[date].has(taskId)) continue;
+                  if (!agg[date]) agg[date] = { count: 0, titles: [] };
+                  agg[date].count += 1;
+                  agg[date].titles.push(title);
+                }
+              } catch {
+                // ignore parse errors
+              }
+            }
+          }
+        } catch {
+          // ignore local snapshot errors
+        }
+        setPersistedActivity(agg);
+      } catch {
+        // ignore
+      }
+    })();
+  }, []);
+
   const { activityMap, activityDetails } = React.useMemo(() => {
     const map: Record<string, number> = {};
     const details: Record<string, string[]> = {};
+    // Start with persisted snapshots
+    for (const [date, info] of Object.entries(persistedActivity)) {
+      map[date] = (map[date] || 0) + info.count;
+      details[date] = [...(details[date] ?? []), ...info.titles];
+    }
+    // Merge live task completions only into today's bucket so past days remain locked
+    const now = new Date();
+    const todayY = now.getFullYear();
+    const todayM = `${now.getMonth() + 1}`.padStart(2, '0');
+    const todayD = `${now.getDate()}`.padStart(2, '0');
+    const todayKey = `${todayY}-${todayM}-${todayD}`;
     for (const t of storeTasks) {
       if (!t.completed) continue;
-      // Prefer completedAt if present, otherwise use createdAt as fallback
+      // Only count live completions that belong to today; previous days must come from persistedActivity
       const when = t.completedAt || t.createdAt;
       if (!when) continue;
-      // Normalize to local YYYY-MM-DD to match ActivityHeatmap's local keys
       let date: string;
       if (/^\d{4}-\d{2}-\d{2}$/.test(when)) {
-        date = when;
+        date = when as string;
       } else {
         const d = new Date(when);
         const y = d.getFullYear();
@@ -192,12 +275,13 @@ export default function Dashboard() {
         const day = `${d.getDate()}`.padStart(2, '0');
         date = `${y}-${m}-${day}`;
       }
+      if (date !== todayKey) continue;
       map[date] = (map[date] || 0) + 1;
       if (!details[date]) details[date] = [];
       details[date].push(t.title || 'Untitled');
     }
     return { activityMap: map, activityDetails: details };
-  }, [storeTasks]);
+  }, [storeTasks, persistedActivity]);
 
   if (!mounted) {
     // render a simple placeholder during SSR so server and client markup match

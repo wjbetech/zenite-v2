@@ -120,6 +120,19 @@ model Project {
   tasks Task[] @relation("ProjectTasks")
 }
 
+// Snapshot of completed tasks for a particular date used by the activity heatmap
+model Activity {
+  id        String   @id @default(uuid())
+  date      String // YYYY-MM-DD local date bucket
+  taskId    String? // optional link to the task that generated this entry
+  taskTitle String
+  ownerId   String?
+  createdAt DateTime @default(now())
+
+  @@index([date])
+  @@index([ownerId])
+}
+
 // Models required by NextAuth.js
 model Account {
   id                String  @id @default(uuid())

@@ -14,13 +14,13 @@ export default function HomeHero() {
   return (
     <section
       className="relative overflow-hidden flex items-center py-8 bg-base-100"
-      style={{ minHeight: 'calc(80vh - var(--nav-height))' }}
+      style={{ minHeight: 'calc(100vh - var(--nav-height))' }}
     >
       <div className="container mx-auto px-6 lg:px-12">
         <div className="max-w-4xl mx-auto text-center grid place-items-center gap-6 sm:gap-8">
           <h1 className="text-4xl md:text-6xl font-extrabold text-gray-700 leading-tight tracking-tight">
             Productivity should be
-            <span className="ml-2 text-emerald-600">zenful</span>
+            <span className="ml-2 text-emerald-600">zenful</span>.
           </h1>
 
           <p className="sm:mt-4 text-xl text-gray-600 font-medium">

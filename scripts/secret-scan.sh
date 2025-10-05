@@ -38,6 +38,7 @@ read -r -d '' IGNORE_PATHS <<'IGNORE_EOF' || true
 ^src/components/clerkKeyGuard.ts$
 ^src/components/__tests__/clerkKeyGuard.test.ts$
 ^src/components/__tests__/Providers.clerk.test.tsx$
+^env-templates/
 IGNORE_EOF
 
 # Allow a permissive local mode (for developer pre-commit) to reduce false positives

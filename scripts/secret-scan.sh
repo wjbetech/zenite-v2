@@ -42,6 +42,8 @@ read -r -d '' IGNORE_PATHS <<'IGNORE_EOF' || true
 ^\.env.production.local.example$
 ^\.env.production.local$
 ^\.env$
+^\.env.main$
+^\.env.prod$
 IGNORE_EOF
 
 # Allow a permissive local mode (for developer pre-commit) to reduce false positives

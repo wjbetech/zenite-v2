@@ -21,9 +21,9 @@ jobs:
           fi
           echo "Evaluating branch: $ref"
 
-          # Allowed patterns: main, master, release/*, feature/*, fix/*, chore/*, refactor/*, hotfix/*, docs/*, test/*
-          if [[ "$ref" =~ ^(main|master)$ ]] || \
-             [[ "$ref" =~ ^(release/.+|feature/.+|fix/.+|chore/.+|refactor/.+|hotfix/.+|docs/.+|test/.+)$ ]]; then
+       # Allowed patterns: main, master, staging, release/*, feature/*, fix/*, chore/*, refactor/*, hotfix/*, docs/*, test/*
+       if [[ "$ref" =~ ^(main|master|staging)$ ]] || \
+         [[ "$ref" =~ ^(release/.+|feature/.+|fix/.+|chore/.+|refactor/.+|hotfix/.+|docs/.+|test/.+)$ ]]; then
             echo "Branch name OK: $ref"
             exit 0
           else

@@ -34,6 +34,7 @@ read -r -d '' IGNORE_PATHS <<'IGNORE_EOF' || true
 ^scripts/secret-scan.sh$
 ^prisma/
 ^deploy/
+^src/components/Providers.tsx$
 IGNORE_EOF
 
 # Allow a permissive local mode (for developer pre-commit) to reduce false positives

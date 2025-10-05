@@ -19,6 +19,26 @@ function mapDaisyToToastTheme(d?: string | null) {
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [toastTheme, setToastTheme] = useState<'light' | 'dark'>(() => 'light');
 
+  // Runtime safety: ensure production/staging builds are not using Clerk test/dev keys.
+  // NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is replaced at build-time; NEXT_PUBLIC_VERCEL_ENV or NODE_ENV
+  // indicate the target environment. If we detect a suspicious key in a production-like env,
+  // throw so deployments fail fast and we don't accidentally ship with test keys.
+  try {
+    const clerkKey = (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '').toString();
+    const deployEnv = (process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NEXT_PUBLIC_ENV || process.env.NODE_ENV || '').toString().toLowerCase();
+    const isProdLike = deployEnv === 'production' || deployEnv === 'staging' || deployEnv === 'prod';
+    const looksLikeTestKey = /test|_test_|pk_test_|sk_test_/i.test(clerkKey);
+    if (isProdLike && clerkKey && looksLikeTestKey) {
+      // Fail fast: throw an error so CI/deploy fails and the issue is visible.
+      throw new Error(
+        `Clerk publishable key appears to be a TEST key while running in production-like environment (${deployEnv}). Set the live Clerk publishable key in your host environment variables and do not commit keys to the repo.`
+      );
+    }
+  } catch (e) {
+    // Re-throw to ensure the app surfaces the misconfiguration during build/runtime.
+    throw e;
+  }
+
   useEffect(() => {
     function readAndMap() {
       try {

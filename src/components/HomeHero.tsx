@@ -3,9 +3,9 @@ import React from 'react';
 import Gem from './Gem';
 import Gem3D from './Gem3D';
 // ...existing code...
-import { useUser } from '@clerk/nextjs';
+import { useUser, SignInButton } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, ArrowRight } from 'lucide-react';
 
 export default function HomeHero() {
   const { isSignedIn } = useUser();
@@ -50,13 +50,15 @@ export default function HomeHero() {
                 <span>To Dashboard</span>
               </button>
             ) : (
-              <button
-                className="btn btn-primary border-on px-4 py-2 inline-flex items-center gap-2"
-                onClick={() => router.push('/signup')}
-                aria-label="Get started"
-              >
-                <span>Get Started</span>
-              </button>
+              <SignInButton mode="modal">
+                <button
+                  className="btn btn-primary border-on px-4 py-2 inline-flex items-center gap-2"
+                  aria-label="Get started"
+                >
+                  <span>Get Started</span>
+                  <ArrowRight size={16} aria-hidden="true" />
+                </button>
+              </SignInButton>
             )}
           </div>
         </div>

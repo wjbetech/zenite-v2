@@ -21,7 +21,7 @@ const features = [
 
 export default function HomeFeatures() {
   return (
-    <section className="py-12 min-h-[60vh] flex items-center bg-base-200">
+    <section className="py-12 min-h-screen flex items-center bg-base-200">
       <div className="container mx-auto px-6 lg:px-12">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl font-bold">A different kind of productivity</h2>

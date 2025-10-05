@@ -3,9 +3,9 @@ import React from 'react';
 import Gem from './Gem';
 import Gem3D from './Gem3D';
 // ...existing code...
-import { useUser } from '@clerk/nextjs';
+import { useUser, SignInButton } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, ArrowRight } from 'lucide-react';
 
 export default function HomeHero() {
   const { isSignedIn } = useUser();
@@ -14,13 +14,13 @@ export default function HomeHero() {
   return (
     <section
       className="relative overflow-hidden flex items-center py-8 bg-base-100"
-      style={{ minHeight: 'calc(80vh - var(--nav-height))' }}
+      style={{ minHeight: 'calc(100vh - var(--nav-height))' }}
     >
       <div className="container mx-auto px-6 lg:px-12">
         <div className="max-w-4xl mx-auto text-center grid place-items-center gap-6 sm:gap-8">
           <h1 className="text-4xl md:text-6xl font-extrabold text-gray-700 leading-tight tracking-tight">
             Productivity should be
-            <span className="ml-2 text-emerald-600">zenful</span>
+            <span className="ml-2 text-emerald-600">zenful</span>.
           </h1>
 
           <p className="sm:mt-4 text-xl text-gray-600 font-medium">
@@ -50,13 +50,15 @@ export default function HomeHero() {
                 <span>To Dashboard</span>
               </button>
             ) : (
-              <button
-                className="btn btn-primary border-on px-4 py-2 inline-flex items-center gap-2"
-                onClick={() => router.push('/signup')}
-                aria-label="Get started"
-              >
-                <span>Get Started</span>
-              </button>
+              <SignInButton mode="modal">
+                <button
+                  className="btn btn-primary border-on px-4 py-2 inline-flex items-center gap-2"
+                  aria-label="Get started"
+                >
+                  <span>Get Started</span>
+                  <ArrowRight size={16} aria-hidden="true" />
+                </button>
+              </SignInButton>
             )}
           </div>
         </div>

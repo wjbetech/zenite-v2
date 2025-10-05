@@ -41,7 +41,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 Run a local Postgres using Docker Compose and generate the Prisma client:
 
-1. Copy `.env.example` to `.env.local` and edit if needed.
+1. Copy `.env.main` to `.env.development.local` (or create `.env.development.local`) and edit if needed.
 2. Start the DB: `npm run db:start`
 3. Install deps: `npm install`
 4. Generate Prisma client: `npm run prisma:generate`
@@ -88,8 +88,8 @@ Prerequisites
 Quick start (copy-paste)
 
 ```bash
-# copy example env, edit if you want a different password/port
-cp .env.example .env
+# copy main env template and create a local development file
+cp .env.main .env.development.local
 
 # start only the DB service in detached mode
 npm run db:start

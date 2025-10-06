@@ -42,3 +42,4 @@ next-env.d.ts
 
 # local tests primer (developer-only notes)
 tests-primer.md
+replacements.txt

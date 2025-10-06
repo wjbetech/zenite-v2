@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Prevent commits that include potential secrets by running the repository secret scanner.
+set -euo pipefail
+
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+HOOK_SCRIPT="$ROOT_DIR/scripts/secret-scan.sh"
+
+if [ ! -x "$HOOK_SCRIPT" ]; then
+  echo "Secret-scan script not found or not executable: $HOOK_SCRIPT"
+  exit 1
+fi
+
+echo "Running pre-commit secret scan (local mode)..."
+"$HOOK_SCRIPT" --local
+
+echo "pre-commit secret scan passed."
+exit 0

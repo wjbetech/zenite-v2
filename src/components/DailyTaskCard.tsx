@@ -54,7 +54,7 @@ export default function DailyTaskCard({ task, onToggle, onEdit, onDelete }: Prop
       role="article"
       aria-label={`Task ${task.title}`}
       tabIndex={0}
-      className={`group flex items-center gap-4 p-3 rounded-lg shadow-sm transition-transform duration-150 ${classes.bg} ${classes.ring} hover:scale-[1.01] focus:scale-[1.01] focus:outline-none`}
+      className={`group flex items-center gap-4 p-3 rounded-lg shadow-sm transition-transform duration-150 ${classes.bg} ${classes.ring} hover:scale-y-[1.02] focus:scale-y-[1.02] focus:outline-none`}
     >
       <button
         aria-pressed={!!task.started || !!task.completed}

@@ -296,9 +296,10 @@ export default function Dashboard() {
           {tasksError}
         </div>
       )}
-      <div>
+      {/* Wrap header, heatmap and lists in shared px-3 container for alignment */}
+      <div className="mx-auto w-full max-w-6xl px-3">
         {/* Header with depth */}
-        <div className="bg-base-200/60 dark:bg-base-300/50 rounded-lg border border-base-200/30 dark:border-base-300/30 shadow-md backdrop-blur-sm px-3 py-5 mb-6">
+        <div className="bg-base-200/60 dark:bg-base-300/50 rounded-lg border border-base-200/30 dark:border-base-300/30 shadow-md backdrop-blur-sm px-0 py-5 mb-6">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-semibold">Dashboard</h1>
             <div className="flex items-center gap-2">
@@ -343,13 +344,12 @@ export default function Dashboard() {
       </div>
 
       <div className="flex-1 flex flex-col min-h-0">
-        {/* Task lists container with depth; ActivityHeatmap intentionally remains outside this background */}
-        <div className="bg-base-200/50 dark:bg-base-300/40 rounded-lg shadow-sm px-3 py-4 flex-1 min-h-0 overflow-hidden ring-1 ring-inset ring-black/2 dark:ring-white/2">
-          {/* Inner scroll area */}
-          {/* Toggle buttons (sub-card) */}
-          <div className="mb-2">
-            {/* Tones: make the buttons area a distinct, slightly lighter/warmer tone than the lists area below the divider */}
-            <div className="rounded-md bg-base-100/40 dark:bg-base-200/30">
+        {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
+        <div className="px-0 py-4 flex-1 min-h-0 overflow-visible">
+          <div className="mx-auto w-full max-w-6xl px-3">
+            {/* Inner scroll area */}
+            {/* Toggle buttons: simple wrapper (no background card) */}
+            <div className="mb-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <button
                   onClick={() => setView('new')}

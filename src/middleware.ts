@@ -1,16 +1,19 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-// Temporarily disable Clerk middleware while debugging headers() sync errors
-// import { clerkMiddleware } from '@clerk/nextjs/server';
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/login(.*)',
+  '/signup(.*)',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/api/health(.*)',
+]);
 
-// export default clerkMiddleware();
-
-/** A minimal pass-through middleware to satisfy Next.js while debugging. */
-export function middleware(req: NextRequest) {
-  // Forward request headers to mark the parameter as used (no behavior change)
-  return NextResponse.next({ request: { headers: req.headers } });
-}
+export default clerkMiddleware((auth, req) => {
+  if (!isPublicRoute(req)) {
+    auth().protect();
+  }
+});
 
 export const config = {
   matcher: [

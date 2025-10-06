@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import ThemeProvider from './ThemeProvider';
 import { ClerkProvider } from '@clerk/nextjs';
@@ -29,7 +29,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   try {
     const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
     const deployEnv = (
-      process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NEXT_PUBLIC_ENV || process.env.NODE_ENV || ''
+      process.env.NEXT_PUBLIC_VERCEL_ENV ||
+      process.env.NEXT_PUBLIC_ENV ||
+      process.env.NODE_ENV ||
+      ''
     ).toString();
     assertClerkKeySafe(clerkKey.toString(), deployEnv);
   } catch (e) {

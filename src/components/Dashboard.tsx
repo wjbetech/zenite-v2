@@ -448,7 +448,8 @@ export default function Dashboard() {
                 onStatusChange={handleStatusChange}
               />
             ) : (
-              <NativeSortableDaily
+              <div className="pt-2">
+                <NativeSortableDaily
                 items={today.map((t) => ({
                   id: t.id,
                   title: t.title,
@@ -484,7 +485,7 @@ export default function Dashboard() {
                   completed?: boolean;
                   href?: string;
                 }) => (
-                  <div className="mb-6" key={t.id}>
+                  <div className="" key={t.id}>
                     <DailyTaskCard
                       task={{
                         id: t.id,
@@ -524,6 +525,7 @@ export default function Dashboard() {
                 )}
                 containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
               />
+            </div>
             ))}
 
           {view === 'week' && (
@@ -550,7 +552,7 @@ export default function Dashboard() {
                   onStatusChange={handleStatusChange}
                 />
               ) : (
-                <div className="p-0">
+                <div className="p-0 pt-2">
                   <NativeSortableDaily
                     items={week.map((t) => ({
                       id: t.id,

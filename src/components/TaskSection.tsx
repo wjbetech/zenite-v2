@@ -30,14 +30,14 @@ export default function TaskSection({
   noInnerScroll = false,
 }: TaskSectionProps) {
   return (
-    <section className="mb-[74px]">
+    <section className="mb-8">
       {title && (
         <h2 className="text-sm font-medium text-gray-700 mb-6">
           <span className={`inline-block border-b-4 ${accentClass} pb-0.5`}>{title}</span>
         </h2>
       )}
       <div
-        className={`transition-all duration-300 ease-in-out pt-4 pb-2 pr-4 ${
+        className={`transition-all duration-300 ease-in-out pt-2 pb-4 pr-4 ${
           noInnerScroll ? '' : 'overflow-x-visible'
         }`}
         style={

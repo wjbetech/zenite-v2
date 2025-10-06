@@ -423,7 +423,7 @@ export default function ActivityHeatmap({
           onClick={toggleOpen}
           aria-expanded={effectiveOpen}
           aria-label={effectiveOpen ? 'Collapse activity tracker' : 'Expand activity tracker'}
-          className="ml-3 w-7 h-7 flex items-center justify-center rounded border border-base-content/30 text-lg leading-none"
+          className="ml-1 w-7 h-7 flex items-center justify-center rounded text-lg leading-none cursor-pointer"
         >
           {effectiveOpen ? '−' : '+'}
         </button>

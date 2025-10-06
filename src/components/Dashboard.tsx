@@ -340,7 +340,7 @@ export default function Dashboard() {
         <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3">
           <button
             onClick={() => setView('new')}
-            className={`w-full px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
+            className={`w-full cursor-pointer px-3 py-1.5 rounded-md border-base border-2 text-sm font-medium focus:outline-none transition ${
               view === 'new'
                 ? 'bg-success text-success-content'
                 : 'bg-transparent text-gray-600 hover:bg-base-200'
@@ -352,7 +352,7 @@ export default function Dashboard() {
 
           <button
             onClick={() => setView('today')}
-            className={`w-full px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
+            className={`w-full cursor-pointer px-3 py-1.5 rounded-md border-base border-2  text-sm font-medium focus:outline-none transition ${
               view === 'today'
                 ? 'bg-info text-info-content'
                 : 'bg-transparent text-gray-600 hover:bg-info hover:text-info-content'
@@ -364,7 +364,7 @@ export default function Dashboard() {
 
           <button
             onClick={() => setView('week')}
-            className={`w-full px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
+            className={`w-full cursor-pointer px-3 py-1.5 rounded-md border-base border-2  text-sm font-medium focus:outline-none transition ${
               view === 'week'
                 ? 'bg-primary text-primary-content'
                 : 'bg-transparent text-gray-600 hover:bg-primary hover:text-primary-content'
@@ -376,7 +376,7 @@ export default function Dashboard() {
 
           <button
             onClick={() => setView('imminent')}
-            className={`w-full px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
+            className={`w-full cursor-pointer px-3 py-1.5 rounded-md border-base border-2  text-sm font-medium focus:outline-none transition ${
               view === 'imminent'
                 ? 'bg-error text-error-content'
                 : 'bg-transparent text-gray-600 hover:bg-error hover:text-error-content'

@@ -450,82 +450,82 @@ export default function Dashboard() {
             ) : (
               <div className="pt-2">
                 <NativeSortableDaily
-                items={today.map((t) => ({
-                  id: t.id,
-                  title: t.title,
-                  notes: t.notes,
-                  started: !!t.started,
-                  completed: !!t.completed,
-                  // omit `href` in draggable lists so the card isn't wrapped with an anchor
-                }))}
-                onReorder={(next) => {
-                  const idOrder = next.map((n) => n.id);
-                  const reordered = idOrder
-                    .map((id) => storeTasks.find((t) => t.id === id))
-                    .filter(Boolean) as typeof storeTasks;
-                  // Determine the original positions of the subset within the global store
-                  const positions: number[] = [];
-                  const idSet = new Set(idOrder);
-                  storeTasks.forEach((t, idx) => {
-                    if (idSet.has(t.id)) positions.push(idx);
-                  });
-                  // Place reordered items back into their original indices
-                  const merged = [...storeTasks];
-                  for (let i = 0; i < positions.length; i++) {
-                    const pos = positions[i];
-                    merged[pos] = reordered[i] || merged[pos];
-                  }
-                  setTasks(merged);
-                }}
-                renderItem={(t: {
-                  id: string;
-                  title: string;
-                  notes?: string;
-                  started?: boolean;
-                  completed?: boolean;
-                  href?: string;
-                }) => (
-                  <div className="" key={t.id}>
-                    <DailyTaskCard
-                      task={{
-                        id: t.id,
-                        title: t.title,
-                        notes: t.notes,
-                        completed: !!t.completed,
-                        started: !!t.started,
-                        href: t.href as string | undefined,
-                        projectName: undefined,
-                      }}
-                      onToggle={(id: string) => {
-                        const found = storeTasks.find((x) => x.id === id) ?? null;
-                        const started = !!found?.started;
-                        const completed = !!found?.completed;
-                        // cycle: none -> started -> done -> none
-                        const next =
-                          !started && !completed
-                            ? 'tilde'
-                            : started && !completed
-                            ? 'done'
-                            : 'none';
-                        handleStatusChange(id, next as 'none' | 'done' | 'tilde');
-                      }}
-                      onEdit={(task: { id: string }) => {
-                        const found = storeTasks.find((x) => x.id === task.id) ?? null;
-                        if (found) {
-                          setEditing(found);
-                          setModalOpen(true);
-                        }
-                      }}
-                      onDelete={(id: string) => {
-                        const found = storeTasks.find((x) => x.id === id) ?? null;
-                        setDeleting(found);
-                      }}
-                    />
-                  </div>
-                )}
-                containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
-              />
-            </div>
+                  items={today.map((t) => ({
+                    id: t.id,
+                    title: t.title,
+                    notes: t.notes,
+                    started: !!t.started,
+                    completed: !!t.completed,
+                    // omit `href` in draggable lists so the card isn't wrapped with an anchor
+                  }))}
+                  onReorder={(next) => {
+                    const idOrder = next.map((n) => n.id);
+                    const reordered = idOrder
+                      .map((id) => storeTasks.find((t) => t.id === id))
+                      .filter(Boolean) as typeof storeTasks;
+                    // Determine the original positions of the subset within the global store
+                    const positions: number[] = [];
+                    const idSet = new Set(idOrder);
+                    storeTasks.forEach((t, idx) => {
+                      if (idSet.has(t.id)) positions.push(idx);
+                    });
+                    // Place reordered items back into their original indices
+                    const merged = [...storeTasks];
+                    for (let i = 0; i < positions.length; i++) {
+                      const pos = positions[i];
+                      merged[pos] = reordered[i] || merged[pos];
+                    }
+                    setTasks(merged);
+                  }}
+                  renderItem={(t: {
+                    id: string;
+                    title: string;
+                    notes?: string;
+                    started?: boolean;
+                    completed?: boolean;
+                    href?: string;
+                  }) => (
+                    <div className="" key={t.id}>
+                      <DailyTaskCard
+                        task={{
+                          id: t.id,
+                          title: t.title,
+                          notes: t.notes,
+                          completed: !!t.completed,
+                          started: !!t.started,
+                          href: t.href as string | undefined,
+                          projectName: undefined,
+                        }}
+                        onToggle={(id: string) => {
+                          const found = storeTasks.find((x) => x.id === id) ?? null;
+                          const started = !!found?.started;
+                          const completed = !!found?.completed;
+                          // cycle: none -> started -> done -> none
+                          const next =
+                            !started && !completed
+                              ? 'tilde'
+                              : started && !completed
+                              ? 'done'
+                              : 'none';
+                          handleStatusChange(id, next as 'none' | 'done' | 'tilde');
+                        }}
+                        onEdit={(task: { id: string }) => {
+                          const found = storeTasks.find((x) => x.id === task.id) ?? null;
+                          if (found) {
+                            setEditing(found);
+                            setModalOpen(true);
+                          }
+                        }}
+                        onDelete={(id: string) => {
+                          const found = storeTasks.find((x) => x.id === id) ?? null;
+                          setDeleting(found);
+                        }}
+                      />
+                    </div>
+                  )}
+                  containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
+                />
+              </div>
             ))}
 
           {view === 'week' && (

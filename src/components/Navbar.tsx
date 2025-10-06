@@ -145,7 +145,7 @@ export default function Navbar() {
               </div>
 
               <SignOutButton>
-                <button className="btn border-on btn-accent cursor-pointer">Sign out</button>
+                <button className="btn border-on btn-error cursor-pointer">Sign out</button>
               </SignOutButton>
             </div>
           </SignedIn>

@@ -37,10 +37,10 @@ export default function HomeHero() {
             </p>
           </div>
 
-          <div className="m-auto">
+          <div className="m-auto mt-6">
             {isSignedIn ? (
               <button
-                className="btn btn-primary border-on px-4 py-2 inline-flex items-center gap-2"
+                className="btn btn-accent border-on px-4 py-2 inline-flex items-center gap-2"
                 onClick={() => {
                   router.push('/dashboard');
                 }}

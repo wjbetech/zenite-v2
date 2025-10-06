@@ -298,7 +298,7 @@ export default function Dashboard() {
       )}
       <div>
         {/* Header with depth */}
-  <div className="bg-base-200/60 dark:bg-base-300/50 rounded-lg border border-base-200/30 dark:border-base-300/30 shadow-md backdrop-blur-sm px-3 py-5 mb-6">
+        <div className="bg-base-200/60 dark:bg-base-300/50 rounded-lg border border-base-200/30 dark:border-base-300/30 shadow-md backdrop-blur-sm px-3 py-5 mb-6">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-semibold">Dashboard</h1>
             <div className="flex items-center gap-2">
@@ -339,61 +339,70 @@ export default function Dashboard() {
           activity={activityMap}
           activityDetails={activityDetails}
         />
-        <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3">
-          <button
-            onClick={() => setView('new')}
-            className={`w-full cursor-pointer px-3 py-1.5 rounded-md border-base border-2 text-sm font-medium focus:outline-none transition ${
-              view === 'new'
-                ? 'bg-success text-success-content'
-                : 'bg-transparent text-gray-600 hover:bg-base-200'
-            }`}
-            aria-pressed={view === 'new'}
-          >
-            New Tasks
-          </button>
-
-          <button
-            onClick={() => setView('today')}
-            className={`w-full cursor-pointer px-3 py-1.5 rounded-md border-base border-2  text-sm font-medium focus:outline-none transition ${
-              view === 'today'
-                ? 'bg-info text-info-content'
-                : 'bg-transparent text-gray-600 hover:bg-info hover:text-info-content'
-            }`}
-            aria-pressed={view === 'today'}
-          >
-            Today
-          </button>
-
-          <button
-            onClick={() => setView('week')}
-            className={`w-full cursor-pointer px-3 py-1.5 rounded-md border-base border-2  text-sm font-medium focus:outline-none transition ${
-              view === 'week'
-                ? 'bg-primary text-primary-content'
-                : 'bg-transparent text-gray-600 hover:bg-primary hover:text-primary-content'
-            }`}
-            aria-pressed={view === 'week'}
-          >
-            This Week
-          </button>
-
-          <button
-            onClick={() => setView('imminent')}
-            className={`w-full cursor-pointer px-3 py-1.5 rounded-md border-base border-2  text-sm font-medium focus:outline-none transition ${
-              view === 'imminent'
-                ? 'bg-error text-error-content'
-                : 'bg-transparent text-gray-600 hover:bg-error hover:text-error-content'
-            }`}
-            aria-pressed={view === 'imminent'}
-          >
-            Imminent
-          </button>
-        </div>
+        {/* moved: view-toggle buttons will be rendered inside the task lists card below */}
       </div>
 
-  <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Task lists container with depth; ActivityHeatmap intentionally remains outside this background */}
-        <div className="bg-base-200/50 dark:bg-base-300/40 rounded-lg shadow-sm px-3 py-4 flex-1 min-h-0 overflow-hidden">
+        <div className="bg-base-200/50 dark:bg-base-300/40 rounded-lg shadow-sm px-3 py-4 flex-1 min-h-0 overflow-hidden ring-1 ring-inset ring-black/2 dark:ring-white/2">
           {/* Inner scroll area */}
+          {/* Toggle buttons (sub-card) */}
+          <div className="mb-2">
+            {/* Tones: make the buttons area a distinct, slightly lighter/warmer tone than the lists area below the divider */}
+            <div className="rounded-md bg-base-100/40 dark:bg-base-200/30">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button
+                  onClick={() => setView('new')}
+                  className={`w-full cursor-pointer px-3 py-1.5 rounded-md border-base border-2 text-sm font-medium focus:outline-none transition ${
+                    view === 'new'
+                      ? 'bg-success text-success-content'
+                      : 'bg-transparent text-gray-600 hover:bg-base-200'
+                  }`}
+                  aria-pressed={view === 'new'}
+                >
+                  New Tasks
+                </button>
+
+                <button
+                  onClick={() => setView('today')}
+                  className={`w-full cursor-pointer px-3 py-1.5 rounded-md border-base border-2  text-sm font-medium focus:outline-none transition ${
+                    view === 'today'
+                      ? 'bg-info text-info-content'
+                      : 'bg-transparent text-gray-600 hover:bg-info hover:text-info-content'
+                  }`}
+                  aria-pressed={view === 'today'}
+                >
+                  Today
+                </button>
+
+                <button
+                  onClick={() => setView('week')}
+                  className={`w-full cursor-pointer px-3 py-1.5 rounded-md border-base border-2  text-sm font-medium focus:outline-none transition ${
+                    view === 'week'
+                      ? 'bg-primary text-primary-content'
+                      : 'bg-transparent text-gray-600 hover:bg-primary hover:text-primary-content'
+                  }`}
+                  aria-pressed={view === 'week'}
+                >
+                  This Week
+                </button>
+
+                <button
+                  onClick={() => setView('imminent')}
+                  className={`w-full cursor-pointer px-3 py-1.5 rounded-md border-base border-2  text-sm font-medium focus:outline-none transition ${
+                    view === 'imminent'
+                      ? 'bg-error text-error-content'
+                      : 'bg-transparent text-gray-600 hover:bg-error hover:text-error-content'
+                  }`}
+                  aria-pressed={view === 'imminent'}
+                >
+                  Imminent
+                </button>
+              </div>
+            </div>
+          </div>
+          {/* divider between toggles and lists */}
+          <div className="-mx-3 border-t-2 border-base-500 dark:border-base-800 my-4" />
           <div className="pt-4 flex-1 min-h-0 overflow-y-auto pb-10">
             {view === 'imminent' && (
               <TaskSection

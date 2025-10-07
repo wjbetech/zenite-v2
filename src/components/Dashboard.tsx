@@ -351,50 +351,52 @@ export default function Dashboard() {
             {/* Toggle buttons: simple wrapper (no background card) */}
             <div className="mb-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {/* New Tasks - primary */}
                 <button
                   onClick={() => setView('new')}
-                  className={`w-full cursor-pointer px-3 py-1.5 rounded-md border-base border-2 text-sm font-medium focus:outline-none transition ${
-                    view === 'new'
-                      ? 'bg-success text-success-content'
-                      : 'bg-transparent text-gray-600 hover:bg-base-200'
-                  }`}
                   aria-pressed={view === 'new'}
+                  className={`btn w-full btn-primary btn-md border-2 border-black transition-all ${
+                    view === 'new'
+                      ? ''
+                      : 'bg-primary/20 text-primary-content/70 hover:bg-primary/30'
+                  }`}
                 >
                   New Tasks
                 </button>
 
+                {/* Today - secondary */}
                 <button
                   onClick={() => setView('today')}
-                  className={`w-full cursor-pointer px-3 py-1.5 rounded-md border-base border-2  text-sm font-medium focus:outline-none transition ${
-                    view === 'today'
-                      ? 'bg-info text-info-content'
-                      : 'bg-transparent text-gray-600 hover:bg-info hover:text-info-content'
-                  }`}
                   aria-pressed={view === 'today'}
+                  className={`btn w-full btn-secondary btn-md border-2 border-black transition-all ${
+                    view === 'today'
+                      ? ''
+                      : 'bg-secondary/18 text-secondary-content/70 hover:bg-secondary/25'
+                  }`}
                 >
                   Today
                 </button>
 
+                {/* This Week - accent */}
                 <button
                   onClick={() => setView('week')}
-                  className={`w-full cursor-pointer px-3 py-1.5 rounded-md border-base border-2  text-sm font-medium focus:outline-none transition ${
-                    view === 'week'
-                      ? 'bg-primary text-primary-content'
-                      : 'bg-transparent text-gray-600 hover:bg-primary hover:text-primary-content'
-                  }`}
                   aria-pressed={view === 'week'}
+                  className={`btn w-full btn-accent btn-md border-2 border-black transition-all ${
+                    view === 'week' ? '' : 'bg-accent/18 text-accent-content/70 hover:bg-accent/25'
+                  }`}
                 >
                   This Week
                 </button>
 
+                {/* Imminent - warning */}
                 <button
                   onClick={() => setView('imminent')}
-                  className={`w-full cursor-pointer px-3 py-1.5 rounded-md border-base border-2  text-sm font-medium focus:outline-none transition ${
-                    view === 'imminent'
-                      ? 'bg-error text-error-content'
-                      : 'bg-transparent text-gray-600 hover:bg-error hover:text-error-content'
-                  }`}
                   aria-pressed={view === 'imminent'}
+                  className={`btn w-full btn-warning btn-md border-2 border-black transition-all ${
+                    view === 'imminent'
+                      ? ''
+                      : 'bg-warning/18 text-warning-content/70 hover:bg-warning/25'
+                  }`}
                 >
                   Imminent
                 </button>

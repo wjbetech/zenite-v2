@@ -14,13 +14,7 @@ type Props = {
 };
 
 // Small adapter that maps the Task shape used by Dashboard -> DailyTaskCard
-export default function DashboardTaskCard({
-  task,
-  right,
-  onEdit,
-  onDelete,
-  onStatusChange,
-}: Props) {
+export default function DashboardTaskCard({ task, onEdit, onDelete, onStatusChange }: Props) {
   const dt: DailyTask = {
     id: (task.id as string) || 'unknown',
     title: (task.title as string) || 'Untitled',

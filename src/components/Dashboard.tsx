@@ -8,7 +8,7 @@ import NativeSortableDaily from './NativeSortableDaily';
 import ActivityHeatmap from './ActivityHeatmap';
 import type { Task } from '../lib/taskStore';
 import useTaskStore from '../lib/taskStore';
-import DailyTaskCard from './DailyTaskCard';
+import DashboardTaskCard from './DashboardTaskCard';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 import TaskModal from './TaskModal';
 import { useState } from 'react';
@@ -289,7 +289,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-3 flex flex-col flex-1 min-h-0 overflow-x-hidden">
+    <div className="mx-2 py-8 flex flex-col flex-1 min-h-0 overflow-x-visible">
       {tasksLoading && <div className="text-sm text-gray-500 pt-2">Loading tasks…</div>}
       {tasksError && (
         <div className="text-sm text-error" role="alert">
@@ -345,7 +345,7 @@ export default function Dashboard() {
 
       <div className="flex-1 flex flex-col min-h-0">
         {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
-        <div className="px-3 py-4 flex-1 min-h-0 overflow-visible">
+        <div className="px-3 py-4 flex-1 min-h-0">
           <div className="mx-auto w-full max-w-6xl">
             {/* Inner scroll area */}
             {/* Toggle buttons: simple wrapper (no background card) */}
@@ -403,7 +403,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <div className="pt-4 flex-1 min-h-0 overflow-y-auto pb-10">
+          <div className="pt-4 min-h-0 overflow-y-auto pb-10 w-full">
             {view === 'imminent' && (
               <TaskSection
                 expanded={!heatmapOpen}
@@ -498,31 +498,21 @@ export default function Dashboard() {
                       completed?: boolean;
                       href?: string;
                     }) => (
-                      <div className="" key={t.id}>
-                        <DailyTaskCard
-                          task={{
-                            id: t.id,
-                            title: t.title,
-                            notes: t.notes,
-                            completed: !!t.completed,
-                            started: !!t.started,
-                            href: t.href as string | undefined,
-                            projectName: undefined,
-                          }}
-                          onToggle={(id: string) => {
-                            const found = storeTasks.find((x) => x.id === id) ?? null;
-                            const started = !!found?.started;
-                            const completed = !!found?.completed;
-                            // cycle: none -> started -> done -> none
-                            const next =
-                              !started && !completed
-                                ? 'tilde'
-                                : started && !completed
-                                ? 'done'
-                                : 'none';
-                            handleStatusChange(id, next as 'none' | 'done' | 'tilde');
-                          }}
-                          onEdit={(task: { id: string }) => {
+                      <div className="px-1.5 sm:px-2" key={t.id}>
+                        <DashboardTaskCard
+                          task={
+                            t as unknown as {
+                              id: string;
+                              title: string;
+                              notes?: string;
+                              completed?: boolean;
+                              started?: boolean;
+                            }
+                          }
+                          onStatusChange={(id: string, status: 'none' | 'done' | 'tilde') =>
+                            handleStatusChange(id, status)
+                          }
+                          onEdit={(task) => {
                             const found = storeTasks.find((x) => x.id === task.id) ?? null;
                             if (found) {
                               setEditing(found);
@@ -600,31 +590,13 @@ export default function Dashboard() {
                         completed?: boolean;
                         href?: string;
                       }) => (
-                        <div className="mb-6" key={t.id}>
-                          <DailyTaskCard
-                            task={{
-                              id: t.id,
-                              title: t.title,
-                              notes: t.notes,
-                              completed: !!t.completed,
-                              started: !!t.started,
-                              href: t.href as string | undefined,
-                              projectName: undefined,
-                            }}
-                            onToggle={(id: string) => {
-                              const found = storeTasks.find((x) => x.id === id) ?? null;
-                              const started = !!found?.started;
-                              const completed = !!found?.completed;
-                              // cycle: none -> started -> done -> none
-                              const next =
-                                !started && !completed
-                                  ? 'tilde'
-                                  : started && !completed
-                                  ? 'done'
-                                  : 'none';
-                              handleStatusChange(id, next as 'none' | 'done' | 'tilde');
-                            }}
-                            onEdit={(task: { id: string }) => {
+                        <div className="mb-6 px-1.5 sm:px-2" key={t.id}>
+                          <DashboardTaskCard
+                            task={t as unknown as Partial<Task>}
+                            onStatusChange={(id: string, status: 'none' | 'done' | 'tilde') =>
+                              handleStatusChange(id, status)
+                            }
+                            onEdit={(task) => {
                               const found = storeTasks.find((x) => x.id === task.id) ?? null;
                               if (found) {
                                 setEditing(found);

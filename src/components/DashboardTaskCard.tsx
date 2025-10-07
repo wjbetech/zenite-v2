@@ -5,10 +5,10 @@ import DailyTaskCard, { DailyTask } from './DailyTaskCard';
 import type { Task as OldTask } from './TaskCard';
 
 type Props = {
-  task: OldTask;
+  task: Partial<OldTask>;
   right?: React.ReactNode;
   href?: string;
-  onEdit?: (task: OldTask) => void;
+  onEdit?: (task: Partial<OldTask>) => void;
   onDelete?: (id: string) => void;
   onStatusChange?: (id: string, status: 'none' | 'done' | 'tilde') => void;
 };
@@ -22,9 +22,9 @@ export default function DashboardTaskCard({
   onStatusChange,
 }: Props) {
   const dt: DailyTask = {
-    id: task.id,
-    title: task.title,
-    notes: task.notes,
+    id: (task.id as string) || 'unknown',
+    title: (task.title as string) || 'Untitled',
+    notes: task.notes as string | undefined,
     completed: !!task.completed,
     started: !!task.started,
     href: undefined,
@@ -54,7 +54,6 @@ export default function DashboardTaskCard({
           onDelete={(id) => onDelete?.(id)}
         />
       </div>
-      {right && <div className="ml-3 shrink-0">{right}</div>}
     </div>
   );
 }

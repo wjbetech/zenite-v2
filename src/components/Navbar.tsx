@@ -49,7 +49,7 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex w-full bg-base-200 backdrop-blur-sm border-b border-accent h-[72px]">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex w-full bg-base-200 backdrop-blur-sm h-[84px]">
       <div className="mx-auto px-4 py-3 flex items-center w-full justify-between">
         {/* Left: logo + links */}
         <div className="flex items-center gap-4">

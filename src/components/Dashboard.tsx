@@ -355,7 +355,7 @@ export default function Dashboard() {
                 <button
                   onClick={() => setView('new')}
                   aria-pressed={view === 'new'}
-                  className={`btn w-full btn-primary btn-md border-2 border-black transition-all ${
+                  className={`btn w-full btn-primary btn-md border-2 border-base-content transition-all ${
                     view === 'new'
                       ? ''
                       : 'bg-primary/20 text-primary-content/70 hover:bg-primary/30'
@@ -368,7 +368,7 @@ export default function Dashboard() {
                 <button
                   onClick={() => setView('today')}
                   aria-pressed={view === 'today'}
-                  className={`btn w-full btn-secondary btn-md border-2 border-black transition-all ${
+                  className={`btn w-full btn-secondary btn-md border-2 border-base-content transition-all ${
                     view === 'today'
                       ? ''
                       : 'bg-secondary/18 text-secondary-content/70 hover:bg-secondary/25'
@@ -381,7 +381,7 @@ export default function Dashboard() {
                 <button
                   onClick={() => setView('week')}
                   aria-pressed={view === 'week'}
-                  className={`btn w-full btn-accent btn-md border-2 border-black transition-all ${
+                  className={`btn w-full btn-accent btn-md border-2 border-base-content transition-all ${
                     view === 'week' ? '' : 'bg-accent/18 text-accent-content/70 hover:bg-accent/25'
                   }`}
                 >
@@ -392,7 +392,7 @@ export default function Dashboard() {
                 <button
                   onClick={() => setView('imminent')}
                   aria-pressed={view === 'imminent'}
-                  className={`btn w-full btn-warning btn-md border-2 border-black transition-all ${
+                  className={`btn w-full btn-warning btn-md border-2 border-base-content transition-all ${
                     view === 'imminent'
                       ? ''
                       : 'bg-warning/18 text-warning-content/70 hover:bg-warning/25'

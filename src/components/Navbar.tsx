@@ -145,19 +145,25 @@ export default function Navbar() {
               </div>
 
               <SignOutButton>
-                <button className="btn border-on btn-error cursor-pointer">Sign out</button>
+                <button className="btn border-2 border-base-content btn-warning cursor-pointer">
+                  Sign out
+                </button>
               </SignOutButton>
             </div>
           </SignedIn>
           <SignedOut>
             <SignInButton mode="modal">
               <span>
-                <button className="btn border-on btn-ghost cursor-pointer">Login</button>
+                <button className="btn border-2 border-base-content btn-success cursor-pointer">
+                  Login
+                </button>
               </span>
             </SignInButton>
             <SignInButton mode="modal">
               <span>
-                <button className="btn border-on btn-md btn-warning cursor-pointer">Sign up</button>
+                <button className="btn border-2 border-base-content btn-accent cursor-pointer">
+                  Sign up
+                </button>
               </span>
             </SignInButton>
           </SignedOut>

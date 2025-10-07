@@ -49,7 +49,7 @@ export default function ConfirmDeleteModal({
         </div>
         <div className="flex justify-end gap-2">
           <button
-            className="btn border-success-content text-neutral"
+            className="btn btn-warning border-2 border-base-content"
             onClick={onCancel}
             type="button"
             disabled={!!loading}
@@ -57,7 +57,7 @@ export default function ConfirmDeleteModal({
             Cancel
           </button>
           <button
-            className="btn btn-error border-error-content text-neutral-content"
+            className="btn btn-error border-2 border-base-content"
             onClick={onConfirm}
             type="button"
             disabled={!!loading}

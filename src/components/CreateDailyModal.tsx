@@ -93,10 +93,14 @@ export default function CreateDailyModal({ open, onOpenChange, onCreated }: Prop
           </select>
 
           <div className="modal-action mt-4">
-            <button type="button" className="btn" onClick={() => onOpenChange(false)}>
+            <button
+              type="button"
+              className="btn btn-warning border-2 border-base-content"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </button>
-            <button type="submit" className="btn btn-success">
+            <button type="submit" className="btn btn-success border-2 border-base-content">
               Create Daily
             </button>
           </div>

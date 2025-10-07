@@ -110,10 +110,19 @@ export default function ProjectModal({ open, onSubmit, onCancel, initial }: Proj
         {error ? <p className="mt-4 text-sm text-error">{error}</p> : null}
 
         <div className="mt-6 flex justify-end gap-2">
-          <button className="btn btn-ghost" type="button" onClick={onCancel} disabled={submitting}>
+          <button
+            className="btn btn-warning border-2 border-base-content"
+            type="button"
+            onClick={onCancel}
+            disabled={submitting}
+          >
             Cancel
           </button>
-          <button className="btn btn-success" type="submit" disabled={submitting}>
+          <button
+            className="btn btn-success border-2 border-base-content"
+            type="submit"
+            disabled={submitting}
+          >
             {submitting ? (isEdit ? 'Saving…' : 'Creating…') : isEdit ? 'Save' : 'Create'}
           </button>
         </div>

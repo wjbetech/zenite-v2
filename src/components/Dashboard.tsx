@@ -299,8 +299,8 @@ export default function Dashboard() {
       {/* Wrap header, heatmap and lists in shared px-3 container for alignment */}
       <div className="mx-auto w-full max-w-6xl px-3">
         {/* Header with depth */}
-        <div className="bg-base-200/60 dark:bg-base-300/50 rounded-lg border border-base-200/30 dark:border-base-300/30 shadow-md backdrop-blur-sm px-0 py-5 mb-6">
-          <div className="flex items-center justify-between">
+        <div className="bg-base-200/60 dark:bg-base-300/50 rounded-lg border border-base-200/30 dark:border-base-300/30 shadow-lg backdrop-blur-sm px-0 py-5 mb-6">
+          <div className="flex items-center justify-between px-2">
             <h1 className="text-2xl font-semibold">Dashboard</h1>
             <div className="flex items-center gap-2">
               <button
@@ -345,8 +345,8 @@ export default function Dashboard() {
 
       <div className="flex-1 flex flex-col min-h-0">
         {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
-        <div className="px-0 py-4 flex-1 min-h-0 overflow-visible">
-          <div className="mx-auto w-full max-w-6xl px-3">
+        <div className="px-3 py-4 flex-1 min-h-0 overflow-visible">
+          <div className="mx-auto w-full max-w-6xl">
             {/* Inner scroll area */}
             {/* Toggle buttons: simple wrapper (no background card) */}
             <div className="mb-4">
@@ -401,8 +401,6 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          {/* divider between toggles and lists */}
-          <div className="-mx-3 border-t-2 border-base-500 dark:border-base-800 my-4" />
           <div className="pt-4 flex-1 min-h-0 overflow-y-auto pb-10">
             {view === 'imminent' && (
               <TaskSection

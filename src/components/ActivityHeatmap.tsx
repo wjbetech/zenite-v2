@@ -401,7 +401,7 @@ export default function ActivityHeatmap({
   }
 
   return (
-    <div className="w-full mb-4">
+    <div className="w-full bg-base-200 px-3 pt-3 pb-1 rounded-lg shadow-xl mb-6">
       <div className="flex items-center mb-2 select-none">
         <h5
           className="font-semibold cursor-pointer"

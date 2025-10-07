@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+// Use a lightweight CSS transition for expand/collapse instead of framer-motion
 
 type RangeKey = '3m' | '1m' | '1w';
 export type ActivityMap = Record<string, number>; // yyyy-mm-dd -> count
@@ -428,83 +429,128 @@ export default function ActivityHeatmap({
           {effectiveOpen ? '−' : '+'}
         </button>
       </div>
-      {effectiveOpen ? (
-        <div className="transition-opacity duration-150 ease-in">
-          <div className="flex items-center gap-3 mt-3 mb-3">
-            <div className="flex rounded-md gap-3">
-              <button
-                onClick={() => setRange('3m')}
-                className={`cursor-pointer border-2 border-gray-400 px-3 py-1 rounded text-sm ${
-                  range === '3m' ? 'bg-base-100 shadow' : ''
-                }`}
-              >
-                3 months
-              </button>
-              <button
-                onClick={() => setRange('1m')}
-                className={`cursor-pointer border-2 border-gray-400 px-3 py-1 rounded text-sm ${
-                  range === '1m' ? 'bg-base-100 shadow' : ''
-                }`}
-              >
-                1 month
-              </button>
-              <button
-                onClick={() => setRange('1w')}
-                className={`cursor-pointer border-2 border-gray-400 px-3 py-1 rounded text-sm ${
-                  range === '1w' ? 'bg-base-100 shadow' : ''
-                }`}
-              >
-                1 week
-              </button>
-            </div>
-            <div className="text-xs text-gray-500">
-              {formatDateISO(startDate)} → {formatDateISO(endDate)}
-            </div>
+      {/* CSS transition-based expand/collapse (no external animation lib) */}
+      <div
+        className={`overflow-hidden transition-[max-height,opacity] duration-200 ease-in-out`}
+        style={{
+          maxHeight: effectiveOpen ? '2000px' : '0px',
+          opacity: effectiveOpen ? 1 : 0,
+        }}
+      >
+        <div className="flex items-center gap-3 mt-3 mb-3">
+          <div className="flex rounded-md gap-3">
+            <button
+              onClick={() => setRange('3m')}
+              className={`cursor-pointer border-2 border-gray-400 px-3 py-1 rounded text-sm ${
+                range === '3m' ? 'bg-base-100 shadow' : ''
+              }`}
+            >
+              3 months
+            </button>
+            <button
+              onClick={() => setRange('1m')}
+              className={`cursor-pointer border-2 border-gray-400 px-3 py-1 rounded text-sm ${
+                range === '1m' ? 'bg-base-100 shadow' : ''
+              }`}
+            >
+              1 month
+            </button>
+            <button
+              onClick={() => setRange('1w')}
+              className={`cursor-pointer border-2 border-gray-400 px-3 py-1 rounded text-sm ${
+                range === '1w' ? 'bg-base-100 shadow' : ''
+              }`}
+            >
+              1 week
+            </button>
           </div>
-          {tooltipPortal}
-          <div className="overflow-x-auto pb-4">
-            <div>
-              {range === '1w' && (
-                <div>
-                  <div className="flex gap-2 items-center mb-2">
-                    {(() => {
-                      const start = addDays(endDate, -6);
-                      return Array.from({ length: 7 }).map((_, i) => {
-                        const d = addDays(start, i);
+          <div className="text-xs text-gray-500">
+            {formatDateISO(startDate)} → {formatDateISO(endDate)}
+          </div>
+        </div>
+        {tooltipPortal}
+        <div className="overflow-x-auto pb-4">
+          <div>
+            {range === '1w' && (
+              <div>
+                <div className="flex gap-2 items-center mb-2">
+                  {(() => {
+                    const start = addDays(endDate, -6);
+                    return Array.from({ length: 7 }).map((_, i) => {
+                      const d = addDays(start, i);
+                      return (
+                        <div key={i} className="text-xs text-gray-500 w-8 text-center">
+                          {d.toLocaleDateString(undefined, { weekday: 'short' }).slice(0, 2)}
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+                <div className="flex gap-2">
+                  {(() => {
+                    const start = addDays(endDate, -6);
+                    const arr: Date[] = [];
+                    for (let cur = new Date(start); cur <= endDate; cur = addDays(cur, 1))
+                      arr.push(new Date(cur));
+                    return arr.map((d, i) => (
+                      <div key={i} className="relative">
+                        {renderDaySquare(d, 'w-8 h-8 rounded')}
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+            )}
+            {range === '1m' &&
+              (() => {
+                const monthDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+                const monthWeeks = weeksForMonth(monthDate);
+                const cells = monthWeeks.flat();
+                const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                return (
+                  <div>
+                    <div className="mb-2 font-semibold text-sm">
+                      {monthDate.toLocaleDateString(undefined, {
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                    </div>
+                    <div className="grid grid-cols-7 gap-2 text-xs text-gray-500 mb-1 w-max">
+                      {weekdays.map((w, i) => (
+                        <div key={i} className="text-center w-5">
+                          {w}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-2 w-max">
+                      {cells.map((d, i) => {
+                        const inMonth = d.getMonth() === monthDate.getMonth();
                         return (
-                          <div key={i} className="text-xs text-gray-500 w-8 text-center">
-                            {d.toLocaleDateString(undefined, { weekday: 'short' }).slice(0, 2)}
+                          <div key={i} className={`relative ${inMonth ? '' : 'opacity-50'}`}>
+                            {renderDaySquare(d, 'w-5 h-5 rounded-sm')}
                           </div>
                         );
-                      });
-                    })()}
+                      })}
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    {(() => {
-                      const start = addDays(endDate, -6);
-                      const arr: Date[] = [];
-                      for (let cur = new Date(start); cur <= endDate; cur = addDays(cur, 1))
-                        arr.push(new Date(cur));
-                      return arr.map((d, i) => (
-                        <div key={i} className="relative">
-                          {renderDaySquare(d, 'w-8 h-8 rounded')}
-                        </div>
-                      ));
-                    })()}
-                  </div>
-                </div>
-              )}
-              {range === '1m' &&
-                (() => {
-                  const monthDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+                );
+              })()}
+            {range === '3m' && (
+              <div className="flex gap-6 overflow-auto">
+                {Array.from({ length: 3 }).map((_, idx) => {
+                  const monthDate = new Date(
+                    endDate.getFullYear(),
+                    endDate.getMonth() - (2 - idx),
+                    1,
+                  );
                   const monthWeeks = weeksForMonth(monthDate);
                   const cells = monthWeeks.flat();
                   const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                   return (
-                    <div>
+                    <div key={idx} className="flex-none w-max">
                       <div className="mb-2 font-semibold text-sm">
                         {monthDate.toLocaleDateString(undefined, {
-                          month: 'long',
+                          month: 'short',
                           year: 'numeric',
                         })}
                       </div>
@@ -516,65 +562,25 @@ export default function ActivityHeatmap({
                         ))}
                       </div>
                       <div className="grid grid-cols-7 gap-2 w-max">
-                        {cells.map((d, i) => {
-                          const inMonth = d.getMonth() === monthDate.getMonth();
-                          return (
-                            <div key={i} className={`relative ${inMonth ? '' : 'opacity-50'}`}>
-                              {renderDaySquare(d, 'w-5 h-5 rounded-sm')}
-                            </div>
-                          );
-                        })}
+                        {cells.map((d, i) => (
+                          <div
+                            key={i}
+                            className={`relative ${
+                              d.getMonth() === monthDate.getMonth() ? '' : 'opacity-50'
+                            }`}
+                          >
+                            {renderDaySquare(d, 'w-5 h-5 rounded-sm')}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   );
-                })()}
-              {range === '3m' && (
-                <div className="flex gap-6 overflow-auto">
-                  {Array.from({ length: 3 }).map((_, idx) => {
-                    const monthDate = new Date(
-                      endDate.getFullYear(),
-                      endDate.getMonth() - (2 - idx),
-                      1,
-                    );
-                    const monthWeeks = weeksForMonth(monthDate);
-                    const cells = monthWeeks.flat();
-                    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-                    return (
-                      <div key={idx} className="flex-none w-max">
-                        <div className="mb-2 font-semibold text-sm">
-                          {monthDate.toLocaleDateString(undefined, {
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </div>
-                        <div className="grid grid-cols-7 gap-2 text-xs text-gray-500 mb-1 w-max">
-                          {weekdays.map((w, i) => (
-                            <div key={i} className="text-center w-5">
-                              {w}
-                            </div>
-                          ))}
-                        </div>
-                        <div className="grid grid-cols-7 gap-2 w-max">
-                          {cells.map((d, i) => (
-                            <div
-                              key={i}
-                              className={`relative ${
-                                d.getMonth() === monthDate.getMonth() ? '' : 'opacity-50'
-                              }`}
-                            >
-                              {renderDaySquare(d, 'w-5 h-5 rounded-sm')}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+                })}
+              </div>
+            )}
           </div>
         </div>
-      ) : null}
+      </div>
     </div>
   );
 }

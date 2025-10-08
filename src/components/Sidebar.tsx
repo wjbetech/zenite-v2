@@ -80,7 +80,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
 
   if (!showSidebar) return null;
 
-  const sidebarWidth = collapsed ? '64px' : '208px';
+  const sidebarWidth = collapsed ? '64px' : '228px';
 
   return (
     <>

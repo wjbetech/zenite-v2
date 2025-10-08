@@ -8,7 +8,7 @@ import NativeSortableDaily from './NativeSortableDaily';
 import ActivityHeatmap from './ActivityHeatmap';
 import type { Task } from '../lib/taskStore';
 import useTaskStore from '../lib/taskStore';
-import DailyTaskCard from './DailyTaskCard';
+import DashboardTaskCard from './DashboardTaskCard';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 import TaskModal from './TaskModal';
 import { useState } from 'react';
@@ -30,7 +30,7 @@ export default function Dashboard() {
   const loadTasks = useTaskStore((s) => s.loadTasks);
   const tasksLoading = useTaskStore((s) => s.loading);
   const tasksError = useTaskStore((s) => s.error);
-  const [heatmapOpen, setHeatmapOpen] = useState(true);
+  const [heatmapOpen, setHeatmapOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   // On mount, read persisted activity open state from cookie so Dashboard
   // reflects the user's last choice. We do this in an effect to avoid SSR
@@ -289,45 +289,48 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-x-hidden">
-      {tasksLoading && <div className="text-sm text-gray-500 px-4 pt-2">Loading tasks…</div>}
+    <div className="mx-2 py-8 flex flex-col flex-1 min-h-0 overflow-x-visible">
+      {tasksLoading && <div className="text-sm text-gray-500 pt-2">Loading tasks…</div>}
       {tasksError && (
-        <div className="px-4 text-sm text-error" role="alert">
+        <div className="text-sm text-error" role="alert">
           {tasksError}
         </div>
       )}
-      <div className="flex items-center justify-between mb-8 px-4 pt-4">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <div className="flex items-center gap-2">
-          <button
-            className="btn btn-md btn-primary border-2 border-base-content flex items-center"
-            type="button"
-            onClick={() => {
-              setEditing(undefined);
-              setModalMode('task');
-              setModalOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            New Task
-          </button>
-          <button
-            className="btn btn-md btn-secondary border-2 border-base-content flex items-center"
-            type="button"
-            onClick={() => {
-              setEditing(undefined);
-              setModalMode('project');
-              setModalOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            New Project
-          </button>
+      {/* Wrap header, heatmap and lists in shared px-3 container for alignment */}
+      <div className="mx-auto w-full max-w-6xl px-3">
+        {/* Header with depth */}
+        <div className="bg-base-200/60 dark:bg-base-300/50 rounded-lg border border-base-200/30 dark:border-base-300/30 shadow-lg backdrop-blur-sm px-0 py-5 mb-6">
+          <div className="flex items-center justify-between px-2">
+            <h1 className="text-2xl font-semibold">Dashboard</h1>
+            <div className="flex items-center gap-2">
+              <button
+                className="btn btn-md btn-primary border-2 border-base-content flex items-center"
+                type="button"
+                onClick={() => {
+                  setEditing(undefined);
+                  setModalMode('task');
+                  setModalOpen(true);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                New Task
+              </button>
+              <button
+                className="btn btn-md btn-secondary border-2 border-base-content flex items-center"
+                type="button"
+                onClick={() => {
+                  setEditing(undefined);
+                  setModalMode('project');
+                  setModalOpen(true);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                New Project
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Activity heatmap under the title */}
-      <div className="px-4">
         <ActivityHeatmap
           open={heatmapOpen}
           onOpenChange={(v) => {
@@ -337,222 +340,130 @@ export default function Dashboard() {
           activity={activityMap}
           activityDetails={activityDetails}
         />
-        <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3">
-          <button
-            onClick={() => setView('new')}
-            className={`w-full px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
-              view === 'new'
-                ? 'bg-success text-success-content'
-                : 'bg-transparent text-gray-600 hover:bg-base-200'
-            }`}
-            aria-pressed={view === 'new'}
-          >
-            New Tasks
-          </button>
-
-          <button
-            onClick={() => setView('today')}
-            className={`w-full px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
-              view === 'today'
-                ? 'bg-info text-info-content'
-                : 'bg-transparent text-gray-600 hover:bg-info hover:text-info-content'
-            }`}
-            aria-pressed={view === 'today'}
-          >
-            Today
-          </button>
-
-          <button
-            onClick={() => setView('week')}
-            className={`w-full px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
-              view === 'week'
-                ? 'bg-primary text-primary-content'
-                : 'bg-transparent text-gray-600 hover:bg-primary hover:text-primary-content'
-            }`}
-            aria-pressed={view === 'week'}
-          >
-            This Week
-          </button>
-
-          <button
-            onClick={() => setView('imminent')}
-            className={`w-full px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none transition ${
-              view === 'imminent'
-                ? 'bg-error text-error-content'
-                : 'bg-transparent text-gray-600 hover:bg-error hover:text-error-content'
-            }`}
-            aria-pressed={view === 'imminent'}
-          >
-            Imminent
-          </button>
-        </div>
+        {/* moved: view-toggle buttons will be rendered inside the task lists card below */}
       </div>
 
       <div className="flex-1 flex flex-col min-h-0">
-        {/* Inner scrollable area that contains only the task lists; it fills remaining space and scrolls */}
-        <div className="pt-4 pl-4 pr-4 flex-1 min-h-0 overflow-y-auto pb-10">
-          {view === 'imminent' && (
-            <TaskSection
-              expanded={!heatmapOpen}
-              accentClass="border-rose-400"
-              tasks={soonest}
-              noInnerScroll
-              renderRight={(t: Task) => {
-                const days = daysUntil(t.dueDate);
-                const dueLabel = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days}d`;
-                return <span className="text-xs text-gray-100">{dueLabel}</span>;
-              }}
-              onEdit={(t) => {
-                setEditing(t);
-                setModalOpen(true);
-              }}
-              onDelete={(id) => {
-                const found = storeTasks.find((x) => x.id === id) ?? null;
-                setDeleting(found);
-              }}
-              onStatusChange={handleStatusChange}
-            />
-          )}
+        {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
+        <div className="px-3 py-4 flex-1 min-h-0">
+          <div className="mx-auto w-full max-w-6xl">
+            {/* Inner scroll area */}
+            {/* Toggle buttons: simple wrapper (no background card) */}
+            <div className="mb-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {/* New Tasks - primary */}
+                <button
+                  onClick={() => setView('new')}
+                  aria-pressed={view === 'new'}
+                  className={`btn w-full btn-primary btn-md border-2 border-base-content transition-all ${
+                    view === 'new'
+                      ? ''
+                      : 'bg-primary/20 text-primary-content/70 hover:bg-primary/30'
+                  }`}
+                >
+                  New Tasks
+                </button>
 
-          {view === 'new' && (
-            <TaskSection
-              expanded={!heatmapOpen}
-              accentClass="border-emerald-400"
-              tasks={newTasks}
-              noInnerScroll
-              onEdit={(t) => {
-                setEditing(t);
-                setModalOpen(true);
-              }}
-              onDelete={(id) => {
-                const found = storeTasks.find((x) => x.id === id) ?? null;
-                setDeleting(found);
-              }}
-              onStatusChange={handleStatusChange}
-            />
-          )}
+                {/* Today - secondary */}
+                <button
+                  onClick={() => setView('today')}
+                  aria-pressed={view === 'today'}
+                  className={`btn w-full btn-secondary btn-md border-2 border-base-content transition-all ${
+                    view === 'today'
+                      ? ''
+                      : 'bg-secondary/18 text-secondary-content/70 hover:bg-secondary/25'
+                  }`}
+                >
+                  Today
+                </button>
 
-          {view === 'today' &&
-            (today.length === 0 ? (
+                {/* This Week - accent */}
+                <button
+                  onClick={() => setView('week')}
+                  aria-pressed={view === 'week'}
+                  className={`btn w-full btn-accent btn-md border-2 border-base-content transition-all ${
+                    view === 'week' ? '' : 'bg-accent/18 text-accent-content/70 hover:bg-accent/25'
+                  }`}
+                >
+                  This Week
+                </button>
+
+                {/* Imminent - warning */}
+                <button
+                  onClick={() => setView('imminent')}
+                  aria-pressed={view === 'imminent'}
+                  className={`btn w-full btn-warning btn-md border-2 border-base-content transition-all ${
+                    view === 'imminent'
+                      ? ''
+                      : 'bg-warning/18 text-warning-content/70 hover:bg-warning/25'
+                  }`}
+                >
+                  Imminent
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="pt-4 min-h-0 overflow-y-auto pb-10 w-full">
+            {view === 'imminent' && (
               <TaskSection
                 expanded={!heatmapOpen}
-                accentClass="border-sky-500"
-                tasks={today}
+                accentClass="border-rose-400"
+                tasks={soonest}
                 noInnerScroll
-                renderRight={() => <span className="text-xs text-gray-100">Due today</span>}
+                renderRight={(t: Task) => {
+                  const days = daysUntil(t.dueDate);
+                  const dueLabel = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days}d`;
+                  return <span className="text-xs text-gray-100">{dueLabel}</span>;
+                }}
                 onEdit={(t) => {
                   setEditing(t);
                   setModalOpen(true);
                 }}
-                onDelete={(id) => deleteTask(id)}
+                onDelete={(id) => {
+                  const found = storeTasks.find((x) => x.id === id) ?? null;
+                  setDeleting(found);
+                }}
                 onStatusChange={handleStatusChange}
               />
-            ) : (
-              <NativeSortableDaily
-                items={today.map((t) => ({
-                  id: t.id,
-                  title: t.title,
-                  notes: t.notes,
-                  started: !!t.started,
-                  completed: !!t.completed,
-                  // omit `href` in draggable lists so the card isn't wrapped with an anchor
-                }))}
-                onReorder={(next) => {
-                  const idOrder = next.map((n) => n.id);
-                  const reordered = idOrder
-                    .map((id) => storeTasks.find((t) => t.id === id))
-                    .filter(Boolean) as typeof storeTasks;
-                  // Determine the original positions of the subset within the global store
-                  const positions: number[] = [];
-                  const idSet = new Set(idOrder);
-                  storeTasks.forEach((t, idx) => {
-                    if (idSet.has(t.id)) positions.push(idx);
-                  });
-                  // Place reordered items back into their original indices
-                  const merged = [...storeTasks];
-                  for (let i = 0; i < positions.length; i++) {
-                    const pos = positions[i];
-                    merged[pos] = reordered[i] || merged[pos];
-                  }
-                  setTasks(merged);
-                }}
-                renderItem={(t: {
-                  id: string;
-                  title: string;
-                  notes?: string;
-                  started?: boolean;
-                  completed?: boolean;
-                  href?: string;
-                }) => (
-                  <div className="mb-6" key={t.id}>
-                    <DailyTaskCard
-                      task={{
-                        id: t.id,
-                        title: t.title,
-                        notes: t.notes,
-                        completed: !!t.completed,
-                        started: !!t.started,
-                        href: t.href as string | undefined,
-                        projectName: undefined,
-                      }}
-                      onToggle={(id: string) => {
-                        const found = storeTasks.find((x) => x.id === id) ?? null;
-                        const started = !!found?.started;
-                        const completed = !!found?.completed;
-                        // cycle: none -> started -> done -> none
-                        const next =
-                          !started && !completed
-                            ? 'tilde'
-                            : started && !completed
-                            ? 'done'
-                            : 'none';
-                        handleStatusChange(id, next as 'none' | 'done' | 'tilde');
-                      }}
-                      onEdit={(task: { id: string }) => {
-                        const found = storeTasks.find((x) => x.id === task.id) ?? null;
-                        if (found) {
-                          setEditing(found);
-                          setModalOpen(true);
-                        }
-                      }}
-                      onDelete={(id: string) => {
-                        const found = storeTasks.find((x) => x.id === id) ?? null;
-                        setDeleting(found);
-                      }}
-                    />
-                  </div>
-                )}
-                containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
-              />
-            ))}
+            )}
 
-          {view === 'week' && (
-            <div className="">
-              {week.length === 0 ? (
+            {view === 'new' && (
+              <TaskSection
+                expanded={!heatmapOpen}
+                accentClass="border-emerald-400"
+                tasks={newTasks}
+                noInnerScroll
+                onEdit={(t) => {
+                  setEditing(t);
+                  setModalOpen(true);
+                }}
+                onDelete={(id) => {
+                  const found = storeTasks.find((x) => x.id === id) ?? null;
+                  setDeleting(found);
+                }}
+                onStatusChange={handleStatusChange}
+              />
+            )}
+
+            {view === 'today' &&
+              (today.length === 0 ? (
                 <TaskSection
                   expanded={!heatmapOpen}
-                  accentClass="border-indigo-300"
-                  tasks={week}
+                  accentClass="border-sky-500"
+                  tasks={today}
                   noInnerScroll
-                  renderRight={(t: Task) => {
-                    const days = daysUntil(t.dueDate);
-                    const dueLabel = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days}d`;
-                    return <span className="text-xs text-gray-100">{dueLabel}</span>;
-                  }}
+                  renderRight={() => <span className="text-xs text-gray-100">Due today</span>}
                   onEdit={(t) => {
                     setEditing(t);
                     setModalOpen(true);
                   }}
-                  onDelete={(id) => {
-                    const found = storeTasks.find((x) => x.id === id) ?? null;
-                    setDeleting(found);
-                  }}
+                  onDelete={(id) => deleteTask(id)}
                   onStatusChange={handleStatusChange}
                 />
               ) : (
-                <div className="p-0">
+                <div className="pt-2">
                   <NativeSortableDaily
-                    items={week.map((t) => ({
+                    items={today.map((t) => ({
                       id: t.id,
                       title: t.title,
                       notes: t.notes,
@@ -565,11 +476,13 @@ export default function Dashboard() {
                       const reordered = idOrder
                         .map((id) => storeTasks.find((t) => t.id === id))
                         .filter(Boolean) as typeof storeTasks;
+                      // Determine the original positions of the subset within the global store
                       const positions: number[] = [];
                       const idSet = new Set(idOrder);
                       storeTasks.forEach((t, idx) => {
                         if (idSet.has(t.id)) positions.push(idx);
                       });
+                      // Place reordered items back into their original indices
                       const merged = [...storeTasks];
                       for (let i = 0; i < positions.length; i++) {
                         const pos = positions[i];
@@ -585,31 +498,21 @@ export default function Dashboard() {
                       completed?: boolean;
                       href?: string;
                     }) => (
-                      <div className="mb-6" key={t.id}>
-                        <DailyTaskCard
-                          task={{
-                            id: t.id,
-                            title: t.title,
-                            notes: t.notes,
-                            completed: !!t.completed,
-                            started: !!t.started,
-                            href: t.href as string | undefined,
-                            projectName: undefined,
-                          }}
-                          onToggle={(id: string) => {
-                            const found = storeTasks.find((x) => x.id === id) ?? null;
-                            const started = !!found?.started;
-                            const completed = !!found?.completed;
-                            // cycle: none -> started -> done -> none
-                            const next =
-                              !started && !completed
-                                ? 'tilde'
-                                : started && !completed
-                                ? 'done'
-                                : 'none';
-                            handleStatusChange(id, next as 'none' | 'done' | 'tilde');
-                          }}
-                          onEdit={(task: { id: string }) => {
+                      <div className="px-1.5 sm:px-2" key={t.id}>
+                        <DashboardTaskCard
+                          task={
+                            t as unknown as {
+                              id: string;
+                              title: string;
+                              notes?: string;
+                              completed?: boolean;
+                              started?: boolean;
+                            }
+                          }
+                          onStatusChange={(id: string, status: 'none' | 'done' | 'tilde') =>
+                            handleStatusChange(id, status)
+                          }
+                          onEdit={(task) => {
                             const found = storeTasks.find((x) => x.id === task.id) ?? null;
                             if (found) {
                               setEditing(found);
@@ -626,9 +529,94 @@ export default function Dashboard() {
                     containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
                   />
                 </div>
-              )}
-            </div>
-          )}
+              ))}
+
+            {view === 'week' && (
+              <div className="">
+                {week.length === 0 ? (
+                  <TaskSection
+                    expanded={!heatmapOpen}
+                    accentClass="border-indigo-300"
+                    tasks={week}
+                    noInnerScroll
+                    renderRight={(t: Task) => {
+                      const days = daysUntil(t.dueDate);
+                      const dueLabel = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days}d`;
+                      return <span className="text-xs text-gray-100">{dueLabel}</span>;
+                    }}
+                    onEdit={(t) => {
+                      setEditing(t);
+                      setModalOpen(true);
+                    }}
+                    onDelete={(id) => {
+                      const found = storeTasks.find((x) => x.id === id) ?? null;
+                      setDeleting(found);
+                    }}
+                    onStatusChange={handleStatusChange}
+                  />
+                ) : (
+                  <div className="p-0 pt-2">
+                    <NativeSortableDaily
+                      items={week.map((t) => ({
+                        id: t.id,
+                        title: t.title,
+                        notes: t.notes,
+                        started: !!t.started,
+                        completed: !!t.completed,
+                        // omit `href` in draggable lists so the card isn't wrapped with an anchor
+                      }))}
+                      onReorder={(next) => {
+                        const idOrder = next.map((n) => n.id);
+                        const reordered = idOrder
+                          .map((id) => storeTasks.find((t) => t.id === id))
+                          .filter(Boolean) as typeof storeTasks;
+                        const positions: number[] = [];
+                        const idSet = new Set(idOrder);
+                        storeTasks.forEach((t, idx) => {
+                          if (idSet.has(t.id)) positions.push(idx);
+                        });
+                        const merged = [...storeTasks];
+                        for (let i = 0; i < positions.length; i++) {
+                          const pos = positions[i];
+                          merged[pos] = reordered[i] || merged[pos];
+                        }
+                        setTasks(merged);
+                      }}
+                      renderItem={(t: {
+                        id: string;
+                        title: string;
+                        notes?: string;
+                        started?: boolean;
+                        completed?: boolean;
+                        href?: string;
+                      }) => (
+                        <div className="mb-6 px-1.5 sm:px-2" key={t.id}>
+                          <DashboardTaskCard
+                            task={t as unknown as Partial<Task>}
+                            onStatusChange={(id: string, status: 'none' | 'done' | 'tilde') =>
+                              handleStatusChange(id, status)
+                            }
+                            onEdit={(task) => {
+                              const found = storeTasks.find((x) => x.id === task.id) ?? null;
+                              if (found) {
+                                setEditing(found);
+                                setModalOpen(true);
+                              }
+                            }}
+                            onDelete={(id: string) => {
+                              const found = storeTasks.find((x) => x.id === id) ?? null;
+                              setDeleting(found);
+                            }}
+                          />
+                        </div>
+                      )}
+                      containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

@@ -49,7 +49,7 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex w-full bg-base-200 backdrop-blur-sm border-b border-accent h-[72px]">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex w-full bg-base-200 backdrop-blur-sm h-[84px]">
       <div className="mx-auto px-4 py-3 flex items-center w-full justify-between">
         {/* Left: logo + links */}
         <div className="flex items-center gap-4">
@@ -58,7 +58,7 @@ export default function Navbar() {
             className="flex items-center gap-3 text-2xl md:text-3xl font-extrabold text-emerald-600"
           >
             <DiamondLogo className="w-7 h-7 inline-block transform translate-y-0.5" />
-            <span className="text-emerald-600">Zenite</span>
+            <span className="text-emerald-600 text-4xl font-extrabold">Zenite</span>
           </Link>
         </div>
 
@@ -145,19 +145,25 @@ export default function Navbar() {
               </div>
 
               <SignOutButton>
-                <button className="btn border-on btn-accent cursor-pointer">Sign out</button>
+                <button className="btn border-2 border-base-content btn-warning cursor-pointer">
+                  Sign out
+                </button>
               </SignOutButton>
             </div>
           </SignedIn>
           <SignedOut>
             <SignInButton mode="modal">
               <span>
-                <button className="btn border-on btn-ghost cursor-pointer">Login</button>
+                <button className="btn border-2 border-base-content btn-success cursor-pointer">
+                  Login
+                </button>
               </span>
             </SignInButton>
             <SignInButton mode="modal">
               <span>
-                <button className="btn border-on btn-md btn-warning cursor-pointer">Sign up</button>
+                <button className="btn border-2 border-base-content btn-accent cursor-pointer">
+                  Sign up
+                </button>
               </span>
             </SignInButton>
           </SignedOut>

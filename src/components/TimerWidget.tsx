@@ -190,16 +190,28 @@ export default function TimerWidget({
             )}
 
             <div className="flex items-center gap-3">
-              <button onClick={reset} title="Reset" className="p-2 rounded-md hover:bg-base-200">
+              <button
+                onClick={reset}
+                title="Reset"
+                className="p-2 rounded-md hover:bg-base-200 cursor-pointer"
+              >
                 <RefreshCw className="w-5 h-5" />
               </button>
 
               {running ? (
-                <button onClick={stop} title="Stop" className="p-2 rounded-md hover:bg-gray-100">
+                <button
+                  onClick={stop}
+                  title="Stop"
+                  className="p-2 rounded-md hover:bg-gray-100 cursor-pointer"
+                >
                   <Square className="w-5 h-5" />
                 </button>
               ) : (
-                <button onClick={start} title="Start" className="p-2 rounded-md hover:bg-gray-100">
+                <button
+                  onClick={start}
+                  title="Start"
+                  className="p-2 rounded-md hover:bg-gray-100 cursor-pointer"
+                >
                   <Play className="w-5 h-5" />
                 </button>
               )}

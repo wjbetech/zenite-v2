@@ -363,10 +363,18 @@ export default function TaskModal({
 
         <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
           {submitError && <span className="mr-auto text-sm text-error">{submitError}</span>}
-          <button className="btn btn-error" onClick={() => onOpenChange(false)} type="button">
+          <button
+            className="btn btn-warning border-2 border-base-content"
+            onClick={() => onOpenChange(false)}
+            type="button"
+          >
             Cancel
           </button>
-          <button className="btn btn-success" type="submit" disabled={saving}>
+          <button
+            className="btn btn-success border-2 border-base-content"
+            type="submit"
+            disabled={saving}
+          >
             {saving ? 'Saving…' : initial?.id ? 'Save' : 'Create'}
           </button>
         </div>

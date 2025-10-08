@@ -17,7 +17,7 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "ci": "npm run lint && npm run typecheck && npm run prisma:generate && npm run build",
-    "postinstall": "prisma generate && sh ./scripts/install-git-hooks.sh",
+    "postinstall": "prisma generate && bash ./scripts/install-git-hooks.sh",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev --name init",
     "prisma:db:push": "prisma db push",
@@ -28,7 +28,8 @@
     "tailwind:build": "npx tailwindcss -c tailwind.config.cjs -i ./src/app/globals.css -o ./public/tailwind.css",
     "tailwind:watch": "npx tailwindcss -c tailwind.config.cjs -i ./src/app/globals.css -o ./public/tailwind.css --watch",
     "test": "jest --passWithNoTests --runInBand",
-    "install:hooks": "sh ./scripts/install-git-hooks.sh"
+    "test:pattern": "jest --passWithNoTests --runInBand",
+    "install:hooks": "bash ./scripts/install-git-hooks.sh"
   },
   "prisma": {
     "schema": "./prisma/schema.prisma"

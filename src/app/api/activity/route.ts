@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import prismaClient from '../../../../src/lib/prisma';
 
+// Prevent static generation - this route must run at request time
+export const dynamic = 'force-dynamic';
+
 // Prisma client will have the `activity` model once the schema is migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const prisma = prismaClient as any;

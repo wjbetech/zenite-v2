@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import type { Task as PrismaTask } from '@prisma/client';
 import prisma from '../../../../src/lib/prisma';
 
+// Prevent static generation - this route must run at request time
+export const dynamic = 'force-dynamic';
+
 const FALLBACK_OWNER_EMAIL = process.env.DEFAULT_TASK_OWNER_EMAIL ?? 'local@zenite.dev';
 const FALLBACK_OWNER_NAME = process.env.DEFAULT_TASK_OWNER_NAME ?? 'Zenite Demo User';
 

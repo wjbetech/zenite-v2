@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import prisma from '../../../../../lib/prisma';
 
+// Prevent static generation - this route must run at request time
+export const dynamic = 'force-dynamic';
+
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(request: Request, { params }: RouteContext) {

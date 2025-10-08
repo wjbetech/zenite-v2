@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import prisma from '../../../../src/lib/prisma';
 import { createProjectSchema, updateProjectSchema } from '../../../lib/validators/projects';
 
+// Prevent static generation - this route must run at request time
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const projects = await prisma.project.findMany({

@@ -30,7 +30,7 @@ export default function Dashboard() {
   const loadTasks = useTaskStore((s) => s.loadTasks);
   const tasksLoading = useTaskStore((s) => s.loading);
   const tasksError = useTaskStore((s) => s.error);
-  const [heatmapOpen, setHeatmapOpen] = useState(true);
+  const [heatmapOpen, setHeatmapOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   // On mount, read persisted activity open state from cookie so Dashboard
   // reflects the user's last choice. We do this in an effect to avoid SSR

@@ -23,6 +23,7 @@
     "tailwind:build": "npx tailwindcss -c tailwind.config.cjs -i ./src/app/globals.css -o ./public/tailwind.css",
     "tailwind:watch": "npx tailwindcss -c tailwind.config.cjs -i ./src/app/globals.css -o ./public/tailwind.css --watch",
     "test": "jest --passWithNoTests --runInBand",
+    "test:pattern": "jest --passWithNoTests --runInBand",
     "install:hooks": "bash ./scripts/install-git-hooks.sh"
   },
   "prisma": {

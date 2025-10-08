@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import Dashboard from '../Dashboard';
 jest.mock('../../lib/taskStore', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { createUseTaskStoreMock } = require('../../test-utils/useTaskStoreMock');
   const { mock, state, setMockState } = createUseTaskStoreMock({ loading: true });
   (global as unknown as Record<string, unknown>).__useTaskStoreMock = { mock, state, setMockState };

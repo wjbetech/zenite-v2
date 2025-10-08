@@ -2,6 +2,7 @@ import React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import Dashboard from '../Dashboard';
 jest.mock('../../lib/taskStore', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { createUseTaskStoreMock } = require('../../test-utils/useTaskStoreMock');
   const { mock, state } = createUseTaskStoreMock({});
   // expose to the test via global so assertions can inspect the spy

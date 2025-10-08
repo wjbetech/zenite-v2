@@ -3,12 +3,22 @@ import { render, screen } from '@testing-library/react';
 import Dashboard from '../Dashboard';
 
 jest.mock('../../lib/taskStore', () => {
-  // build the mock inside the factory to satisfy jest's hoisting safety
-  const { createUseTaskStoreMock } = require('../../test-utils/useTaskStoreMock');
+  // Inline selector-style mock to avoid require() in the factory
   const sampleTask = { id: 't1', title: 'Test task', completed: false };
-  const { mock, state, setMockState } = createUseTaskStoreMock({ tasks: [sampleTask] });
-  // expose for debugging if needed
-  (global as unknown as Record<string, unknown>).__useTaskStoreMock = { mock, state, setMockState };
+  const state = {
+    tasks: [sampleTask],
+    loading: false,
+    error: null,
+    loadTasks: jest.fn().mockResolvedValue(undefined),
+    setTasks: jest.fn(),
+    deleteTask: jest.fn(),
+    updateTask: jest.fn(),
+    createTask: jest.fn(),
+    resetDailiesIfNeeded: jest.fn(),
+    resetDailiesNow: jest.fn(),
+  } as const;
+
+  const mock = (selector: (s: unknown) => unknown) => selector(state as unknown);
   return { __esModule: true, default: mock };
 });
 

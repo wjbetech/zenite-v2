@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import Dashboard from '../Dashboard';
 
 jest.mock('../../lib/taskStore', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { createUseTaskStoreMock } = require('../../test-utils/useTaskStoreMock');
   const { mock } = createUseTaskStoreMock({ tasks: [] });
   return { __esModule: true, default: mock };

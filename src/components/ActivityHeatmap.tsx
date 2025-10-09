@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-// Use a lightweight CSS transition for expand/collapse instead of framer-motion
+import { motion, AnimatePresence } from 'framer-motion';
 
 type RangeKey = '3m' | '1m' | '1w';
 export type ActivityMap = Record<string, number>; // yyyy-mm-dd -> count
@@ -422,26 +422,28 @@ export default function ActivityHeatmap({
         >
           Activity Tracker
         </h5>
-        <button
+        <motion.button
           type="button"
           onClick={toggleOpen}
           aria-expanded={effectiveOpen}
           aria-label={effectiveOpen ? 'Collapse activity tracker' : 'Expand activity tracker'}
           className="ml-1 w-7 h-7 flex items-center justify-center rounded text-lg leading-none cursor-pointer"
+          animate={{ rotate: effectiveOpen ? 180 : 0 }}
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
         >
           {effectiveOpen ? '−' : '+'}
-        </button>
+        </motion.button>
       </div>
-      {/* CSS transition-based expand/collapse (no external animation lib) */}
-      <div
-        className={`overflow-hidden transition-[max-height,opacity] duration-200 ease-in-out`}
-        style={{
-          maxHeight: effectiveOpen ? '2000px' : '0px',
-          opacity: effectiveOpen ? 1 : 0,
-        }}
-      >
+      {/* Framer Motion expand/collapse animation */}
+      <AnimatePresence initial={false}>
         {effectiveOpen && (
-          <>
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="overflow-hidden"
+          >
             <div className="flex items-center gap-3 mt-3 mb-3">
               <div className="flex rounded-md gap-3">
                 <button
@@ -475,9 +477,15 @@ export default function ActivityHeatmap({
             </div>
             {tooltipPortal}
             <div className="overflow-x-auto">
-              <div>
+              <AnimatePresence mode="wait">
                 {range === '1w' && (
-                  <div>
+                  <motion.div
+                    key="1w"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                  >
                     <div className="flex gap-2 items-center mb-2">
                       {(() => {
                         const start = addDays(endDate, -6);
@@ -504,7 +512,7 @@ export default function ActivityHeatmap({
                         ));
                       })()}
                     </div>
-                  </div>
+                  </motion.div>
                 )}
                 {range === '1m' &&
                   (() => {
@@ -513,7 +521,13 @@ export default function ActivityHeatmap({
                     const cells = monthWeeks.flat();
                     const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                     return (
-                      <div>
+                      <motion.div
+                        key="1m"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        transition={{ duration: 0.25, ease: 'easeInOut' }}
+                      >
                         <div className="mb-2 font-semibold text-sm">
                           {monthDate.toLocaleDateString(undefined, {
                             month: 'long',
@@ -537,11 +551,18 @@ export default function ActivityHeatmap({
                             );
                           })}
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })()}
                 {range === '3m' && (
-                  <div className="flex gap-6 overflow-auto">
+                  <motion.div
+                    key="3m"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                    className="flex gap-6 overflow-auto"
+                  >
                     {Array.from({ length: 3 }).map((_, idx) => {
                       const monthDate = new Date(
                         endDate.getFullYear(),
@@ -581,13 +602,13 @@ export default function ActivityHeatmap({
                         </div>
                       );
                     })}
-                  </div>
+                  </motion.div>
                 )}
-              </div>
+              </AnimatePresence>
             </div>
-          </>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
     </div>
   );
 }

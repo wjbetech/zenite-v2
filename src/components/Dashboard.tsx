@@ -289,7 +289,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="mx-2 py-8 flex flex-col flex-1 min-h-0 overflow-x-visible">
+    <div className="mx-2 py-8 flex flex-col flex-1 min-h-0 overflow-x-visible max-w-[95%]">
       {tasksError && (
         <div className="text-sm text-error" role="alert">
           {tasksError}

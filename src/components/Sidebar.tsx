@@ -85,7 +85,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
   return (
     <>
       <aside
-        className={`sidebar fixed left-0 z-40 bg-base-200 overflow-x-hidden`}
+        className={`sidebar fixed left-0 z-40 overflow-x-hidden`}
         style={{
           top: 'var(--nav-height)',
           height: 'calc(100vh - var(--nav-height))',

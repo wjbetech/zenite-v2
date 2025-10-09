@@ -402,8 +402,11 @@ export default function ActivityHeatmap({
   }
 
   return (
-    <div className="w-full bg-base-200 px-3 pt-3 pb-1 rounded-lg shadow-xl mb-6">
-      <div className="flex items-center mb-2 select-none">
+    <div className="relative w-full bg-gradient-to-br from-base-100 via-base-200/80 to-base-300/60 rounded-xl border-2 border-base-300/50 shadow-2xl shadow-primary/50 backdrop-blur-md px-6 pt-3 pb-1 mb-6 overflow-hidden">
+      {/* Subtle inner glow for depth */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
+
+      <div className="relative flex items-center mb-2 select-none">
         <h5
           className="font-semibold cursor-pointer"
           onClick={toggleOpen}
@@ -471,7 +474,7 @@ export default function ActivityHeatmap({
               </div>
             </div>
             {tooltipPortal}
-            <div className="overflow-x-auto pb-4">
+            <div className="overflow-x-auto">
               <div>
                 {range === '1w' && (
                   <div>
@@ -488,7 +491,7 @@ export default function ActivityHeatmap({
                         });
                       })()}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 pb-4">
                       {(() => {
                         const start = addDays(endDate, -6);
                         const arr: Date[] = [];
@@ -524,7 +527,7 @@ export default function ActivityHeatmap({
                             </div>
                           ))}
                         </div>
-                        <div className="grid grid-cols-7 gap-2 w-max">
+                        <div className="grid grid-cols-7 gap-2 w-max pb-4">
                           {cells.map((d, i) => {
                             const inMonth = d.getMonth() === monthDate.getMonth();
                             return (
@@ -563,7 +566,7 @@ export default function ActivityHeatmap({
                               </div>
                             ))}
                           </div>
-                          <div className="grid grid-cols-7 gap-2 w-max">
+                          <div className="grid grid-cols-7 gap-2 w-max pb-4">
                             {cells.map((d, i) => (
                               <div
                                 key={i}

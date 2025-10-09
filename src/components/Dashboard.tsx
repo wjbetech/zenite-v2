@@ -290,7 +290,6 @@ export default function Dashboard() {
 
   return (
     <div className="mx-2 py-8 flex flex-col flex-1 min-h-0 overflow-x-visible">
-      {tasksLoading && <div className="text-sm text-gray-500 pt-2">Loading tasks…</div>}
       {tasksError && (
         <div className="text-sm text-error" role="alert">
           {tasksError}
@@ -404,7 +403,23 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="pt-4 min-h-0 overflow-y-auto pb-10 w-full">
-            {view === 'imminent' && (
+            {tasksLoading ? (
+              <div className="flex flex-col items-center justify-center py-24 text-center w-full">
+                <svg
+                  className="animate-spin h-10 w-10 text-primary"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  aria-hidden
+                >
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+                <div className="mt-3 text-sm text-gray-500">Fetching tasks…</div>
+              </div>
+            ) : (
+              <>
+                {view === 'imminent' && (
               <TaskSection
                 expanded={!heatmapOpen}
                 accentClass="border-rose-400"
@@ -531,7 +546,7 @@ export default function Dashboard() {
                 </div>
               ))}
 
-            {view === 'week' && (
+                {view === 'week' && (
               <div className="">
                 {week.length === 0 ? (
                   <TaskSection
@@ -615,6 +630,8 @@ export default function Dashboard() {
                   </div>
                 )}
               </div>
+                )}
+              </>
             )}
           </div>
         </div>

@@ -14,9 +14,19 @@ const getDatabaseUrl = () => {
   if (process.env.NODE_ENV === 'production') {
     const renderUrl = process.env.RENDER_DATABASE_URL ?? process.env.RENDER_DATABASE; // support alternate name
     const db = renderUrl ?? process.env.DATABASE_URL;
-    if (!db) {
+
+    // During CI or preview builds (e.g. Vercel preview) we sometimes build without a
+    // production DB set. Allow build-time to proceed but still enforce the presence
+    // of a DB at runtime in real production deploys. Use NEXT_PUBLIC_VERCEL_ENV or
+    // a Render-provided env to detect true production.
+    const vercelEnv = process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.VERCEL_ENV || '';
+    const isVercelProduction = vercelEnv === 'production';
+
+    if (!db && isVercelProduction) {
       throw new Error('DATABASE_URL (or RENDER_DATABASE_URL) must be set in production');
     }
+
+    // Return whatever we have (may be undefined during preview build).
     return db;
   }
   // in non-production environments prefer explicit DATABASE_URL, fallback to sqlite or local

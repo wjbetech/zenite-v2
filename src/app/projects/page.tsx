@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import ProjectsClient from '../../components/ProjectsClient';
 import prisma from '../../lib/prisma';
+import { getAuthUserId } from '../../lib/auth-helpers';
 
 export default async function Page() {
   let projects = [] as Array<{
@@ -12,7 +13,9 @@ export default async function Page() {
   }>;
   try {
     try {
+      const userId = await getAuthUserId();
       projects = await prisma.project.findMany({
+        where: { ownerId: userId } as any, // Type will be correct after regenerating Prisma client
         orderBy: { createdAt: 'desc' },
         take: 200,
         include: { _count: { select: { tasks: true } } },

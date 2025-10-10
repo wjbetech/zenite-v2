@@ -35,12 +35,13 @@ model User {
   lastSeenAt     DateTime?
 
   // relations
-  ownedTasks  Task[]       @relation("TaskOwner")
-  comments    Comment[]
-  attachments Attachment[]
+  ownedTasks    Task[]       @relation("TaskOwner")
+  ownedProjects Project[]    @relation("ProjectOwner")
+  comments      Comment[]
+  attachments   Attachment[]
   // next-auth relations
-  accounts    Account[]
-  sessions    Session[]
+  accounts      Account[]
+  sessions      Session[]
 }
 
 model Task {
@@ -114,10 +115,14 @@ model Project {
   id          String   @id @default(uuid())
   name        String
   description String?
+  ownerId     String
+  owner       User     @relation("ProjectOwner", fields: [ownerId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   tasks Task[] @relation("ProjectTasks")
+
+  @@index([ownerId])
 }
 
 // Snapshot of completed tasks for a particular date used by the activity heatmap

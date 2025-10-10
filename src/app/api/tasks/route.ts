@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { Task as PrismaTask } from '@prisma/client';
 import prisma from '../../../../src/lib/prisma';
+import { getAuthUserId } from '../../../../src/lib/auth-helpers';
 
 // Prevent static generation - this route must run at request time
 export const dynamic = 'force-dynamic';
-
-const FALLBACK_OWNER_EMAIL = process.env.DEFAULT_TASK_OWNER_EMAIL ?? 'local@zenite.dev';
-const FALLBACK_OWNER_NAME = process.env.DEFAULT_TASK_OWNER_NAME ?? 'Zenite Demo User';
 
 type SerializableTask = {
   id: string;
@@ -61,15 +59,7 @@ function parseDate(value: unknown): Date | null | undefined {
   return undefined;
 }
 
-async function resolveOwnerId(provided?: string | null) {
-  if (provided) return provided;
-  const fallback = await prisma.user.upsert({
-    where: { email: FALLBACK_OWNER_EMAIL },
-    update: {},
-    create: { email: FALLBACK_OWNER_EMAIL, name: FALLBACK_OWNER_NAME },
-  });
-  return fallback.id;
-}
+
 
 function normalizeNotes(body: Record<string, unknown>) {
   if (typeof body.notes === 'string') return body.notes;
@@ -79,7 +69,11 @@ function normalizeNotes(body: Record<string, unknown>) {
 
 export async function GET() {
   try {
-    const tasks = await prisma.task.findMany({ orderBy: { createdAt: 'desc' } });
+    const userId = await getAuthUserId();
+    const tasks = await prisma.task.findMany({
+      where: { ownerId: userId },
+      orderBy: { createdAt: 'desc' },
+    });
     return NextResponse.json(tasks.map(serializeTask));
   } catch (error) {
     console.error('GET /api/tasks failed', error);
@@ -93,11 +87,11 @@ export async function POST(request: Request) {
   if (!title) return NextResponse.json({ error: 'title required' }, { status: 400 });
 
   const recurrence = typeof body.recurrence === 'string' ? body.recurrence : undefined;
-  const ownerIdInput = (typeof body.ownerId === 'string' && body.ownerId.trim()) || undefined;
   const notes = normalizeNotes(body);
 
   try {
-    const ownerId = await resolveOwnerId(ownerIdInput);
+    // Always use the authenticated user's ID - ignore any provided ownerId
+    const ownerId = await getAuthUserId();
 
     if (recurrence === 'daily') {
       const existingDaily = await prisma.task.count({
@@ -142,11 +136,19 @@ export async function PATCH(request: Request) {
   const id = typeof body.id === 'string' ? body.id : undefined;
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
 
+  const userId = await getAuthUserId();
+
+  // Verify ownership
+  const existing = await prisma.task.findUnique({ where: { id } });
+  if (!existing) {
+    return NextResponse.json({ error: 'task not found' }, { status: 404 });
+  }
+  if (existing.ownerId !== userId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   const data: Record<string, unknown> = {};
   let projectIdToAssign: string | null | undefined = undefined;
-
-  // load existing task so we can make decisions about completedAt preservation
-  const existing = await prisma.task.findUnique({ where: { id } });
   // prisma.activity is available after running migrations and generating the client;
   // use the typed prisma client directly.
   const _prisma = prisma;
@@ -197,9 +199,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'invalid projectId' }, { status: 400 });
     }
   }
-  if ('ownerId' in body && typeof body.ownerId === 'string') {
-    data.ownerId = body.ownerId;
-  }
+  // Don't allow changing ownerId - tasks are always owned by the creator
 
   const statusFlags: StatusFlagInput = {};
   let shouldUpdateStatus = false;
@@ -309,6 +309,17 @@ export async function DELETE(request: Request) {
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
 
   try {
+    const userId = await getAuthUserId();
+
+    // Verify ownership before delete
+    const existing = await prisma.task.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'task not found' }, { status: 404 });
+    }
+    if (existing.ownerId !== userId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     await prisma.task.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (error: unknown) {

@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
 import prisma from '../../../../src/lib/prisma';
 import { createProjectSchema, updateProjectSchema } from '../../../lib/validators/projects';
+import { getAuthUserId } from '../../../lib/auth-helpers';
 
 // Prevent static generation - this route must run at request time
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    const userId = await getAuthUserId();
     const projects = await prisma.project.findMany({
+      where: { ownerId: userId },
       orderBy: { createdAt: 'desc' },
       take: 200,
       include: { _count: { select: { tasks: true } } },
@@ -35,6 +38,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const userId = await getAuthUserId();
     const body = await request.json();
     const parsed = createProjectSchema.safeParse(body);
     if (!parsed.success) {
@@ -45,7 +49,9 @@ export async function POST(request: Request) {
     }
 
     const { name, description } = parsed.data;
-    const project = await prisma.project.create({ data: { name, description } });
+    const project = await prisma.project.create({
+      data: { name, description, ownerId: userId },
+    });
     return NextResponse.json(project, { status: 201 });
   } catch (err) {
     return NextResponse.json(
@@ -57,6 +63,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    const userId = await getAuthUserId();
     const body = await request.json();
     const parsed = updateProjectSchema.safeParse(body);
     if (!parsed.success) {
@@ -67,6 +74,16 @@ export async function PATCH(request: Request) {
     }
 
     const { id, name, description } = parsed.data;
+
+    // Verify ownership
+    const existing = await prisma.project.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'project not found' }, { status: 404 });
+    }
+    if ((existing as any).ownerId !== userId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const data: Partial<{ name: string; description: string }> = {};
     if (name) data.name = name;
     if (description) data.description = description;
@@ -97,9 +114,19 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const userId = await getAuthUserId();
     const url = new URL(request.url);
     const id = url.searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
+
+    // Verify ownership
+    const existing = await prisma.project.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'project not found' }, { status: 404 });
+    }
+    if ((existing as any).ownerId !== userId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     await prisma.project.delete({ where: { id } });
     return NextResponse.json({ ok: true });

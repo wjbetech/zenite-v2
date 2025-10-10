@@ -12,6 +12,8 @@ import CreateDailyModal from './CreateDailyModal';
 
 export default function DailiesClient() {
   const tasks = useTaskStore((s) => s.tasks) as Task[];
+  const tasksLoading = useTaskStore((s) => s.loading);
+  const tasksError = useTaskStore((s) => s.error);
   const deleteTask = useTaskStore((s) => s.deleteTask);
   const updateTask = useTaskStore((s) => s.updateTask);
   const projects = useProjectStore((s) => s.projects);
@@ -161,8 +163,42 @@ export default function DailiesClient() {
 
             <section className="mb-[74px]">
               <div className="transition-all duration-300 ease-in-out pt-4 pb-2 px-0">
-                {daily.length === 0 ? (
-                  <div className="text-sm text-neutral-content">No items.</div>
+                {tasksLoading ? (
+                  <div className="flex flex-col items-center justify-center py-24 text-center w-full">
+                    <svg
+                      className="animate-spin h-10 w-10 text-success"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      aria-hidden
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                      ></path>
+                    </svg>
+                    <div className="mt-3 text-sm text-base-content/50">Fetching tasks…</div>
+                  </div>
+                ) : daily.length === 0 ? (
+                  tasksError ? (
+                    <div className="flex items-center justify-center py-24 w-full">
+                      <div className="text-center text-base-content/50">
+                        <p>
+                          Unable to load tasks — the database may be unavailable. Check your local
+                          DB and try again, or contact the administrator (wjbetech@gmail.com)
+                        </p>
+                      </div>
+                    </div>
+                  ) : null
                 ) : (
                   <NativeSortableDaily
                     items={daily.map((t) => ({

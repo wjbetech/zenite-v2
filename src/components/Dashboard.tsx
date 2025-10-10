@@ -290,11 +290,6 @@ export default function Dashboard() {
 
   return (
     <div className="mx-2 py-8 flex flex-col flex-1 min-h-0 overflow-x-visible max-w-[95%]">
-      {tasksError && (
-        <div className="text-sm text-error" role="alert">
-          {tasksError}
-        </div>
-      )}
       {/* Wrap header, heatmap and lists in shared px-3 container for alignment */}
       <div className="mx-auto w-full max-w-6xl px-3">
         {/* Header with depth - elevated card with layered backgrounds */}
@@ -649,16 +644,25 @@ export default function Dashboard() {
                   )}
                 </>
               )}
+
+              {/* If there are no tasks at all (and we're not loading), show a centered empty state
+                  inside the task-list area so it appears where the lists normally render. If
+                  tasksError is present we hint that the DB may be down. */}
+              {all.length === 0 && !tasksLoading && (
+                <div className="flex items-center justify-center py-24 w-full">
+                  <div className="text-center text-base-content/50">
+                    <p>
+                      {tasksError
+                        ? 'Unable to load tasks — the database may be unavailable. Check your local DB and try again, or contact the administrator (wjbetech@gmail.com)'
+                        : 'No tasks found — try creating one or contact the administrator (wjbetech@gmail.com)'}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
-
-      {all.length === 0 && !tasksLoading && (
-        <div className="text-center text-gray-500 py-12">
-          No tasks found — try creating one or enable the remote DB.
-        </div>
-      )}
 
       <TaskModal
         open={modalOpen}

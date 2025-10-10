@@ -15,7 +15,7 @@ export default async function Page() {
     try {
       const userId = await getAuthUserId();
       projects = await prisma.project.findMany({
-        where: { ownerId: userId } as any, // Type will be correct after regenerating Prisma client
+        where: { ownerId: userId },
         orderBy: { createdAt: 'desc' },
         take: 200,
         include: { _count: { select: { tasks: true } } },

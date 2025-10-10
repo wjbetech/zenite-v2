@@ -17,7 +17,7 @@ export default async function Page(props: unknown) {
   try {
     const userId = await getAuthUserId();
     const projects = await prisma.project.findMany({
-      where: { ownerId: userId } as any, // Type will be correct after regenerating Prisma client
+      where: { ownerId: userId },
       select: { id: true, name: true, description: true },
     });
     project = projects.find((p) => projectSlug(p.name ?? '') === slug) ?? null;

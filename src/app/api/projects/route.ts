@@ -80,7 +80,7 @@ export async function PATCH(request: Request) {
     if (!existing) {
       return NextResponse.json({ error: 'project not found' }, { status: 404 });
     }
-    if ((existing as any).ownerId !== userId) {
+    if (existing.ownerId !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -124,7 +124,7 @@ export async function DELETE(request: Request) {
     if (!existing) {
       return NextResponse.json({ error: 'project not found' }, { status: 404 });
     }
-    if ((existing as any).ownerId !== userId) {
+    if (existing.ownerId !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

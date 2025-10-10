@@ -17,7 +17,7 @@ export async function GET(request: Request, { params }: RouteContext) {
     if (!project) {
       return NextResponse.json({ error: 'project not found' }, { status: 404 });
     }
-    if ((project as any).ownerId !== userId) {
+    if (project.ownerId !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

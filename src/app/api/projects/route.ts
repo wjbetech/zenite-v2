@@ -56,7 +56,11 @@ export async function POST(request: Request) {
       create: { email: FALLBACK_OWNER_EMAIL, name: FALLBACK_OWNER_NAME },
     });
     const project = await prisma.project.create({
-      data: { name, description, ownerId: fallback.id },
+      data: {
+        name,
+        description,
+        owner: { connect: { id: fallback.id } },
+      },
     });
     return NextResponse.json(project, { status: 201 });
   } catch (err) {

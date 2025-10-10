@@ -26,7 +26,7 @@ export default function ExperimentalDailies() {
   };
 
   return (
-    <main className="p-6">
+    <main className="">
       <h1 className="text-2xl font-semibold mb-4">Experimental Dailies Preview</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {daily.length === 0 && (

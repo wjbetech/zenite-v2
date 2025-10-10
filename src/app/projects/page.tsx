@@ -45,7 +45,7 @@ export default async function Page() {
   });
 
   return (
-    <main className="p-6">
+    <main className="">
       <ProjectsClient initialProjects={serialized} />
     </main>
   );

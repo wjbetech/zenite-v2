@@ -14,8 +14,8 @@ export async function getAuthUserId(): Promise<string> {
   const session = await getServerSession(authOptions);
 
   // If we have a session with user ID, return it
-  if (session?.user && (session.user as any).id) {
-    return (session.user as any).id;
+  if (session?.user?.id) {
+    return session.user.id;
   }
 
   // Fallback to demo user for local development
@@ -36,12 +36,12 @@ export async function requireAuth(): Promise<
 > {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user || !(session.user as any).id) {
+  if (!session?.user?.id) {
     return {
       userId: null,
       error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
     };
   }
 
-  return { userId: (session.user as any).id, error: null };
+  return { userId: session.user.id, error: null };
 }

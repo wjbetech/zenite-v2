@@ -24,7 +24,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       // Add user ID to session from token
       if (session.user && token.userId) {
-        (session.user as any).id = token.userId as string;
+        session.user.id = token.userId;
       }
       return session;
     },

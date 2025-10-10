@@ -50,7 +50,7 @@ describe('Dashboard modals', () => {
     render(React.createElement(Dashboard));
 
     // Use exact text to avoid matching 'New Tasks' filter button
-    const newTaskBtn = screen.getByText((c) => c === 'New Task');
+    const newTaskBtn = screen.getByText((c: unknown) => (c as string) === 'New Task');
     expect(newTaskBtn).toBeTruthy();
 
     fireEvent.click(newTaskBtn);

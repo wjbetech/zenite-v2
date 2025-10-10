@@ -26,7 +26,7 @@ async function main() {
   // Count orphaned projects (projects without ownerId)
   const orphanedProjects = await prisma.project.count({
     where: {
-      OR: [{ ownerId: null }, { ownerId: '' }],
+      OR: [{ ownerId: '' }],
     },
   });
 
@@ -36,7 +36,7 @@ async function main() {
     // Assign all orphaned projects to demo user
     const result = await prisma.project.updateMany({
       where: {
-        OR: [{ ownerId: null }, { ownerId: '' }],
+        OR: [{ ownerId: '' }],
       },
       data: {
         ownerId: demoUser.id,

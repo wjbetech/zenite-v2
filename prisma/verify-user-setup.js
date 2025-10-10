@@ -50,7 +50,10 @@ async function main() {
       console.log('📁 No projects in database');
     }
   } catch (err) {
-    console.error('❌ Error checking projects:', err.message);
+    // `err` may be unknown; narrow it to produce a useful message without
+    // assuming it's an Error object to satisfy TypeScript checks.
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('❌ Error checking projects:', msg);
   }
 
   console.log('\n✅ Verification complete!');

@@ -40,7 +40,9 @@ describe('ActivityHeatmap', () => {
     // There should be at least one element with a non-empty color class
     // for count=2 the heatmap uses the second color (index 1) -> 'bg-success/30'
     const buttons = screen.getAllByRole('button');
-    const colored = buttons.find((b) => b.className.includes('bg-success/30'));
+    const colored = buttons.find((b: unknown) =>
+      (b as { className?: string }).className?.includes('bg-success/30'),
+    );
     expect(colored).toBeDefined();
   });
 });

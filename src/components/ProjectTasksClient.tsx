@@ -103,15 +103,45 @@ export default function ProjectTasksClient({ projectId }: Props) {
     }
   }, []);
 
-  if (loading) return <div>Loading tasks…</div>;
+  if (loading)
+    return (
+      <div className="col-span-full min-h-[60vh] flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <svg
+            className="animate-spin h-10 w-10 text-accent"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            aria-hidden
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+            ></path>
+          </svg>
+          <div className="mt-3 text-sm text-base-content/50">Loading tasks…</div>
+        </div>
+      </div>
+    );
 
   if (dbUnavailable) {
     return (
-      <div>
-        <div className="text-sm text-red-600 font-semibold mb-2">
-          The DB was not found - please contact your network administrator
+      <div className="col-span-full min-h-[60vh] flex items-center justify-center">
+        <div className="text-center text-base-content/50">
+          <p>
+            Unable to load tasks — the database may be unavailable. Check your local DB and try
+            again, or contact the administrator (wjbetech@gmail.com)
+          </p>
         </div>
-        <div className="text-sm text-gray-500">No tasks found!</div>
       </div>
     );
   }

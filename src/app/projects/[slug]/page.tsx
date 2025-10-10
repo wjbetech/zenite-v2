@@ -19,18 +19,21 @@ export default async function Page(props: unknown) {
     });
     project = projects.find((p) => projectSlug(p.name ?? '') === slug) ?? null;
   } catch (err) {
-    // If DB is down, show a clear warning instead of demo data so users don't get
-    // confused by placeholders that may not reflect real data.
+    // If DB is down, show a muted hint instead of a red admin alert so the UI
+    // matches the other pages' empty-state / error UX.
     console.error('Project detail: failed to query database', err);
     return (
       <main className="p-6">
         <div className="px-4 pt-4">
-          <div className="text-sm text-red-600 font-semibold mb-2">
-            The DB was not found - please contact your network administrator
-          </div>
           <h1 className="text-2xl font-semibold mb-4">Project not available</h1>
-          <div className="text-sm text-gray-500">
-            Unable to load project data due to a backend error.
+
+          <div className="flex items-center justify-center py-24 w-full">
+            <div className="text-center text-base-content/50">
+              <p>
+                Unable to load tasks — the database may be unavailable. Check your local DB and try
+                again, or contact the administrator (wjbetech@gmail.com)
+              </p>
+            </div>
           </div>
         </div>
       </main>

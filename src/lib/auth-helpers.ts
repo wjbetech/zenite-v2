@@ -1,5 +1,4 @@
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from './auth';
+import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import prisma from './prisma';
 
@@ -11,11 +10,11 @@ const FALLBACK_OWNER_NAME = process.env.DEFAULT_TASK_OWNER_NAME ?? 'Zenite Demo 
  * If no session exists, returns the fallback demo user ID (for local dev).
  */
 export async function getAuthUserId(): Promise<string> {
-  const session = await getServerSession(authOptions);
+  const { userId } = await auth();
 
-  // If we have a session with user ID, return it
-  if (session?.user?.id) {
-    return session.user.id;
+  // If we have a Clerk user ID, return it
+  if (userId) {
+    return userId;
   }
 
   // Fallback to demo user for local development
@@ -34,14 +33,14 @@ export async function getAuthUserId(): Promise<string> {
 export async function requireAuth(): Promise<
   { userId: string; error: null } | { userId: null; error: NextResponse }
 > {
-  const session = await getServerSession(authOptions);
+  const { userId } = await auth();
 
-  if (!session?.user?.id) {
+  if (!userId) {
     return {
       userId: null,
       error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
     };
   }
 
-  return { userId: session.user.id, error: null };
+  return { userId, error: null };
 }

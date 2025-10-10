@@ -23,7 +23,7 @@ export default async function Page(props: unknown) {
     // matches the other pages' empty-state / error UX.
     console.error('Project detail: failed to query database', err);
     return (
-      <main className="p-6">
+      <main className="">
         <div className="px-4 pt-4">
           <h1 className="text-2xl font-semibold mb-4">Project not available</h1>
 
@@ -52,7 +52,7 @@ export default async function Page(props: unknown) {
   }
 
   return (
-    <main className="p-6">
+    <main className="">
       <div className="px-4 pt-4">
         <h1 className="text-2xl font-semibold mb-4">{project.name}</h1>
         <p className="text-sm text-gray-500 mb-4">{project.description}</p>

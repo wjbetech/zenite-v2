@@ -8,8 +8,17 @@ import type { NextRequest } from 'next/server';
 
 /** A minimal pass-through middleware to satisfy Next.js while debugging. */
 export function middleware(req: NextRequest) {
-  // Forward request headers to mark the parameter as used (no behavior change)
-  return NextResponse.next({ request: { headers: req.headers } });
+  try {
+    // Forward request headers to mark the parameter as used (no behavior change)
+    return NextResponse.next({ request: { headers: req.headers } });
+  } catch (err) {
+    // Log the full error (stack when available) so Vercel logs capture the cause.
+    const msg = err instanceof Error ? err.stack ?? err.message : String(err);
+    // Use console.error so it's visible in platform logs
+    console.error('Middleware invocation error:', msg);
+    // Don't rethrow — allow the request to continue to avoid a hard 500 caused by middleware
+    return NextResponse.next();
+  }
 }
 
 export const config = {

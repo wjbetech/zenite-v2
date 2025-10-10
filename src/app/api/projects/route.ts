@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
-import prisma from '../../../../src/lib/prisma';
+import prisma from '@/lib/prisma';
+
+const FALLBACK_OWNER_EMAIL = process.env.DEFAULT_TASK_OWNER_EMAIL ?? 'local@zenite.dev';
+const FALLBACK_OWNER_NAME = process.env.DEFAULT_TASK_OWNER_NAME ?? 'Zenite Demo User';
 import { createProjectSchema, updateProjectSchema } from '../../../lib/validators/projects';
 
 // Prevent static generation - this route must run at request time
@@ -45,7 +48,16 @@ export async function POST(request: Request) {
     }
 
     const { name, description } = parsed.data;
-    const project = await prisma.project.create({ data: { name, description } });
+    // Determine owner for the new project. We upsert a fallback demo user in
+    // cases where an authenticated local user row isn't available (preview/dev).
+    const fallback = await prisma.user.upsert({
+      where: { email: FALLBACK_OWNER_EMAIL },
+      update: {},
+      create: { email: FALLBACK_OWNER_EMAIL, name: FALLBACK_OWNER_NAME },
+    });
+    const project = await prisma.project.create({
+      data: { name, description, ownerId: fallback.id },
+    });
     return NextResponse.json(project, { status: 201 });
   } catch (err) {
     return NextResponse.json(

@@ -2,6 +2,7 @@
  * Verify user setup and data access control
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports */
 require('dotenv').config({ path: '.env.production.local' });
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();

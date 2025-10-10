@@ -64,7 +64,13 @@ async function main() {
   for (const pd of projectDefs) {
     let p = await prisma.project.findFirst({ where: { name: pd.name } });
     if (!p) {
-      p = await prisma.project.create({ data: { name: pd.name, description: pd.description } });
+      p = await prisma.project.create({
+        data: {
+          name: pd.name,
+          description: pd.description,
+          owner: { connect: { id: user.id } },
+        },
+      });
     }
     createdProjects.push(p);
 

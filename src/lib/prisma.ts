@@ -8,6 +8,9 @@ declare global {
 // require DATABASE_URL to be set. This makes deployments fail fast if DB is
 // misconfigured.
 const getDatabaseUrl = () => {
+  console.log('[prisma.ts] NODE_ENV:', process.env.NODE_ENV);
+  console.log('[prisma.ts] DATABASE_URL:', process.env.DATABASE_URL ? '***set***' : '<EMPTY>');
+
   if (process.env.NODE_ENV === 'production') {
     const renderUrl = process.env.RENDER_DATABASE_URL ?? process.env.RENDER_DATABASE; // support alternate name
     const db = renderUrl ?? process.env.DATABASE_URL;

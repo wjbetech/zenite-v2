@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '../../../../src/lib/prisma';
 import { createProjectSchema, updateProjectSchema } from '../../../lib/validators/projects';
-import { getAuthUserId } from '../../../lib/auth-helpers';
+import { getAuthUserId, requireAuth } from '../../../lib/auth-helpers';
 
 // Prevent static generation - this route must run at request time
 export const dynamic = 'force-dynamic';
@@ -38,7 +38,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const userId = await getAuthUserId();
+    const authRes = await requireAuth();
+    if (authRes.error) return authRes.error;
+    const userId = authRes.userId!;
     const body = await request.json();
     const parsed = createProjectSchema.safeParse(body);
     if (!parsed.success) {
@@ -63,7 +65,9 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const userId = await getAuthUserId();
+    const authRes = await requireAuth();
+    if (authRes.error) return authRes.error;
+    const userId = authRes.userId!;
     const body = await request.json();
     const parsed = updateProjectSchema.safeParse(body);
     if (!parsed.success) {
@@ -114,7 +118,9 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const userId = await getAuthUserId();
+    const authRes = await requireAuth();
+    if (authRes.error) return authRes.error;
+    const userId = authRes.userId!;
     const url = new URL(request.url);
     const id = url.searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });

@@ -100,7 +100,7 @@ async function main() {
 
   // Create a few unassigned tasks with dueDate values so Today/Week lists display
   const now = new Date();
-  const iso = (d) => d.toISOString();
+  const iso = (/** @type {Date} */ d) => d.toISOString();
   const sampleDueDates = [
     new Date(now),
     new Date(now.getTime() + 24 * 60 * 60 * 1000),
@@ -111,7 +111,10 @@ async function main() {
     const title = `Due Sample ${i + 1}`;
     const exists = await prisma.task.findFirst({ where: { title } });
     if (exists) {
-      await prisma.task.update({ where: { id: exists.id }, data: { dueDate: iso(sampleDueDates[i]) } });
+      await prisma.task.update({
+        where: { id: exists.id },
+        data: { dueDate: iso(sampleDueDates[i]) },
+      });
     } else {
       await prisma.task.create({
         data: {

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { Task as PrismaTask } from '@prisma/client';
 import prisma from '../../../../src/lib/prisma';
-import { getAuthUserId, requireAuth } from '../../../../src/lib/auth-helpers';
+import { requireAuth } from '../../../../src/lib/auth-helpers';
 
 // Prevent static generation - this route must run at request time
 export const dynamic = 'force-dynamic';
@@ -59,8 +59,6 @@ function parseDate(value: unknown): Date | null | undefined {
   return undefined;
 }
 
-
-
 function normalizeNotes(body: Record<string, unknown>) {
   if (typeof body.notes === 'string') return body.notes;
   if (typeof body.description === 'string') return body.description;
@@ -69,7 +67,9 @@ function normalizeNotes(body: Record<string, unknown>) {
 
 export async function GET() {
   try {
-    const userId = await getAuthUserId();
+    const authRes = await requireAuth();
+    if (authRes.error) return authRes.error;
+    const userId = authRes.userId!;
     const tasks = await prisma.task.findMany({
       where: { ownerId: userId },
       orderBy: { createdAt: 'desc' },
@@ -90,10 +90,10 @@ export async function POST(request: Request) {
   const notes = normalizeNotes(body);
 
   try {
-  // Require a real authenticated user for mutating operations
-  const authRes = await requireAuth();
-  if (authRes.error) return authRes.error;
-  const ownerId = authRes.userId!;
+    // Require a real authenticated user for mutating operations
+    const authRes = await requireAuth();
+    if (authRes.error) return authRes.error;
+    const ownerId = authRes.userId!;
 
     if (recurrence === 'daily') {
       const existingDaily = await prisma.task.count({
@@ -313,9 +313,9 @@ export async function DELETE(request: Request) {
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
 
   try {
-  const authRes = await requireAuth();
-  if (authRes.error) return authRes.error;
-  const userId = authRes.userId!;
+    const authRes = await requireAuth();
+    if (authRes.error) return authRes.error;
+    const userId = authRes.userId!;
 
     // Verify ownership before delete
     const existing = await prisma.task.findUnique({ where: { id } });

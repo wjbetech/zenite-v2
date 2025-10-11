@@ -1,14 +1,16 @@
 import { NextResponse } from 'next/server';
 import prisma from '../../../../src/lib/prisma';
 import { createProjectSchema, updateProjectSchema } from '../../../lib/validators/projects';
-import { getAuthUserId, requireAuth } from '../../../lib/auth-helpers';
+import { requireAuth } from '../../../lib/auth-helpers';
 
 // Prevent static generation - this route must run at request time
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const userId = await getAuthUserId();
+    const authRes = await requireAuth();
+    if (authRes.error) return authRes.error;
+    const userId = authRes.userId!;
     const projects = await prisma.project.findMany({
       where: { ownerId: userId },
       orderBy: { createdAt: 'desc' },

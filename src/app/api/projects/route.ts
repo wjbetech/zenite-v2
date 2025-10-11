@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
-import prisma from '../../../../src/lib/prisma';
+import prisma from '@/lib/prisma';
 import { createProjectSchema, updateProjectSchema } from '../../../lib/validators/projects';
 import { getAuthUserId } from '../../../lib/auth-helpers';
 
@@ -105,10 +106,7 @@ export async function PATCH(request: Request) {
         { status: 500 },
       );
     }
-    return NextResponse.json(
-      { error: 'Failed to update project', details: String(err) },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Failed to update project', details: String(err) }, { status: 500 });
   }
 }
 
@@ -118,7 +116,6 @@ export async function DELETE(request: Request) {
     const url = new URL(request.url);
     const id = url.searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
-
     // Verify ownership
     const existing = await prisma.project.findUnique({ where: { id } });
     if (!existing) {
@@ -140,14 +137,8 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
     if (err instanceof Error) {
-      return NextResponse.json(
-        { error: 'Failed to delete project', details: err.message },
-        { status: 500 },
-      );
+      return NextResponse.json({ error: 'Failed to delete project', details: err.message }, { status: 500 });
     }
-    return NextResponse.json(
-      { error: 'Failed to delete project', details: String(err) },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Failed to delete project', details: String(err) }, { status: 500 });
   }
 }

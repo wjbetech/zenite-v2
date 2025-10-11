@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prismaClient from '../../../../src/lib/prisma';
+import { getAuthUserId } from '../../../lib/auth-helpers';
 
 // Prevent static generation - this route must run at request time
 export const dynamic = 'force-dynamic';
@@ -10,9 +11,10 @@ const prisma = prismaClient as any;
 
 export async function GET(request: Request) {
   try {
+    const userId = await getAuthUserId();
     const url = new URL(request.url);
     const date = url.searchParams.get('date') ?? undefined;
-    const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = { ownerId: userId };
     if (date) where.date = date;
     const rows = await prisma.activity.findMany({ where, orderBy: { createdAt: 'desc' } });
     return NextResponse.json(rows);
@@ -24,11 +26,13 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const userId = await getAuthUserId();
     const body = (await request.json()) ?? {};
     const date = typeof body.date === 'string' ? body.date : null;
     const items = Array.isArray(body.items) ? body.items : [];
     if (!date) return NextResponse.json({ error: 'date required' }, { status: 400 });
 
+    // Always use authenticated user's ID
     const created = await Promise.all(
       items.map((it: Record<string, unknown>) =>
         prisma.activity.create({
@@ -36,7 +40,7 @@ export async function POST(request: Request) {
             date,
             taskId: typeof it.taskId === 'string' ? it.taskId : undefined,
             taskTitle: typeof it.taskTitle === 'string' ? it.taskTitle : it['title'] ?? 'Untitled',
-            ownerId: typeof it.ownerId === 'string' ? it.ownerId : undefined,
+            ownerId: userId,
           },
         }),
       ),

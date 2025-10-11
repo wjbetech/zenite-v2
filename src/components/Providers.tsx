@@ -2,6 +2,7 @@
 
 import ThemeProvider from './ThemeProvider';
 import { ClerkProvider } from '@clerk/nextjs';
+import assertClerkKeySafe from './clerkKeyGuard';
 import React, { useEffect, useState } from 'react';
 import AuthRedirect from './AuthRedirect';
 import { ToastContainer } from 'react-toastify';
@@ -18,6 +19,25 @@ function mapDaisyToToastTheme(d?: string | null) {
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [toastTheme, setToastTheme] = useState<'light' | 'dark'>(() => 'light');
+
+  // Runtime safety: ensure production/staging builds are not using Clerk test/dev keys.
+  // NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is replaced at build-time; NEXT_PUBLIC_VERCEL_ENV or NODE_ENV
+  // indicate the target environment. If we detect a suspicious key in a production-like env,
+  // throw so deployments fail fast and we don't accidentally ship with test keys.
+  // Delegate to a small testable helper so unit tests can validate behavior
+  // without importing the full Providers (which bundles browser-only deps).
+  try {
+    const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
+    const deployEnv = (
+      process.env.NEXT_PUBLIC_VERCEL_ENV ||
+      process.env.NEXT_PUBLIC_ENV ||
+      process.env.NODE_ENV ||
+      ''
+    ).toString();
+    assertClerkKeySafe(clerkKey.toString(), deployEnv);
+  } catch (e) {
+    throw e;
+  }
 
   useEffect(() => {
     function readAndMap() {

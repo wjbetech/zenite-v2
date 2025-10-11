@@ -8,12 +8,25 @@ declare global {
 // require DATABASE_URL to be set. This makes deployments fail fast if DB is
 // misconfigured.
 const getDatabaseUrl = () => {
+  console.log('[prisma.ts] NODE_ENV:', process.env.NODE_ENV);
+  console.log('[prisma.ts] DATABASE_URL:', process.env.DATABASE_URL ? '***set***' : '<EMPTY>');
+
   if (process.env.NODE_ENV === 'production') {
     const renderUrl = process.env.RENDER_DATABASE_URL ?? process.env.RENDER_DATABASE; // support alternate name
     const db = renderUrl ?? process.env.DATABASE_URL;
-    if (!db) {
+
+    // During CI or preview builds (e.g. Vercel preview) we sometimes build without a
+    // production DB set. Allow build-time to proceed but still enforce the presence
+    // of a DB at runtime in real production deploys. Use NEXT_PUBLIC_VERCEL_ENV or
+    // a Render-provided env to detect true production.
+    const vercelEnv = process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.VERCEL_ENV || '';
+    const isVercelProduction = vercelEnv === 'production';
+
+    if (!db && isVercelProduction) {
       throw new Error('DATABASE_URL (or RENDER_DATABASE_URL) must be set in production');
     }
+
+    // Return whatever we have (may be undefined during preview build).
     return db;
   }
   // in non-production environments prefer explicit DATABASE_URL, fallback to sqlite or local
@@ -55,3 +68,24 @@ if (process.env.NODE_ENV === 'production') {
 
 export default prisma;
 export { prisma };
+
+// Safety guard: prevent staging/production deployments from using a local/dev DATABASE_URL
+const dbUrl = process.env.DATABASE_URL || '';
+const envName = process.env.NEXT_PUBLIC_ENV || process.env.NODE_ENV || '';
+
+if (envName === 'production' || envName === 'staging') {
+  // simple local URL heuristics: localhost, 127.0.0.1, or postgres on local port
+  if (dbUrl.match(/localhost|127\.0\.0\.1|postgres:password|:5432\//i)) {
+    console.error(
+      '\nFATAL: DATABASE_URL appears to be a local/development database while running in',
+      envName,
+    );
+    console.error(
+      'DATABASE_URL=',
+      dbUrl ? dbUrl.replace(/(postgresql:\/\/.*@).*(:\d+)/, '$1<REDACTED>') : '<empty>',
+    );
+    throw new Error(
+      'Unsafe DATABASE_URL for staging/production. Set DATABASE_URL to your Render/Postgres connection string.',
+    );
+  }
+}

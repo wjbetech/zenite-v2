@@ -220,30 +220,65 @@ export default function ProjectsClient({ initialProjects }: Props) {
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-x-visible px-4">
-      <header className="pt-4 pb-6 flex justify-between w-full align-middle">
-        <h1 className="text-2xl font-semibold mb-4">Projects</h1>
+    <div className="flex flex-col flex-1 min-h-0 overflow-x-visible pt-4 px-5">
+      <header className="pt-4 pb-6">
+        <div className="mx-auto w-full max-w-6xl">
+          <div className="relative bg-gradient-to-br from-base-100 via-base-200/80 to-base-300/60 rounded-xl border-2 border-base-300/50 shadow-2xl shadow-accent/50 backdrop-blur-md px-6 py-6 mb-6 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setCreateModalOpen(true)}
-            className="btn btn-success py-3 flex items-center gap-2 border-2 border-base-content"
-          >
-            <Plus className="h-4 w-4" />
-            <span className="leading-none">New Project</span>
-          </button>
+            <div className="relative flex items-center justify-between">
+              <h1 className="text-3xl font-semibold mb-0 text-accent">Projects</h1>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCreateModalOpen(true)}
+                  className="btn btn-success py-3 flex items-center gap-2 border-2 border-base-content"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span className="leading-none">New Project</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
       <div className="flex flex-col gap-6 pb-10">
-        {dbUnavailable ? (
-          <div className="text-sm text-red-600 font-semibold">
-            The DB was not found - please contact your network administrator
-          </div>
-        ) : null}
         {loading ? (
           <div className="col-span-full min-h-[60vh] flex items-center justify-center">
-            <div className="text-lg md:text-xl text-gray-500">Loading projects…</div>
+            <div className="flex flex-col items-center">
+              <svg
+                className="animate-spin h-10 w-10 text-accent"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                aria-hidden
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                ></path>
+              </svg>
+              <div className="mt-3 text-sm text-base-content/50">Loading projects…</div>
+            </div>
+          </div>
+        ) : dbUnavailable ? (
+          <div className="col-span-full min-h-[60vh] flex items-center justify-center">
+            <div className="text-center text-base-content/50">
+              <p>
+                Unable to load tasks — the database may be unavailable. Check your local DB and try
+                again, or contact the administrator (wjbetech@gmail.com)
+              </p>
+            </div>
           </div>
         ) : (mounted ? projects.length === 0 : (initialProjects?.length ?? 0) === 0) ? (
           <div className="col-span-full min-h-[60vh] flex items-center justify-center">

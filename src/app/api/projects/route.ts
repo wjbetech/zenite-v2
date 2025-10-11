@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-
-const FALLBACK_OWNER_EMAIL = process.env.DEFAULT_TASK_OWNER_EMAIL ?? 'local@zenite.dev';
-const FALLBACK_OWNER_NAME = process.env.DEFAULT_TASK_OWNER_NAME ?? 'Zenite Demo User';
 import { createProjectSchema, updateProjectSchema } from '../../../lib/validators/projects';
+import { getAuthUserId } from '../../../lib/auth-helpers';
 
 // Prevent static generation - this route must run at request time
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    const userId = await getAuthUserId();
     const projects = await prisma.project.findMany({
+      where: { ownerId: userId },
       orderBy: { createdAt: 'desc' },
       take: 200,
       include: { _count: { select: { tasks: true } } },
@@ -39,6 +39,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const userId = await getAuthUserId();
     const body = await request.json();
     const parsed = createProjectSchema.safeParse(body);
     if (!parsed.success) {
@@ -49,21 +50,8 @@ export async function POST(request: Request) {
     }
 
     const { name, description } = parsed.data;
-    // Determine owner for the new project. We upsert a fallback demo user in
-    // cases where an authenticated local user row isn't available (preview/dev).
-    const fallback = await prisma.user.upsert({
-      where: { email: FALLBACK_OWNER_EMAIL },
-      update: {},
-      create: { email: FALLBACK_OWNER_EMAIL, name: FALLBACK_OWNER_NAME },
-    });
     const project = await prisma.project.create({
-      // Cast to any to avoid mismatches between generated Prisma client types
-      // across environments (build vs local). The runtime shape is valid.
-      data: {
-        name,
-        description,
-        owner: { connect: { id: fallback.id } },
-      } as any,
+      data: { name, description, ownerId: userId },
     });
     return NextResponse.json(project, { status: 201 });
   } catch (err) {
@@ -76,6 +64,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    const userId = await getAuthUserId();
     const body = await request.json();
     const parsed = updateProjectSchema.safeParse(body);
     if (!parsed.success) {
@@ -86,6 +75,16 @@ export async function PATCH(request: Request) {
     }
 
     const { id, name, description } = parsed.data;
+
+    // Verify ownership
+    const existing = await prisma.project.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'project not found' }, { status: 404 });
+    }
+    if (existing.ownerId !== userId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const data: Partial<{ name: string; description: string }> = {};
     if (name) data.name = name;
     if (description) data.description = description;
@@ -107,18 +106,24 @@ export async function PATCH(request: Request) {
         { status: 500 },
       );
     }
-    return NextResponse.json(
-      { error: 'Failed to update project', details: String(err) },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Failed to update project', details: String(err) }, { status: 500 });
   }
 }
 
 export async function DELETE(request: Request) {
   try {
+    const userId = await getAuthUserId();
     const url = new URL(request.url);
     const id = url.searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
+    // Verify ownership
+    const existing = await prisma.project.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'project not found' }, { status: 404 });
+    }
+    if (existing.ownerId !== userId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     await prisma.project.delete({ where: { id } });
     return NextResponse.json({ ok: true });
@@ -132,14 +137,8 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
     if (err instanceof Error) {
-      return NextResponse.json(
-        { error: 'Failed to delete project', details: err.message },
-        { status: 500 },
-      );
+      return NextResponse.json({ error: 'Failed to delete project', details: err.message }, { status: 500 });
     }
-    return NextResponse.json(
-      { error: 'Failed to delete project', details: String(err) },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Failed to delete project', details: String(err) }, { status: 500 });
   }
 }

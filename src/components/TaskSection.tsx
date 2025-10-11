@@ -45,7 +45,7 @@ export default function TaskSection({
         }
       >
         <ul className="list-none space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6 max-w-full">
-          {tasks.length === 0 && <li className="text-sm text-neutral-content">No items.</li>}
+          {tasks.length === 0 && null}
           {tasks.map((t) => (
             <li key={t.id} className="px-1.5 sm:px-2">
               <DashboardTaskCard

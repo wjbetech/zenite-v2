@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // Safe, idempotent seeding for dev/test only
-// This script refuses to run if DATABASE_URL points to a non-local host or production-like DB.
-
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
@@ -27,7 +25,6 @@ async function main() {
 
   const shouldSeedDemo = process.env.SEED_DEMO_DATA === 'true';
   console.log(`Running dev/test seed (demo data ${shouldSeedDemo ? 'enabled' : 'disabled'}).`);
-
   if (!shouldSeedDemo) {
     console.log(
       'Skipping demo projects and tasks. Set SEED_DEMO_DATA=true if you want sample data inserted.',
@@ -65,7 +62,11 @@ async function main() {
     let p = await prisma.project.findFirst({ where: { name: pd.name } });
     if (!p) {
       p = await prisma.project.create({
-        data: { name: pd.name, description: pd.description, ownerId: user.id },
+        data: {
+          name: pd.name,
+          description: pd.description,
+          owner: { connect: { id: user.id } },
+        },
       });
     }
     createdProjects.push(p);
@@ -86,7 +87,6 @@ async function main() {
           projectId: p.id,
         });
       }
-      // Type-checking in JS files can flag Prisma enum types; allow this runtime call
       // @ts-expect-error Allow using string enum values in createMany JS call
       await prisma.task.createMany({ data: toCreate });
     }
@@ -100,9 +100,6 @@ async function main() {
 
   // Create a few unassigned tasks with dueDate values so Today/Week lists display
   const now = new Date();
-  /**
-   * @param {Date} d
-   */
   const iso = (d) => d.toISOString();
   const sampleDueDates = [
     new Date(now),
@@ -114,11 +111,7 @@ async function main() {
     const title = `Due Sample ${i + 1}`;
     const exists = await prisma.task.findFirst({ where: { title } });
     if (exists) {
-      // If a sample task already exists from a previous seed run, refresh its dueDate
-      await prisma.task.update({
-        where: { id: exists.id },
-        data: { dueDate: iso(sampleDueDates[i]) },
-      });
+      await prisma.task.update({ where: { id: exists.id }, data: { dueDate: iso(sampleDueDates[i]) } });
     } else {
       await prisma.task.create({
         data: {

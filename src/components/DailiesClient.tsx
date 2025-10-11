@@ -12,6 +12,8 @@ import CreateDailyModal from './CreateDailyModal';
 
 export default function DailiesClient() {
   const tasks = useTaskStore((s) => s.tasks) as Task[];
+  const tasksLoading = useTaskStore((s) => s.loading);
+  const tasksError = useTaskStore((s) => s.error);
   const deleteTask = useTaskStore((s) => s.deleteTask);
   const updateTask = useTaskStore((s) => s.updateTask);
   const projects = useProjectStore((s) => s.projects);
@@ -101,47 +103,53 @@ export default function DailiesClient() {
   // deletion is handled from the task card directly; modal no longer supports delete
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-      <header className="px-4 pt-4">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-3xl md:text-2xl font-semibold mb-0 text-center md:text-left w-full md:w-auto">
-              Dailies
-            </h1>
-            <div className="hidden md:flex items-center gap-3">
-              <button
-                onClick={() => setTimerOpen((s) => !s)}
-                className="btn-icon  text-sm text-gray-500 hover:text-gray-700 cursor-pointer"
-                aria-expanded={timerOpen}
-              >
-                {timerOpen ? 'Hide timer' : 'Show timer'}
-              </button>
-              <button
-                onClick={() => {
-                  setCreating(true);
-                }}
-                className="btn btn-success  border-2 border-base-content"
-                aria-label="Add daily task"
-              >
-                + Add Daily Task
-              </button>
+    <div className="px-5 py-8 flex-1 min-h-0">
+      <header>
+        <div className="mx-auto w-full max-w-6xl">
+          <div className="relative bg-gradient-to-br from-base-100 via-base-200/80 to-base-300/60 rounded-xl border-2 border-base-300/50 shadow-2xl shadow-success/50 backdrop-blur-md px-6 py-6 mb-6 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-success/5 via-transparent to-secondary/5 pointer-events-none" />
+
+            <div className="relative flex flex-col gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h1 className="text-3xl md:text-3xl font-semibold mb-0 text-center text-success md:text-left w-full md:w-auto">
+                  Dailies
+                </h1>
+                <div className="hidden md:flex items-center gap-3">
+                  <button
+                    onClick={() => setTimerOpen((s) => !s)}
+                    className="btn-icon  text-sm text-gray-500 hover:text-gray-700 cursor-pointer"
+                    aria-expanded={timerOpen}
+                  >
+                    {timerOpen ? 'Hide timer' : 'Show timer'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCreating(true);
+                    }}
+                    className="btn btn-success  border-2 border-base-content"
+                    aria-label="Add daily task"
+                  >
+                    + Add Daily Task
+                  </button>
+                </div>
+              </div>
+              <div className="flex md:hidden items-center justify-end gap-3">
+                <button
+                  onClick={() => setTimerOpen((s) => !s)}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                  aria-expanded={timerOpen}
+                >
+                  {timerOpen ? 'Hide timer' : 'Show timer'}
+                </button>
+                <button
+                  onClick={() => setCreating(true)}
+                  className="btn btn-ghost btn-sm"
+                  aria-label="Add daily task"
+                >
+                  + Add
+                </button>
+              </div>
             </div>
-          </div>
-          <div className="flex md:hidden items-center justify-end gap-3">
-            <button
-              onClick={() => setTimerOpen((s) => !s)}
-              className="text-sm text-gray-500 hover:text-gray-700"
-              aria-expanded={timerOpen}
-            >
-              {timerOpen ? 'Hide timer' : 'Show timer'}
-            </button>
-            <button
-              onClick={() => setCreating(true)}
-              className="btn btn-ghost btn-sm"
-              aria-label="Add daily task"
-            >
-              + Add
-            </button>
           </div>
         </div>
       </header>
@@ -155,8 +163,42 @@ export default function DailiesClient() {
 
             <section className="mb-[74px]">
               <div className="transition-all duration-300 ease-in-out pt-4 pb-2 px-0">
-                {daily.length === 0 ? (
-                  <div className="text-sm text-neutral-content">No items.</div>
+                {tasksLoading ? (
+                  <div className="flex flex-col items-center justify-center py-24 text-center w-full">
+                    <svg
+                      className="animate-spin h-10 w-10 text-success"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      aria-hidden
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                      ></path>
+                    </svg>
+                    <div className="mt-3 text-sm text-base-content/50">Fetching tasks…</div>
+                  </div>
+                ) : daily.length === 0 ? (
+                  tasksError ? (
+                    <div className="flex items-center justify-center py-24 w-full">
+                      <div className="text-center text-base-content/50">
+                        <p>
+                          Unable to load tasks — the database may be unavailable. Check your local
+                          DB and try again, or contact the administrator (wjbetech@gmail.com)
+                        </p>
+                      </div>
+                    </div>
+                  ) : null
                 ) : (
                   <NativeSortableDaily
                     items={daily.map((t) => ({

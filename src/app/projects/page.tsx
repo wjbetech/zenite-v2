@@ -2,7 +2,8 @@ export const dynamic = 'force-dynamic';
 
 import ProjectsClient from '../../components/ProjectsClient';
 import prisma from '../../lib/prisma';
-import { getAuthUserId } from '../../lib/auth-helpers';
+import { requireAuth } from '../../lib/auth-helpers';
+import { redirect } from 'next/navigation';
 
 export default async function Page() {
   let projects = [] as Array<{
@@ -13,7 +14,12 @@ export default async function Page() {
   }>;
   try {
     try {
-      const userId = await getAuthUserId();
+      const authRes = await requireAuth();
+      if (authRes.error) {
+        // If not authenticated, redirect to login
+        redirect('/login');
+      }
+      const userId = authRes.userId!;
       projects = await prisma.project.findMany({
         where: { ownerId: userId },
         orderBy: { createdAt: 'desc' },

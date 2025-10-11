@@ -1,7 +1,8 @@
 import prisma from '../../../lib/prisma';
 import ProjectTasksClient from '../../../components/ProjectTasksClient';
 import { projectSlug } from '../../../lib/utils';
-import { getAuthUserId } from '../../../lib/auth-helpers';
+import { requireAuth } from '../../../lib/auth-helpers';
+import { redirect } from 'next/navigation';
 
 export default async function Page(props: unknown) {
   // `params` can be a promise in some Next.js environments — await it before
@@ -15,7 +16,11 @@ export default async function Page(props: unknown) {
   // are normalized consistently.
   let project = null;
   try {
-    const userId = await getAuthUserId();
+    const authRes = await requireAuth();
+    if (authRes.error) {
+      redirect('/login');
+    }
+    const userId = authRes.userId!;
     const projects = await prisma.project.findMany({
       where: { ownerId: userId },
       select: { id: true, name: true, description: true },

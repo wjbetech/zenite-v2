@@ -114,14 +114,13 @@ export default async function RootLayout({
         </Script>
       </head>
 
-      <body className={`font-vend bg-base-100 text-base-content`}>
+      <body className={`font-vend text-base-content`}>
         <Providers>
           <Navbar />
-          {/* spacer for fixed navbar height (kept for layout), use CSS var '--nav-height' for precise centering */}
-          <div style={{ height: 72 }} />
-          <div className="flex h-[calc(100vh-72px)]">
+          {/* Navbar now overlays content. Do not apply top padding so pages sit underneath the absolute navbar. */}
+          <div className="flex min-h-screen">
             <Sidebar isLoggedIn={isLoggedIn} />
-            <main className="flex-1 p-6 h-full flex flex-col min-h-0">{children}</main>
+            <main className="flex-1 h-full flex flex-col min-h-0">{children}</main>
           </div>
         </Providers>
       </body>

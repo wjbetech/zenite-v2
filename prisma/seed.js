@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // Safe, idempotent seeding for dev/test only
-// This script refuses to run if DATABASE_URL points to a non-local host or production-like DB.
-
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
@@ -27,7 +25,6 @@ async function main() {
 
   const shouldSeedDemo = process.env.SEED_DEMO_DATA === 'true';
   console.log(`Running dev/test seed (demo data ${shouldSeedDemo ? 'enabled' : 'disabled'}).`);
-
   if (!shouldSeedDemo) {
     console.log(
       'Skipping demo projects and tasks. Set SEED_DEMO_DATA=true if you want sample data inserted.',
@@ -90,7 +87,6 @@ async function main() {
           projectId: p.id,
         });
       }
-      // Type-checking in JS files can flag Prisma enum types; allow this runtime call
       // @ts-expect-error Allow using string enum values in createMany JS call
       await prisma.task.createMany({ data: toCreate });
     }

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '../../../../src/lib/prisma';
+import prisma from '@/lib/prisma';
 import { createProjectSchema, updateProjectSchema } from '../../../lib/validators/projects';
 import { requireAuth } from '../../../lib/auth-helpers';
 
@@ -128,7 +128,6 @@ export async function DELETE(request: Request) {
     const url = new URL(request.url);
     const id = url.searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
-
     // Verify ownership
     const existing = await prisma.project.findUnique({ where: { id } });
     if (!existing) {

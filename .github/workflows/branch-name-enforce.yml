@@ -21,12 +21,12 @@ jobs:
           fi
           echo "Evaluating branch: $ref"
 
-          # Allowed patterns: main, master, staging, release/*, feature/*, fix/*, chore/*, refactor/*, hotfix/*, docs/*, test/*
+          # Allowed patterns: main, master, staging, release/*, feature/*, feat/*, fix/*, bugfix/*, chore/*, refactor/*, hotfix/*, docs/*, test/*, merge/*
           if [[ "$ref" =~ ^(main|master|staging)$ ]] || \
-             [[ "$ref" =~ ^(release/.+|feature/.+|fix/.+|chore/.+|refactor/.+|hotfix/.+|docs/.+|test/.+)$ ]]; then
+             [[ "$ref" =~ ^(release/.+|feature/.+|feat/.+|fix/.+|bugfix/.+|chore/.+|refactor/.+|hotfix/.+|docs/.+|test/.+|merge/.+)$ ]]; then
             echo "Branch name OK: $ref"
             exit 0
           else
-            echo "ERROR: Branch name '$ref' does not match allowed patterns. Allowed: main, master, release/*, feature/*, fix/*, chore/*, refactor/*, hotfix/*, docs/*, test/*"
+            echo "ERROR: Branch name '$ref' does not match allowed patterns. Allowed: main, master, staging, release/*, feature/*, feat/*, fix/*, bugfix/*, chore/*, refactor/*, hotfix/*, docs/*, test/*, merge/*"
             exit 1
           fi

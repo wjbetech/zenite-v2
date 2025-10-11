@@ -102,6 +102,67 @@ body {
   overflow-y: scroll;
 }
 
+/* Glassmorphism utilities for navbar and small cards. */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-bg-dark: rgba(17, 24, 39, 0.5); /* for dark-ish themes */
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-border-dark: rgba(255, 255, 255, 0.08);
+  --glass-blur: 8px;
+  --glass-shadow: 0 6px 18px rgba(2, 6, 23, 0.08);
+}
+
+/* Respect user preference to reduce motion/blur and avoid backdrop-filter when unavailable */
+@media (prefers-reduced-transparency: reduce), (prefers-reduced-motion: reduce) {
+  :root {
+    --glass-blur: 0px;
+  }
+}
+
+/* The `nav-glass` class applies a subtle glass effect. It uses backdrop-filter when available,
+   falls back to a translucent background otherwise, and adapts for dark themes using the
+   page's data-theme attribute (DaisyUI). */
+.nav-glass {
+  /* Make the nav element itself transparent so content sits visually beneath it.
+     Use isolation to create a stacking context so the pseudo-element can sit
+     behind the nav's content but above the page for the glass/blur effect. */
+  background-color: transparent;
+  isolation: isolate;
+  box-shadow: var(--glass-shadow);
+}
+
+/* Optional overlay behind nav content that provides the glass color + blur while
+   keeping the nav element transparent. This prevents a solid rectangle look while
+   still letting the navbar 'blend' with the page. */
+.nav-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-bottom: 1px solid var(--glass-border);
+  z-index: -1; /* behind nav content but above page */
+}
+
+/* Dark mode adaptation: when DaisyUI sets a dark-ish theme on html[data-theme], switch vars */
+
+html[data-theme='business'] .nav-glass::before,
+html[data-theme='dim'] .nav-glass::before,
+html[data-theme='nord'] .nav-glass::before {
+  background-color: var(--glass-bg-dark);
+  border-bottom: 1px solid var(--glass-border-dark);
+}
+
+/* On very small screens, reduce blur and shadow for performance */
+@media (max-width: 640px) {
+  .nav-glass {
+    --glass-blur: 2px;
+    box-shadow: 0 4px 10px rgba(2, 6, 23, 0.06);
+  }
+}
+
 /* subtle float animations used on the home hero */
 @keyframes float {
   0% {

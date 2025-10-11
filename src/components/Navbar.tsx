@@ -49,7 +49,12 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex w-full backdrop-blur-sm h-[84px]">
+    <nav
+      role="navigation"
+      aria-label="Main"
+      className="absolute top-0 left-0 right-0 z-50 flex w-full "
+      style={{ height: 'var(--nav-height)' }}
+    >
       <div className="mx-auto px-4 py-3 flex items-center w-full justify-between">
         {/* Left: logo + links */}
         <div className="flex items-center gap-4">
@@ -58,7 +63,7 @@ export default function Navbar() {
             className="flex items-center gap-3 text-2xl md:text-3xl font-extrabold text-emerald-600"
           >
             <DiamondLogo className="w-7 h-7 inline-block transform translate-y-0.5" />
-            <span className="text-emerald-600 text-4xl font-extrabold">Zenite</span>
+            <h5 className="text-emerald-600 text-4xl font-semibold">Zenite</h5>
           </Link>
         </div>
 

@@ -1,11 +1,11 @@
 import HomeHero from '../components/HomeHero';
-import HomeFeatures from '../components/HomeFeatures';
+// import HomeFeatures from '../components/HomeFeatures';
 
 export default function Home() {
   return (
     <div>
       <HomeHero />
-      <HomeFeatures />
+      {/* <HomeFeatures /> */}
     </div>
   );
 }

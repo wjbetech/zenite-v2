@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { createProjectSchema, updateProjectSchema } from '../../../lib/validators/projects';
@@ -114,7 +113,10 @@ export async function PATCH(request: Request) {
         { status: 500 },
       );
     }
-    return NextResponse.json({ error: 'Failed to update project', details: String(err) }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to update project', details: String(err) },
+      { status: 500 },
+    );
   }
 }
 
@@ -147,8 +149,14 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
     if (err instanceof Error) {
-      return NextResponse.json({ error: 'Failed to delete project', details: err.message }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to delete project', details: err.message },
+        { status: 500 },
+      );
     }
-    return NextResponse.json({ error: 'Failed to delete project', details: String(err) }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to delete project', details: String(err) },
+      { status: 500 },
+    );
   }
 }

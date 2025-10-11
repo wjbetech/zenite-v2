@@ -63,6 +63,8 @@ export async function requireAuth(): Promise<
         ? `${clerkUser.firstName}${clerkUser.lastName ? ' ' + clerkUser.lastName : ''}`
         : clerkUser.username ?? email.split('@')[0];
 
+      console.log('[requireAuth] Syncing Clerk user:', { userId, email, name });
+
       await prisma.user.upsert({
         where: { id: userId },
         update: {
@@ -77,6 +79,8 @@ export async function requireAuth(): Promise<
           avatarUrl: clerkUser.imageUrl ?? undefined,
         },
       });
+
+      console.log('[requireAuth] User synced successfully:', userId);
     }
   } catch (err) {
     console.error('requireAuth: failed to sync Clerk user to local DB', err);

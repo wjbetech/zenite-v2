@@ -11,12 +11,14 @@ export async function GET() {
     const authRes = await requireAuth();
     if (authRes.error) return authRes.error;
     const userId = authRes.userId!;
+    console.log('[GET /api/projects] Fetching projects for userId:', userId);
     const projects = await prisma.project.findMany({
       where: { ownerId: userId },
       orderBy: { createdAt: 'desc' },
       take: 200,
       include: { _count: { select: { tasks: true } } },
     });
+    console.log('[GET /api/projects] Found', projects.length, 'projects for userId:', userId);
 
     const serialized = projects.map((p) => {
       const projectWithCount = p as typeof p & { _count?: { tasks?: number } };

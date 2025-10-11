@@ -70,10 +70,12 @@ export async function GET() {
     const authRes = await requireAuth();
     if (authRes.error) return authRes.error;
     const userId = authRes.userId!;
+    console.log('[GET /api/tasks] Fetching tasks for userId:', userId);
     const tasks = await prisma.task.findMany({
       where: { ownerId: userId },
       orderBy: { createdAt: 'desc' },
     });
+    console.log('[GET /api/tasks] Found', tasks.length, 'tasks for userId:', userId);
     return NextResponse.json(tasks.map(serializeTask));
   } catch (error) {
     console.error('GET /api/tasks failed', error);

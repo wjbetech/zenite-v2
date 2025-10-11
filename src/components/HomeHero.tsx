@@ -12,7 +12,7 @@ export default function HomeHero() {
   const router = useRouter();
 
   return (
-    <section className="relative flex min-h-screen w-full items-center text-center overflow-hidden bg-gradient-to-br from-base-300 via-base-300/60 to-base-300/80 text-base-content py-20">
+    <section className="relative flex min-h-screen max-h-screen w-full items-center text-center overflow-hidden bg-gradient-to-br from-base-300 via-base-300/60 to-base-300/80 text-base-content py-20">
       <div className="pointer-events-none absolute inset-0 py-10">
         <div className="absolute -left-32 top-24 h-72 w-72 rounded-full bg-emerald-500/25 blur-3xl" />
         <div className="absolute right-0 top-1/3 h-80 w-80 rounded-full bg-sky-500/20 blur-3xl" />

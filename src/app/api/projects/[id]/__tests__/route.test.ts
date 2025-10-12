@@ -28,6 +28,10 @@ jest.mock('src/lib/prisma', () => ({
     delete: jest.fn(),
     findUnique: jest.fn(),
   },
+  user: {
+    upsert: jest.fn(),
+    findUnique: jest.fn(),
+  },
 }));
 
 import prisma from 'src/lib/prisma';
@@ -35,10 +39,25 @@ import prisma from 'src/lib/prisma';
 describe('API: /api/projects/[id]', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Default to an existing project owned by the test clerk user so
+    // ownership checks in the route handlers pass unless a test
+    // explicitly overrides this behavior.
+    prisma.project.findUnique.mockResolvedValue({
+      id: '00000000-0000-0000-0000-000000000001',
+      ownerId: 'test_user',
+    });
+    // Ensure auth helpers see a local user row to avoid fallback upsert errors
+    prisma.user.findUnique.mockResolvedValue({ id: 'test_user' });
+    prisma.user.upsert.mockResolvedValue({ id: 'test_user' });
   });
 
   test('GET returns project when found', async () => {
-    const fakeProject = { id: '00000000-0000-0000-0000-000000000001', name: 'Test', tasks: [] };
+    const fakeProject = {
+      id: '00000000-0000-0000-0000-000000000001',
+      name: 'Test',
+      tasks: [],
+      ownerId: 'test_user',
+    };
     prisma.project.findUnique.mockResolvedValue(fakeProject);
 
     const req = new Request('http://localhost/api/projects/00000000-0000-0000-0000-000000000001');

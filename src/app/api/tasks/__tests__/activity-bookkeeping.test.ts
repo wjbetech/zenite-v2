@@ -21,6 +21,7 @@ jest.mock('src/lib/prisma', () => ({
     create: jest.fn(),
     deleteMany: jest.fn(),
   },
+  user: { upsert: jest.fn(), findUnique: jest.fn() },
 }));
 
 import prisma from 'src/lib/prisma';
@@ -39,7 +40,10 @@ describe('PATCH /api/tasks activity bookkeeping', () => {
 
   test('creates an activity row for today when marking completed', async () => {
     const fakeExisting = { id: 't1', completedAt: null };
-    (prisma.task.findUnique as jest.Mock).mockResolvedValue(fakeExisting);
+    (prisma.task.findUnique as jest.Mock).mockResolvedValue({
+      ...fakeExisting,
+      ownerId: 'test_user',
+    });
     (prisma.task.update as jest.Mock).mockResolvedValue({
       id: 't1',
       title: 'Task 1',
@@ -52,6 +56,11 @@ describe('PATCH /api/tasks activity bookkeeping', () => {
       projectId: null,
     });
     (prisma.activity.findFirst as jest.Mock).mockResolvedValue(null);
+    (prisma.activity.create as jest.Mock).mockResolvedValue({
+      id: 'a-t1',
+      taskId: 't1',
+      date: '2025-10-01',
+    });
 
     const payload = { id: 't1', completed: true };
     const req = new Request('http://localhost/api/tasks', {
@@ -77,7 +86,10 @@ describe('PATCH /api/tasks activity bookkeeping', () => {
   test("deletes today's activity rows when marking uncompleted", async () => {
     const prevDate = new Date().toISOString();
     const fakeExisting = { id: 't1', completedAt: prevDate };
-    (prisma.task.findUnique as jest.Mock).mockResolvedValue(fakeExisting);
+    (prisma.task.findUnique as jest.Mock).mockResolvedValue({
+      ...fakeExisting,
+      ownerId: 'test_user',
+    });
     (prisma.task.update as jest.Mock).mockResolvedValue({
       id: 't1',
       title: 'Task 1',

@@ -8,6 +8,10 @@ declare module '@clerk/nextjs/server' {
     username?: string;
     imageUrl?: string | null;
   } | null>;
-  export function clerkMiddleware(): any;
+  // clerkMiddleware accepts a handler function (auth helper and request)
+  // and returns an unknown middleware result. Avoid `any` to satisfy lint.
+  export function clerkMiddleware(
+    handler: (auth: () => { protect: () => void }, req: unknown) => unknown,
+  ): unknown;
   export function createRouteMatcher(): (url: string) => boolean;
 }

@@ -41,3 +41,16 @@ export {
   mockActivity as __mockActivity,
   mockUser as __mockUser,
 };
+
+// Provide reasonable default resolved values so handlers that call
+// these during auth/bootstrapping don't throw during tests.
+mockUser.upsert.mockResolvedValue({ id: 'fallback-demo-user' });
+mockUser.findUnique.mockResolvedValue(null);
+mockProject.findUnique.mockResolvedValue(null);
+mockProject.findMany.mockResolvedValue([]);
+mockTask.findMany.mockResolvedValue([]);
+mockTask.findUnique.mockResolvedValue(null);
+mockActivity.findFirst.mockResolvedValue(null);
+mockActivity.findMany.mockResolvedValue([]);
+mockActivity.create.mockResolvedValue({});
+mockActivity.deleteMany.mockResolvedValue({ count: 0 });

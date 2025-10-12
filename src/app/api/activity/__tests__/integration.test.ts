@@ -19,6 +19,10 @@ jest.mock('src/lib/prisma', () => ({
     findUnique: jest.fn(),
     update: jest.fn(),
   },
+  user: {
+    upsert: jest.fn(),
+    findUnique: jest.fn(),
+  },
 }));
 
 import * as activityHandlers from '../route';
@@ -30,6 +34,8 @@ describe('POST/GET /api/activity and tasks bookkeeping integration', () => {
     jest.clearAllMocks();
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2025-10-01T08:00:00Z'));
+    prisma.user.findUnique.mockResolvedValue({ id: 'test_user' });
+    prisma.user.upsert.mockResolvedValue({ id: 'test_user' });
   });
 
   afterEach(() => {
@@ -74,13 +80,19 @@ describe('POST/GET /api/activity and tasks bookkeeping integration', () => {
     const getRes = await activityHandlers.GET(getReq as unknown as Request);
     const rows = await getRes.json();
     expect(prisma.activity.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { date: '2025-10-01' }, orderBy: { createdAt: 'desc' } }),
+      expect.objectContaining({
+        where: { date: '2025-10-01', ownerId: 'test_user' },
+        orderBy: { createdAt: 'desc' },
+      }),
     );
     expect(rows[0]).toHaveProperty('taskId', 't1');
 
     // Now simulate PATCH /api/tasks marking task uncompleted; it should call deleteMany for today's date
     const fakeExisting = { id: 't1', completedAt: new Date().toISOString() };
-    (prisma.task.findUnique as jest.Mock).mockResolvedValue(fakeExisting);
+    (prisma.task.findUnique as jest.Mock).mockResolvedValue({
+      ...fakeExisting,
+      ownerId: 'test_user',
+    });
     (prisma.task.update as jest.Mock).mockResolvedValue({
       id: 't1',
       title: 'T1',
@@ -99,6 +111,9 @@ describe('POST/GET /api/activity and tasks bookkeeping integration', () => {
     });
     const patchRes = await taskHandlers.PATCH(patchReq as unknown as Request);
     const patchBody = await patchRes.json();
+
+    // Ensure deleteMany resolved so assertions can be observed
+    (prisma.activity.deleteMany as jest.Mock).mockResolvedValue({ count: 1 });
 
     expect(prisma.activity.deleteMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { taskId: 't1', date: '2025-10-01' } }),

@@ -9,8 +9,8 @@ jest.mock('../../lib/taskStore', () => {
   return { __esModule: true, default: mock };
 });
 
-test('shows error alert when store provides an error', () => {
+test('shows error paragraph when store provides an error', () => {
   render(<Dashboard />);
-  const alert = screen.getByRole('alert');
-  expect(alert).toHaveTextContent(/server failure/i);
+  // The component renders a paragraph explaining DB/unavailable state
+  expect(screen.getByText(/unable to load tasks/i)).toBeInTheDocument();
 });

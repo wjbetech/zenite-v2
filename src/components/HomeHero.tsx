@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Gem from './Gem';
 import Gem3D from './Gem3D';
 import { useUser, SignInButton } from '@clerk/nextjs';
@@ -10,22 +10,49 @@ import { ArrowRight, LayoutDashboard } from 'lucide-react';
 export default function HomeHero() {
   const { isSignedIn } = useUser();
   const router = useRouter();
+  // Hero spacing is handled by container height (100vh minus navbar) and inner gap utilities.
+
+  // Responsive gem size: measure container width and compute a smaller gem on narrower layouts.
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [gemSize, setGemSize] = useState<number>(200);
+
+  useEffect(() => {
+    function computeSize() {
+      const el = containerRef.current;
+      const width = el?.clientWidth ?? window.innerWidth;
+      // Use a smaller fraction for the gem so it doesn't dominate narrower screens.
+      const scaled = Math.round(width * 0.15); // ~144 at 960px
+      const clamped = Math.max(100, Math.min(180, scaled));
+      setGemSize(clamped);
+    }
+
+    computeSize();
+    window.addEventListener('resize', computeSize);
+    return () => window.removeEventListener('resize', computeSize);
+  }, []);
 
   return (
-    <section className="relative flex min-h-screen w-full items-center text-center overflow-hidden bg-gradient-to-br from-base-300 via-base-300/60 to-base-300/80 text-base-content py-20">
+    <section
+      className="relative flex w-full items-center text-center bg-gradient-to-br from-base-300 via-base-300/60 to-base-300/80 text-base-content"
+      style={{
+        height: `calc(100vh - var(--nav-height))`,
+        boxSizing: 'border-box',
+        overflow: 'auto',
+      }}
+    >
       <div className="pointer-events-none absolute inset-0 py-10">
         <div className="absolute -left-32 top-24 h-72 w-72 rounded-full bg-emerald-500/25 blur-3xl" />
         <div className="absolute right-0 top-1/3 h-80 w-80 rounded-full bg-sky-500/20 blur-3xl" />
         <div className="absolute inset-x-1/3 bottom-0 h-64 rounded-full bg-indigo-500/10 blur-3xl" />
       </div>
 
-      <div className="relative z-10 flex w-full flex-col justify-center px-6 py-24 sm:px-10 lg:px-16 xl:px-24 text-center">
-        <div className="flex flex-col items-center gap-16 text-center">
-          <div className="flex flex-col items-center justify-center space-y-20 m-auto text-center w-full">
-            <h1 className="text-4xl font-semibold text-base-content sm:text-6xl">
+      <div className="relative z-10 flex w-full justify-center px-6 py-8 sm:py-12 sm:px-10 lg:px-16 xl:px-24 text-center">
+        <div className="mx-auto flex max-w-6xl w-full flex-col items-center justify-center gap-y-6 sm:gap-y-10 lg:gap-y-16">
+          <div className="flex flex-col items-center justify-center text-center w-full">
+            <h1 className="text-4xl font-semibold text-base-content sm:text-6xl mt-4 sm:mt-6 md:mt-8 mb-6 sm:mb-8">
               Productivity should be <span className="text-emerald-600">zenful</span>.
             </h1>
-            <div className="flex flex-col pb-10 sm:flex-row sm:items-center sm:justify-center justify-center">
+            <div className="flex flex-col mt-4 sm:flex-row sm:items-center sm:justify-center justify-center gap-x-4">
               {isSignedIn ? (
                 <button
                   className="btn btn-success border-2 border-base-content inline-flex items-center justify-center font-semibold text-base-content shadow-[0_20px_45px_-20px_rgba(16,185,129,0.75)] transition"
@@ -60,10 +87,17 @@ export default function HomeHero() {
                 <div className="absolute -top-10 right-10 h-36 w-36 rounded-full bg-emerald-400/20 blur-3xl" />
                 <div className="absolute -bottom-12 left-12 h-40 w-40 rounded-full bg-sky-400/20 blur-3xl" />
 
-                <div className="relative flex items-center justify-center py-20">
-                  <Gem3D size={200} />
+                <div
+                  className="relative flex items-center justify-center py-12 sm:py-16"
+                  ref={containerRef}
+                >
+                  <div
+                    style={{ width: gemSize, height: gemSize, maxWidth: '50vw', maxHeight: '50vh' }}
+                  >
+                    <Gem3D size={gemSize} />
+                  </div>
                   <noscript>
-                    <Gem size={120} />
+                    <Gem size={Math.max(100, Math.round(gemSize * 0.6))} />
                   </noscript>
                 </div>
                 {/* 

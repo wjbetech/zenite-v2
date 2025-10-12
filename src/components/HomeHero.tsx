@@ -64,7 +64,7 @@ export default function HomeHero() {
                 <div className="absolute -bottom-12 left-12 h-40 w-40 rounded-full bg-sky-400/20 blur-3xl" />
 
                 <div className="relative flex items-center justify-center">
-                  <div className="mt-4 xl:mt-8 2xl:mt-12 w-[clamp(150px,20vw,380px)] h-[clamp(150px,20vw,380px)] max-w-[45vw] max-h-[60vh] xl:w-[clamp(190px,18vw,460px)] xl:h-[clamp(190px,18vw,460px)] 2xl:w-[clamp(240px,16vw,560px)] 2xl:h-[clamp(240px,16vw,560px)]">
+                  <div className="mt-4 xl:mt-12 2xl:mt-20 w-[clamp(150px,20vw,380px)] h-[clamp(150px,20vw,380px)] max-w-[45vw] max-h-[60vh] xl:w-[clamp(190px,18vw,460px)] xl:h-[clamp(190px,18vw,460px)] 2xl:w-[clamp(240px,16vw,560px)] 2xl:h-[clamp(240px,16vw,560px)]">
                     <Gem3D size={140} />
                   </div>
                   <noscript>

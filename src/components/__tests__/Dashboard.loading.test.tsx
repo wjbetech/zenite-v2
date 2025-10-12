@@ -19,6 +19,6 @@ test('shows loading indicator when tasks are loading', () => {
   setMockState({ loading: true });
   render(<Dashboard />);
 
-  // The Dashboard shows a loading message or spinner. We assert on text used in UI.
-  expect(screen.getByText(/loading/i)).toBeInTheDocument();
+  // The Dashboard shows a loading spinner and text 'Fetching tasks…'
+  expect(screen.getByText(/fetching tasks/i)).toBeInTheDocument();
 });

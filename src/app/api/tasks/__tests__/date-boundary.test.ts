@@ -19,6 +19,7 @@ jest.mock('src/lib/prisma', () => ({
     create: jest.fn(),
     deleteMany: jest.fn(),
   },
+  user: { upsert: jest.fn(), findUnique: jest.fn() },
 }));
 
 import * as handlers from '../route';
@@ -27,6 +28,8 @@ import prisma from 'src/lib/prisma';
 describe('Date-bound activity bookkeeping', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    prisma.user.findUnique.mockResolvedValue({ id: 'test_user' });
+    prisma.user.upsert.mockResolvedValue({ id: 'test_user' });
   });
 
   test("uncompleting a task on a new day only deletes today's activity rows and preserves previous day's activity", async () => {
@@ -37,7 +40,10 @@ describe('Date-bound activity bookkeeping', () => {
 
     // existing task was completed on previous day
     const fakeExisting = { id: 't1', completedAt: prevIso };
-    (prisma.task.findUnique as jest.Mock).mockResolvedValue(fakeExisting);
+    (prisma.task.findUnique as jest.Mock).mockResolvedValue({
+      ...fakeExisting,
+      ownerId: 'test_user',
+    });
     (prisma.task.update as jest.Mock).mockResolvedValue({
       id: 't1',
       title: 'Task 1',
@@ -58,6 +64,9 @@ describe('Date-bound activity bookkeeping', () => {
     const res = await handlers.PATCH(req as unknown as Request);
     const body = await res.json();
 
+    // Ensure activity mocks exist and deleteMany resolves so the handler proceeds
+    (prisma.activity.deleteMany as jest.Mock).mockResolvedValue({ count: 1 });
+
     // deleteMany should be called only for today's date (2025-10-02)
     expect(prisma.activity.deleteMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { taskId: 't1', date: '2025-10-02' } }),
@@ -76,7 +85,9 @@ describe('Date-bound activity bookkeeping', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2025-10-02T10:00:00Z'));
 
-    (prisma.task.findUnique as jest.Mock).mockResolvedValue(null);
+    // Return an existing task owned by the test user so the handler
+    // proceeds to create today's activity row.
+    (prisma.task.findUnique as jest.Mock).mockResolvedValue({ id: 't2', ownerId: 'test_user' });
     (prisma.task.update as jest.Mock).mockResolvedValue({
       id: 't2',
       title: 'Task 2',
@@ -89,6 +100,11 @@ describe('Date-bound activity bookkeeping', () => {
       projectId: null,
     });
     (prisma.activity.findFirst as jest.Mock).mockResolvedValue(null);
+    (prisma.activity.create as jest.Mock).mockResolvedValue({
+      id: 'a-t2',
+      taskId: 't2',
+      date: '2025-10-02',
+    });
 
     const payload = { id: 't2', completed: true };
     const req = new Request('http://localhost/api/tasks', {

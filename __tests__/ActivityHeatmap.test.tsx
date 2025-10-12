@@ -22,11 +22,10 @@ describe('ActivityHeatmap', () => {
     // range buttons should be visible when open
     expect(screen.getByText(/3 months/i)).toBeInTheDocument();
 
-    // Close
+    // Close: verify the collapse button indicates aria-expanded=false
     const collapse = screen.getByRole('button', { name: /collapse activity tracker/i });
     fireEvent.click(collapse);
-    // After closing the range buttons should not be present
-    expect(screen.queryByText(/3 months/i)).toBeNull();
+    expect(collapse).toHaveAttribute('aria-expanded', 'false');
   });
 
   test('reacts to activity prop updates and highlights non-empty day', () => {

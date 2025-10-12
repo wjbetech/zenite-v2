@@ -23,12 +23,12 @@ export default function HomeHero() {
       </div>
 
       <div className="relative z-10 flex w-full justify-center px-6 sm:px-10 lg:px-16 xl:px-24 text-center">
-        <div className="mx-auto flex max-w-6xl w-full flex-col items-center justify-center gap-y-10">
+        <div className="mx-auto flex max-w-6xl w-full flex-col items-center justify-center gap-y-10 xl:max-w-8xl xl:gap-y-14 2xl:max-w-[1400px] 2xl:gap-y-20">
           <div className="flex flex-col items-center justify-center text-center w-full">
-            <h1 className="text-4xl font-semibold text-base-content sm:text-6xl mt-4 sm:mt-6 md:mt-8 mb-6 sm:mb-8">
+            <h1 className="text-4xl font-semibold text-base-content sm:text-6xl xl:text-6xl 2xl:text-7xl mt-4 sm:mt-6 md:mt-8 mb-6 sm:mb-8">
               Productivity should be <span className="text-emerald-600">zenful</span>.
             </h1>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center justify-center gap-x-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center justify-center gap-x-4 xl:gap-x-6 xl:mt-4 2xl:mt-6">
               {isSignedIn ? (
                 <button
                   className="btn btn-success border-2 border-base-content inline-flex items-center justify-center font-semibold text-base-content shadow-[0_20px_45px_-20px_rgba(16,185,129,0.75)] transition"
@@ -43,7 +43,7 @@ export default function HomeHero() {
               ) : (
                 <SignInButton mode="modal">
                   <button
-                    className="btn btn-success inline-flex items-center justify-center font-semibold border-2 border-base-content transition"
+                    className="btn btn-success inline-flex items-center justify-center font-semibold border-2 border-base-content transition xl:px-6 xl:py-3 xl:text-lg"
                     aria-label="Get started"
                   >
                     Get Started
@@ -64,11 +64,11 @@ export default function HomeHero() {
                 <div className="absolute -bottom-12 left-12 h-40 w-40 rounded-full bg-sky-400/20 blur-3xl" />
 
                 <div className="relative flex items-center justify-center">
-                  <div className="w-[clamp(120px,22vw,240px)] h-[clamp(0px,22vw,160px)] max-w-[50vw] max-h-[45vh]">
+                  <div className="mt-4 xl:mt-8 2xl:mt-12 w-[clamp(150px,20vw,380px)] h-[clamp(150px,20vw,380px)] max-w-[45vw] max-h-[60vh] xl:w-[clamp(190px,18vw,460px)] xl:h-[clamp(190px,18vw,460px)] 2xl:w-[clamp(240px,16vw,560px)] 2xl:h-[clamp(240px,16vw,560px)]">
                     <Gem3D size={140} />
                   </div>
                   <noscript>
-                    <Gem size={80} />
+                    <Gem size={140} />
                   </noscript>
                 </div>
                 {/* 

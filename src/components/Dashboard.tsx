@@ -289,42 +289,38 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="mx-2 py-8 flex flex-col flex-1 min-h-0 overflow-x-visible max-w-[95%]">
+    <div className="mx-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-visible max-w-[95%]">
       {/* Wrap header, heatmap and lists in shared px-3 container for alignment */}
       <div className="mx-auto w-full max-w-6xl px-3">
         {/* Header with depth - elevated card with layered backgrounds */}
-        <div className="relative bg-gradient-to-br from-base-100 via-base-200/80 to-base-300/60 rounded-xl border-2 border-base-300/50 shadow-2xl shadow-primary/50 backdrop-blur-md px-6 py-6 mb-6 overflow-hidden">
-          {/* Subtle inner glow for depth */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
 
-          <div className="relative flex items-center justify-between">
-            <h1 className="text-3xl font-bold tracking-tight text-primary">Dashboard</h1>
-            <div className="flex items-center gap-3">
-              <button
-                className="btn btn-md btn-primary border-2 border-base-content shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center"
-                type="button"
-                onClick={() => {
-                  setEditing(undefined);
-                  setModalMode('task');
-                  setModalOpen(true);
-                }}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                New Task
-              </button>
-              <button
-                className="btn btn-md btn-secondary border-2 border-base-content shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center"
-                type="button"
-                onClick={() => {
-                  setEditing(undefined);
-                  setModalMode('project');
-                  setModalOpen(true);
-                }}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                New Project
-              </button>
-            </div>
+        <div className="relative flex items-center justify-between pb-6">
+          <h1 className="text-3xl font-bold tracking-tight text-primary-content">Dashboard</h1>
+          <div className="flex items-center gap-3">
+            <button
+              className="btn btn-md btn-primary border-2 border-base-content shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center"
+              type="button"
+              onClick={() => {
+                setEditing(undefined);
+                setModalMode('task');
+                setModalOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              New Task
+            </button>
+            <button
+              className="btn btn-md btn-secondary border-2 border-base-content shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center"
+              type="button"
+              onClick={() => {
+                setEditing(undefined);
+                setModalMode('project');
+                setModalOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              New Project
+            </button>
           </div>
         </div>
 
@@ -342,7 +338,7 @@ export default function Dashboard() {
 
       <div className="flex-1 flex flex-col min-h-0">
         {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
-        <div className="px-3 py-4 flex-1 min-h-0">
+        <div className="px-3 flex-1 min-h-0">
           <div className="mx-auto w-full max-w-6xl">
             {/* Toggle buttons */}
             <div className="mb-4">

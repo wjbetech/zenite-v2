@@ -103,52 +103,48 @@ export default function DailiesClient() {
   // deletion is handled from the task card directly; modal no longer supports delete
 
   return (
-    <div className="px-5 py-8 flex-1 min-h-0">
-      <header>
+    <div className="mx-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-visible max-w-[95%]">
+      <header className="max-w-6xl px-3">
         <div className="mx-auto w-full max-w-6xl">
-          <div className="relative bg-gradient-to-br from-base-100 via-base-200/80 to-base-300/60 rounded-xl border-2 border-base-300/50 shadow-2xl shadow-success/50 backdrop-blur-md px-6 py-6 mb-6 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-success/5 via-transparent to-secondary/5 pointer-events-none" />
-
-            <div className="relative flex flex-col gap-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h1 className="text-3xl md:text-3xl font-semibold mb-0 text-center text-success md:text-left w-full md:w-auto">
-                  Dailies
-                </h1>
-                <div className="hidden md:flex items-center gap-3">
-                  <button
-                    onClick={() => setTimerOpen((s) => !s)}
-                    className="btn-icon  text-sm text-gray-500 hover:text-gray-700 cursor-pointer"
-                    aria-expanded={timerOpen}
-                  >
-                    {timerOpen ? 'Hide timer' : 'Show timer'}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setCreating(true);
-                    }}
-                    className="btn btn-success  border-2 border-base-content"
-                    aria-label="Add daily task"
-                  >
-                    + Add Daily Task
-                  </button>
-                </div>
-              </div>
-              <div className="flex md:hidden items-center justify-end gap-3">
+          <div className="relative flex flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h1 className="text-3xl md:text-3xl font-semibold mb-0 text-center text-success-content md:text-left w-full md:w-auto">
+                Dailies
+              </h1>
+              <div className="hidden md:flex items-center gap-3">
                 <button
                   onClick={() => setTimerOpen((s) => !s)}
-                  className="text-sm text-gray-500 hover:text-gray-700"
+                  className="btn-icon  text-sm text-gray-500 hover:text-gray-700 cursor-pointer"
                   aria-expanded={timerOpen}
                 >
                   {timerOpen ? 'Hide timer' : 'Show timer'}
                 </button>
                 <button
-                  onClick={() => setCreating(true)}
-                  className="btn btn-ghost btn-sm"
+                  onClick={() => {
+                    setCreating(true);
+                  }}
+                  className="btn btn-success  border-2 border-base-content"
                   aria-label="Add daily task"
                 >
-                  + Add
+                  + Add Daily Task
                 </button>
               </div>
+            </div>
+            <div className="flex md:hidden items-center justify-end gap-3">
+              <button
+                onClick={() => setTimerOpen((s) => !s)}
+                className="text-sm text-gray-500 hover:text-gray-700"
+                aria-expanded={timerOpen}
+              >
+                {timerOpen ? 'Hide timer' : 'Show timer'}
+              </button>
+              <button
+                onClick={() => setCreating(true)}
+                className="btn btn-ghost btn-sm"
+                aria-label="Add daily task"
+              >
+                + Add
+              </button>
             </div>
           </div>
         </div>

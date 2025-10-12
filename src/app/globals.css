@@ -81,6 +81,12 @@
   .text-neutral-content {
     color: #f3f4f6;
   }
+  .text-base-content {
+    color: #f3f4f6;
+  }
+  .border-base-content {
+    border-color: #f3f4f6;
+  }
 }
 
 a {

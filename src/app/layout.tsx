@@ -118,7 +118,7 @@ export default async function RootLayout({
         <Providers>
           <Navbar />
           {/* Navbar now overlays content. Do not apply top padding so pages sit underneath the absolute navbar. */}
-          <div className="flex min-h-screen">
+          <div className="flex h-screen">
             <Sidebar isLoggedIn={isLoggedIn} />
             <main className="flex-1 h-full flex flex-col min-h-0">{children}</main>
           </div>

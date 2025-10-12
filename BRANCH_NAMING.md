@@ -26,24 +26,30 @@ This project enforces branch naming conventions through GitHub Actions (`.github
 - `test/*` - Test improvements (e.g., `test/api-integration`)
 - `merge/*` - Temporary merge resolution branches (e.g., `merge/staging-to-master-20251011`)
 
-## Workflow
+## Workflow (new)
 
-1. **Create feature branches from `staging`:**
+The canonical development workflow for this repository is:
+
+1. Developers branch from `main` for feature work.
    ```bash
-   git checkout staging
-   git pull origin staging
+   git checkout main
+   git pull origin main
    git checkout -b feat/your-feature-name
    ```
 
-2. **Create PRs to `staging` first:**
-   - Open PR: `feat/your-feature-name` → `staging`
-   - Review, test on Vercel preview
-   - Merge to staging
+2. Create PRs from your feature branch into `main` (optional) or directly into `staging` if you want a preview deploy.
 
-3. **Deploy to production:**
-   - Open PR: `staging` → `master`
-   - Resolve any conflicts
-   - Merge to master (triggers production deployment)
+3. When `main` is ready for integration testing / a preview deploy, open a PR: `main` → `staging`.
+   - Staging runs preview builds on Vercel and integration checks.
+   - Test the staging preview and fix issues on feature branches, then merge back into `main` and re-open `main` → `staging` if needed.
+
+4. After staging verification, open a PR: `staging` → `master` to deploy to production.
+   - Resolve any conflicts and merge to `master` (production deploys automatically).
+
+Notes:
+- `main` is the primary development branch and the source of truth for local development.
+- `staging` is for integration testing and preview deployments.
+- `master` is the production branch and should only be updated via PR from `staging`.
 
 ## Protected Branch Policies
 

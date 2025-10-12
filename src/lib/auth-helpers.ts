@@ -1,4 +1,5 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
+import { Prisma } from '@prisma/client';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
@@ -62,27 +63,53 @@ export async function requireAuth(): Promise<
       const name = clerkUser.firstName
         ? `${clerkUser.firstName}${clerkUser.lastName ? ' ' + clerkUser.lastName : ''}`
         : clerkUser.username ?? email.split('@')[0];
+      const avatarUrl = clerkUser.imageUrl ?? null;
 
       console.log('[requireAuth] Syncing Clerk user:', { userId, email, name });
 
-      await prisma.user.upsert({
-        where: { id: userId },
-        update: {
-          email,
-          name,
-          avatarUrl: clerkUser.imageUrl ?? undefined,
-        },
-        create: {
-          id: userId,
-          email,
-          name,
-          avatarUrl: clerkUser.imageUrl ?? undefined,
-        },
+      await prisma.$transaction(async (tx) => {
+        const existingById = await tx.user.findUnique({ where: { id: userId } });
+        if (existingById) {
+          await tx.user.update({
+            where: { id: userId },
+            data: { email, name, avatarUrl },
+          });
+          return;
+        }
+
+        const existingByEmail = await tx.user.findUnique({ where: { email } });
+        if (existingByEmail) {
+          if (existingByEmail.id !== userId) {
+            await tx.user.update({
+              where: { email },
+              data: {
+                id: userId,
+                name,
+                avatarUrl,
+              },
+            });
+          } else {
+            await tx.user.update({ where: { id: userId }, data: { name, avatarUrl } });
+          }
+          return;
+        }
+
+        await tx.user.create({
+          data: {
+            id: userId,
+            email,
+            name,
+            avatarUrl,
+          },
+        });
       });
 
       console.log('[requireAuth] User synced successfully:', userId);
     }
   } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      console.error('requireAuth: unique constraint collision when syncing user', err.meta);
+    }
     console.error('requireAuth: failed to sync Clerk user to local DB', err);
     // If sync fails, return error to avoid creating orphaned records
     return {

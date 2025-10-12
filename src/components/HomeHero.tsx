@@ -15,7 +15,7 @@ export default function HomeHero() {
   // Gem sizing is handled with CSS clamp so it stays proportional across breakpoints.
 
   return (
-    <section className="relative flex flex-col place-content-center w-full items-center text-center bg-gradient-to-br from-base-300 via-base-300/60 to-base-300/80 text-base-content min-h-screen max-h-screen">
+    <section className="relative flex flex-col place-content-center min-h-screen max-h-screen w-full items-center text-center overflow-hidden bg-gradient-to-br from-base-300 via-base-300/60 to-base-300/80 text-base-content">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-32 top-24 h-72 w-72 rounded-full bg-emerald-500/25 blur-3xl" />
         <div className="absolute right-0 top-1/3 h-80 w-80 rounded-full bg-sky-500/20 blur-3xl" />

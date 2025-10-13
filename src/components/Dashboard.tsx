@@ -324,7 +324,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="hidden sm:block">
+  <div className="hidden lg:block">
           <ActivityHeatmap
             open={heatmapOpen}
             onOpenChange={(v) => {

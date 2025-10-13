@@ -324,15 +324,17 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <ActivityHeatmap
-          open={heatmapOpen}
-          onOpenChange={(v) => {
-            console.debug('Dashboard: onOpenChange received', { v });
-            setHeatmapOpen(v);
-          }}
-          activity={activityMap}
-          activityDetails={activityDetails}
-        />
+        <div className="hidden sm:block">
+          <ActivityHeatmap
+            open={heatmapOpen}
+            onOpenChange={(v) => {
+              console.debug('Dashboard: onOpenChange received', { v });
+              setHeatmapOpen(v);
+            }}
+            activity={activityMap}
+            activityDetails={activityDetails}
+          />
+        </div>
         {/* moved: view-toggle buttons will be rendered inside the task lists card below */}
       </div>
 

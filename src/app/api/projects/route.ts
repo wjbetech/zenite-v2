@@ -1,16 +1,20 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { createProjectSchema, updateProjectSchema } from '../../../lib/validators/projects';
-import { requireAuth } from '../../../lib/auth-helpers';
+import { requireAuth, getAuthUserId } from '../../../lib/auth-helpers';
 
 // Prevent static generation - this route must run at request time
 export const dynamic = 'force-dynamic';
 
+const isDev = process.env.NODE_ENV === 'development';
+
 export async function GET() {
   try {
-    const authRes = await requireAuth();
-    if (authRes.error) return authRes.error;
-    const userId = authRes.userId!;
+    // In dev mode, use getAuthUserId which has fallback to demo user
+    const userId = isDev ? await getAuthUserId() : (await requireAuth()).userId ?? '';
+    if (!isDev && !userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.log('[GET /api/projects] Fetching projects for userId:', userId);
     const projects = await prisma.project.findMany({
       where: { ownerId: userId },
@@ -42,9 +46,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const authRes = await requireAuth();
-    if (authRes.error) return authRes.error;
-    const userId = authRes.userId!;
+    // In dev mode, use getAuthUserId which has fallback to demo user
+    const userId = isDev ? await getAuthUserId() : (await requireAuth()).userId ?? '';
+    if (!isDev && !userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const body = await request.json();
     const parsed = createProjectSchema.safeParse(body);
     if (!parsed.success) {
@@ -69,9 +75,11 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const authRes = await requireAuth();
-    if (authRes.error) return authRes.error;
-    const userId = authRes.userId!;
+    // In dev mode, use getAuthUserId which has fallback to demo user
+    const userId = isDev ? await getAuthUserId() : (await requireAuth()).userId ?? '';
+    if (!isDev && !userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const body = await request.json();
     const parsed = updateProjectSchema.safeParse(body);
     if (!parsed.success) {
@@ -122,9 +130,11 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const authRes = await requireAuth();
-    if (authRes.error) return authRes.error;
-    const userId = authRes.userId!;
+    // In dev mode, use getAuthUserId which has fallback to demo user
+    const userId = isDev ? await getAuthUserId() : (await requireAuth()).userId ?? '';
+    if (!isDev && !userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const url = new URL(request.url);
     const id = url.searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });

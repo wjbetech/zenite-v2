@@ -294,37 +294,47 @@ export default function Dashboard() {
       <div className="mx-auto w-full max-w-6xl px-3">
         {/* Header with depth - elevated card with layered backgrounds */}
 
-        <div className="relative flex items-center justify-between pb-6">
-          <h1 className="text-3xl font-bold tracking-tight text-primary-content">Dashboard</h1>
-          <div className="flex items-center gap-3">
-            <button
-              className="btn btn-md btn-primary border-2 border-base-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center"
-              type="button"
-              onClick={() => {
-                setEditing(undefined);
-                setModalMode('task');
-                setModalOpen(true);
-              }}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              New Task
-            </button>
-            <button
-              className="btn btn-md btn-secondary border-2 border-base-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center"
-              type="button"
-              onClick={() => {
-                setEditing(undefined);
-                setModalMode('project');
-                setModalOpen(true);
-              }}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              New Project
-            </button>
+        <div className="relative pb-6">
+          {/*
+            On small screens we want the title centered with the action buttons
+            stacked under it. On md and up, keep the original layout with title
+            left and buttons inline on the right.
+          */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between items-center gap-3">
+            <h1 className="text-3xl font-semibold tracking-tight text-primary-content text-center md:text-left">
+              Dashboard
+            </h1>
+
+            <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+              <button
+                className="btn btn-md btn-primary border-2 border-base-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center w-full md:w-auto"
+                type="button"
+                onClick={() => {
+                  setEditing(undefined);
+                  setModalMode('task');
+                  setModalOpen(true);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                New Task
+              </button>
+              <button
+                className="btn btn-md btn-secondary border-2 border-base-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center w-full md:w-auto"
+                type="button"
+                onClick={() => {
+                  setEditing(undefined);
+                  setModalMode('project');
+                  setModalOpen(true);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                New Project
+              </button>
+            </div>
           </div>
         </div>
 
-  <div className="hidden lg:block">
+        <div className="hidden lg:block">
           <ActivityHeatmap
             open={heatmapOpen}
             onOpenChange={(v) => {

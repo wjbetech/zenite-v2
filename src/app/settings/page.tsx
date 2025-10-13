@@ -1,17 +1,18 @@
 'use client';
 
 import React from 'react';
+import SettingsClient from '../../components/SettingsClient';
 import ThemeDropdown from '../../components/ThemeDropdown';
 
 export default function SettingsPage() {
-  return (
-    <div className="px-4 pt-4">
-      <h1 className="text-2xl font-semibold mb-4">Settings</h1>
+  const sections = [
+    {
+      id: 'theme',
+      title: 'Theme',
+      description: 'Choose your color scheme and theme settings',
+      render: <ThemeDropdown />,
+    },
+  ];
 
-      <section className="mb-6">
-        <h2 className="text-lg font-medium mb-2">Theme:</h2>
-        <ThemeDropdown />
-      </section>
-    </div>
-  );
+  return <SettingsClient sections={sections} />;
 }

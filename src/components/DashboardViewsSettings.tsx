@@ -1,23 +1,18 @@
 'use client';
 
 import React from 'react';
+import useSettingsStore from '../lib/settingsStore';
 
-type Props = {
-  initial?: {
-    newTasks?: boolean;
-    today?: boolean;
-    week?: boolean;
-    imminent?: boolean;
-  };
-};
+export default function DashboardViewsSettings() {
+  const newTasks = useSettingsStore((s) => s.newTasks);
+  const today = useSettingsStore((s) => s.today);
+  const week = useSettingsStore((s) => s.week);
+  const imminent = useSettingsStore((s) => s.imminent);
 
-export default function DashboardViewsSettings({
-  initial = { newTasks: true, today: true, week: true, imminent: true },
-}: Props) {
-  const [newTasks, setNewTasks] = React.useState(!!initial.newTasks);
-  const [today, setToday] = React.useState(!!initial.today);
-  const [week, setWeek] = React.useState(!!initial.week);
-  const [imminent, setImminent] = React.useState(!!initial.imminent);
+  const setNewTasks = useSettingsStore((s) => s.setNewTasks);
+  const setToday = useSettingsStore((s) => s.setToday);
+  const setWeek = useSettingsStore((s) => s.setWeek);
+  const setImminent = useSettingsStore((s) => s.setImminent);
 
   return (
     <div className="flex flex-col gap-2">

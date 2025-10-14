@@ -4,7 +4,13 @@ import React from 'react';
 import SettingsClient from '../../components/SettingsClient';
 import ThemeDropdown from '../../components/ThemeDropdown';
 import DashboardViewsSettings from '../../components/DashboardViewsSettings';
-import PreferencesSettings from '../../components/PreferencesSettings';
+import {
+  TaskCreationDefaults,
+  TaskListSettings,
+  NotificationsSettings,
+  PrivacySettings,
+} from '../../components/PreferencesSettings';
+import { DisplayDensity } from '../../components/PreferencesSettings';
 
 export default function SettingsPage() {
   const sections = [
@@ -21,10 +27,33 @@ export default function SettingsPage() {
       render: <DashboardViewsSettings />,
     },
     {
-      id: 'preferences',
-      title: 'Preferences',
-      description: 'General app preferences: density, defaults, notifications, and privacy',
-      render: <PreferencesSettings />,
+      id: 'display',
+      title: 'Display',
+      description: 'Choose compact or full spacing for task lists.',
+      render: <DisplayDensity />,
+    },
+    {
+      id: 'tasks',
+      title: 'Tasks',
+      description: 'Task creation defaults and task list settings',
+      render: (
+        <div className="grid grid-cols-1 gap-4">
+          <TaskCreationDefaults />
+          <TaskListSettings />
+        </div>
+      ),
+    },
+    {
+      id: 'notifications',
+      title: 'Notifications',
+      description: 'Local notification preferences',
+      render: <NotificationsSettings />,
+    },
+    {
+      id: 'privacy',
+      title: 'Privacy',
+      description: 'Telemetry and sync behavior',
+      render: <PrivacySettings />,
     },
   ];
 

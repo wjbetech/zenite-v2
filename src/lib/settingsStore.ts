@@ -50,7 +50,19 @@ type SettingsState = {
 
 const STORAGE_KEY = 'zenite.settings.v1';
 
-function readInitial(): Omit<SettingsState, 'setNewTasks' | 'setToday' | 'setWeek' | 'setImminent' | 'setDensity' | 'setTaskDefaults' | 'setShowCompleted' | 'setNotificationsEnabled' | 'setTelemetryEnabled' | 'setSyncEnabled'> {
+function readInitial(): Omit<
+  SettingsState,
+  | 'setNewTasks'
+  | 'setToday'
+  | 'setWeek'
+  | 'setImminent'
+  | 'setDensity'
+  | 'setTaskDefaults'
+  | 'setShowCompleted'
+  | 'setNotificationsEnabled'
+  | 'setTelemetryEnabled'
+  | 'setSyncEnabled'
+> {
   try {
     if (typeof window === 'undefined')
       return {
@@ -59,7 +71,12 @@ function readInitial(): Omit<SettingsState, 'setNewTasks' | 'setToday' | 'setWee
         week: true,
         imminent: true,
         density: 'full',
-        taskDefaults: { defaultProjectId: null, defaultPriority: null, defaultRecurrence: null, defaultDueOffsetDays: null },
+        taskDefaults: {
+          defaultProjectId: null,
+          defaultPriority: null,
+          defaultRecurrence: null,
+          defaultDueOffsetDays: null,
+        },
         showCompleted: false,
         notificationsEnabled: false,
         telemetryEnabled: true,
@@ -73,7 +90,12 @@ function readInitial(): Omit<SettingsState, 'setNewTasks' | 'setToday' | 'setWee
         week: true,
         imminent: true,
         density: 'full',
-        taskDefaults: { defaultProjectId: null, defaultPriority: null, defaultRecurrence: null, defaultDueOffsetDays: null },
+        taskDefaults: {
+          defaultProjectId: null,
+          defaultPriority: null,
+          defaultRecurrence: null,
+          defaultDueOffsetDays: null,
+        },
         showCompleted: false,
         notificationsEnabled: false,
         telemetryEnabled: true,
@@ -86,7 +108,12 @@ function readInitial(): Omit<SettingsState, 'setNewTasks' | 'setToday' | 'setWee
       week: parsed.week ?? true,
       imminent: parsed.imminent ?? true,
       density: parsed.density ?? 'full',
-      taskDefaults: parsed.taskDefaults ?? { defaultProjectId: null, defaultPriority: null, defaultRecurrence: null, defaultDueOffsetDays: null },
+      taskDefaults: parsed.taskDefaults ?? {
+        defaultProjectId: null,
+        defaultPriority: null,
+        defaultRecurrence: null,
+        defaultDueOffsetDays: null,
+      },
       showCompleted: parsed.showCompleted ?? false,
       notificationsEnabled: parsed.notificationsEnabled ?? false,
       telemetryEnabled: parsed.telemetryEnabled ?? true,
@@ -99,7 +126,12 @@ function readInitial(): Omit<SettingsState, 'setNewTasks' | 'setToday' | 'setWee
       week: true,
       imminent: true,
       density: 'full',
-      taskDefaults: { defaultProjectId: null, defaultPriority: null, defaultRecurrence: null, defaultDueOffsetDays: null },
+      taskDefaults: {
+        defaultProjectId: null,
+        defaultPriority: null,
+        defaultRecurrence: null,
+        defaultDueOffsetDays: null,
+      },
       showCompleted: false,
       notificationsEnabled: false,
       telemetryEnabled: true,

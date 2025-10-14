@@ -301,7 +301,7 @@ export default function Dashboard() {
             left and buttons inline on the right.
           */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between items-center gap-3">
-            <h1 className="text-3xl font-semibold tracking-tight text-primary-content text-center md:text-left">
+            <h1 className="text-3xl font-semibold tracking-tight text-emerald-600 text-center md:text-left">
               Dashboard
             </h1>
 

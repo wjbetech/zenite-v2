@@ -13,7 +13,7 @@ export default function ThemeDropdown() {
     <div className="dropdown self-center align-middle">
       <label
         tabIndex={0}
-        className="btn btn-outline w-48 justify-between items-center text-sm px-3 py-2"
+        className="btn btn-outline border-2 w-48 justify-between items-center text-sm px-3 h-10 flex mt-1.5 hover:border-2 hover:border-base-content"
         aria-haspopup="listbox"
         aria-expanded={false}
       >

@@ -22,14 +22,16 @@ export default function SettingsClient({ sections = [] }: SettingsClientProps) {
       <div className="space-y-6">
         {sections.map((s) => (
           <section key={s.id} className="bg-base-200 p-4 rounded-md">
-            <div className="flex items-start justify-between gap-4">
+            {/* grid with an auto-width column for controls so the control can be centered
+                vertically relative to the left text block even when the text wraps */}
+            <div className="grid items-center grid-cols-[1fr_auto] gap-4">
               <div className="self-start">
                 <h2 className="text-lg font-medium">{s.title}</h2>
                 {s.description && (
                   <p className="text-sm text-base-content/60 mt-1">{s.description}</p>
                 )}
               </div>
-              <div className="ml-4 flex items-center">{s.render}</div>
+              <div className="ml-4 flex items-center justify-end">{s.render}</div>
             </div>
           </section>
         ))}

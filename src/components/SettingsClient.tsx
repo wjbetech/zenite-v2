@@ -17,7 +17,7 @@ type SettingsClientProps = {
 export default function SettingsClient({ sections = [] }: SettingsClientProps) {
   return (
     <div className="pt-[124px] px-8 pb-12">
-      <h1 className="text-3xl font-semibold tracking-tight mb-6">Settings</h1>
+      <h1 className="text-3xl font-semibold tracking-tight mb-6 text-emerald-600">Settings</h1>
 
       <div className="space-y-6">
         {sections.map((s) => (

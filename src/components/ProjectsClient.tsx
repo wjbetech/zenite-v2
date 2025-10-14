@@ -226,7 +226,7 @@ export default function ProjectsClient({ initialProjects }: Props) {
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
 
           <div className="relative flex items-center justify-between">
-            <h1 className="text-3xl font-semibold mb-0 text-accent">Projects</h1>
+            <h1 className="text-3xl font-semibold mb-0 text-emerald-600">Projects</h1>
 
             <div className="flex items-center gap-2">
               <button

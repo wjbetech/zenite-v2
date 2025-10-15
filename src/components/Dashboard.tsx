@@ -427,42 +427,29 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col min-h-0">
         {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
         <div className="px-3 flex-1 min-h-0">
-          <div className="mx-auto w-full max-w-6xl">
+          <div className="mx-auto w-full max-w-full">
             {/* Tabs - horizontally scrollable using daisyUI tabs-box + arrows */}
-            <div className="mb-4 relative w-full">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-1">
-                <button
-                  type="button"
-                  aria-label="Scroll tabs left"
-                  onClick={() => scrollTabsBy(-220)}
-                  className="btn btn-ghost btn-sm pointer-events-auto"
-                  disabled={!canScrollLeft}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1">
-                <button
-                  type="button"
-                  aria-label="Scroll tabs right"
-                  onClick={() => scrollTabsBy(220)}
-                  className="btn btn-ghost btn-sm pointer-events-auto"
-                  disabled={!canScrollRight}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="overflow-hidden px-12">
+            <div className="mb-4 relative">
+              <div className="">
                 <div
                   ref={tabsRef}
                   onPointerDown={onPointerDown}
                   onPointerMove={onPointerMove}
                   onPointerUp={onPointerUp}
                   onScroll={updateScrollButtons}
-                  className="tabs tabs-box overflow-x-auto no-scrollbar w-full max-w-full flex flex-nowrap whitespace-nowrap"
+                  className="tabs tabs-box overflow-x-auto no-scrollbar flex flex-nowrap whitespace-nowrap align-middle"
                   role="tablist"
                   aria-label="Task view tabs"
                 >
+                  <button
+                    type="button"
+                    aria-label="Scroll tabs left"
+                    onClick={() => scrollTabsBy(-220)}
+                    className="btn btn-ghost btn-sm pointer-events-auto align-middle"
+                    disabled={!canScrollLeft}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
                   {showNew && (
                     <button
                       role="tab"
@@ -514,6 +501,15 @@ export default function Dashboard() {
                       Imminent
                     </button>
                   )}
+                  <button
+                    type="button"
+                    aria-label="Scroll tabs right"
+                    onClick={() => scrollTabsBy(220)}
+                    className="btn btn-ghost btn-sm pointer-events-auto"
+                    disabled={!canScrollRight}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             </div>

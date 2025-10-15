@@ -486,12 +486,7 @@ export default function Dashboard() {
                         const isActive = view === t.id;
                         const isLast = i === arr.length - 1;
                         return (
-                          <div
-                            key={t.id}
-                            className={`flex items-center flex-none transition-opacity ${
-                              isActive ? 'opacity-100' : 'opacity-60 hover:opacity-100 focus-within:opacity-100'
-                            }`}
-                          >
+                          <div key={t.id} className="flex items-center flex-none">
                             <button
                               role="tab"
                               aria-selected={isActive}

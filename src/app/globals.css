@@ -223,6 +223,18 @@ html[data-theme='nord'] .nav-glass::before {
   background-clip: padding-box;
 }
 
+/* Hide native scrollbar arrow buttons (Chromium/WebKit) used on some Windows themes */
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Remove the scrollbar corner background so corner doesn't show a block */
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 /* Firefox */
 * {
   scrollbar-width: thin;
@@ -274,5 +286,26 @@ button:focus-visible {
     border-width: 2px !important;
     border-style: solid !important;
     border-color: #000 !important;
+  }
+  /* Utility: hide native scrollbars while preserving scroll behavior (scoped usage)
+     Apply `no-scrollbar` to the scroll container elements that should not show
+     a native scrollbar (for example the tabs container). */
+  .no-scrollbar {
+    /* Chromium/WebKit */
+    -ms-overflow-style: none !important; /* IE and Edge */
+    scrollbar-width: none !important; /* Firefox */
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  /* Some Chromium builds show an overlay scrollbar; hide the track/thumb explicitly */
+  .no-scrollbar::-webkit-scrollbar-track,
+  .no-scrollbar::-webkit-scrollbar-thumb,
+  .no-scrollbar::-webkit-scrollbar-corner {
+    background: transparent !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
   }
 }

@@ -365,11 +365,15 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="mx-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-hidden">
-      {/* Wrap header, heatmap and lists in shared px-3 container for alignment */}
-      <div className="mx-auto w-full max-w-6xl px-3">
-        {/* Header with depth - elevated card with layered backgrounds */}
-
+    <div
+      className="px-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-hidden"
+      style={{ boxSizing: 'border-box' }}
+    >
+      {/* Wrap header, heatmap and lists in a centered container; use no extra inner padding so the title sits flush with the outer padding */}
+      <div
+        className="mx-auto w-full px-0"
+        style={{ maxWidth: 'calc(100vw - var(--sidebar-width) - 3rem)', boxSizing: 'border-box' }}
+      >
         <div className="relative pb-6">
           {/*
             On small screens we want the title centered with the action buttons
@@ -426,90 +430,110 @@ export default function Dashboard() {
 
       <div className="flex-1 flex flex-col min-h-0">
         {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
-        <div className="px-3 flex-1 min-h-0">
-          <div className="mx-auto w-full max-w-full">
+        <div className="flex-1 min-h-0">
+          <div
+            className="mx-auto w-full"
+            style={{
+              maxWidth: 'calc(100vw - var(--sidebar-width) - 3rem)',
+              boxSizing: 'border-box',
+            }}
+          >
             {/* Tabs - horizontally scrollable using daisyUI tabs-box + arrows */}
             <div className="mb-4 relative">
               <div className="">
-                <div
-                  ref={tabsRef}
-                  onPointerDown={onPointerDown}
-                  onPointerMove={onPointerMove}
-                  onPointerUp={onPointerUp}
-                  onScroll={updateScrollButtons}
-                  className="tabs tabs-box overflow-x-auto no-scrollbar flex items-center flex-nowrap whitespace-nowrap bg-base-300"
-                  role="tablist"
-                  aria-label="Task view tabs"
-                >
-                  <button
-                    type="button"
-                    aria-label="Scroll tabs left"
-                    onClick={() => scrollTabsBy(-220)}
-                    className="btn btn-ghost cursor-pointer btn-sm pointer-events-auto self-center h-10 w-10 p-0 flex items-center justify-center text-base-content"
-                    disabled={!canScrollLeft}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  {showNew && (
-                    <button
-                      role="tab"
-                      aria-selected={view === 'new'}
-                      onClick={() => setView('new')}
-                      className={`tab tab-lg  flex-none min-w-[200px] sm:min-w-[240px] ${
-                        view === 'new' ? 'tab-active text-base-content' : 'text-base-content'
-                      } border-0 border-r border-base-200`}
-                    >
-                      New Tasks
-                    </button>
-                  )}
+                <div className="relative">
+                  <div className="flex items-center">
+                    {/* left chevron column (fixed width) */}
+                    <div className="flex-none w-10 flex items-center justify-center">
+                      <button
+                        type="button"
+                        aria-label="Scroll tabs left"
+                        onClick={() => scrollTabsBy(-220)}
+                        className="btn btn-ghost btn-sm pointer-events-auto h-10 w-10 p-0 flex items-center justify-center text-base-content"
+                        disabled={!canScrollLeft}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                    </div>
 
-                  {showToday && (
-                    <button
-                      role="tab"
-                      aria-selected={view === 'today'}
-                      onClick={() => setView('today')}
-                      className={`tab tab-lg flex-none min-w-[200px] sm:min-w-[240px] ${
-                        view === 'today' ? 'tab-active text-base-content' : 'text-base-content'
-                      } border-0 border-r border-base-200`}
+                    {/* scrollable tabs (flex-1) */}
+                    <div
+                      ref={tabsRef}
+                      onPointerDown={onPointerDown}
+                      onPointerMove={onPointerMove}
+                      onPointerUp={onPointerUp}
+                      onScroll={updateScrollButtons}
+                      className="tabs tabs-box overflow-x-auto no-scrollbar flex items-center flex-nowrap whitespace-nowrap bg-base-300 flex-1"
+                      role="tablist"
+                      aria-label="Task view tabs"
+                      style={{ WebkitOverflowScrolling: 'touch' }}
                     >
-                      Today
-                    </button>
-                  )}
+                      {showNew && (
+                        <button
+                          role="tab"
+                          aria-selected={view === 'new'}
+                          onClick={() => setView('new')}
+                          className={`tab tab-lg  flex-none min-w-[200px] sm:min-w-[240px] ${
+                            view === 'new' ? 'tab-active text-base-content' : 'text-base-content'
+                          } border-0 border-r border-base-200`}
+                        >
+                          New Tasks
+                        </button>
+                      )}
 
-                  {showWeek && (
-                    <button
-                      role="tab"
-                      aria-selected={view === 'week'}
-                      onClick={() => setView('week')}
-                      className={`tab tab-lg flex-none min-w-[200px] sm:min-w-[240px] ${
-                        view === 'week' ? 'tab-active text-base-content' : 'text-base-content'
-                      } border-0 border-r border-base-200`}
-                    >
-                      This Week
-                    </button>
-                  )}
+                      {showToday && (
+                        <button
+                          role="tab"
+                          aria-selected={view === 'today'}
+                          onClick={() => setView('today')}
+                          className={`tab tab-lg flex-none min-w-[200px] sm:min-w-[240px] ${
+                            view === 'today' ? 'tab-active text-base-content' : 'text-base-content'
+                          } border-0 border-r border-base-200`}
+                        >
+                          Today
+                        </button>
+                      )}
 
-                  {showImminent && (
-                    <button
-                      role="tab"
-                      aria-selected={view === 'imminent'}
-                      onClick={() => setView('imminent')}
-                      className={`tab tab-lg flex-none min-w-[200px] sm:min-w-[240px] ${
-                        view === 'imminent' ? 'tab-active text-base-content' : 'text-base-content'
-                      } border-0`}
-                    >
-                      Imminent
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    aria-label="Scroll tabs right"
-                    onClick={() => scrollTabsBy(220)}
-                    className="btn btn-ghost btn-sm pointer-events-auto self-center h-10 w-10 p-0 flex items-center justify-center text-base-content"
-                    disabled={!canScrollRight}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
+                      {showWeek && (
+                        <button
+                          role="tab"
+                          aria-selected={view === 'week'}
+                          onClick={() => setView('week')}
+                          className={`tab tab-lg flex-none min-w-[200px] sm:min-w-[240px] ${
+                            view === 'week' ? 'tab-active text-base-content' : 'text-base-content'
+                          } border-0 border-r border-base-200`}
+                        >
+                          This Week
+                        </button>
+                      )}
+
+                      {showImminent && (
+                        <button
+                          role="tab"
+                          aria-selected={view === 'imminent'}
+                          onClick={() => setView('imminent')}
+                          className={`tab tab-lg flex-none min-w-[200px] sm:min-w-[240px] ${
+                            view === 'imminent' ? 'tab-active text-base-content' : 'text-base-content'
+                          } border-0`}
+                        >
+                          Imminent
+                        </button>
+                      )}
+                    </div>
+
+                    {/* right chevron column (fixed width) */}
+                    <div className="flex-none w-10 flex items-center justify-center">
+                      <button
+                        type="button"
+                        aria-label="Scroll tabs right"
+                        onClick={() => scrollTabsBy(220)}
+                        className="btn btn-ghost btn-sm pointer-events-auto h-10 w-10 p-0 flex items-center justify-center text-base-content"
+                        disabled={!canScrollRight}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

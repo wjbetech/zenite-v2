@@ -343,6 +343,20 @@ export default function Dashboard() {
   const showWeek = useSettingsStore((s) => s.week);
   const showImminent = useSettingsStore((s) => s.imminent);
 
+  // Define tabs in a single place so we can insert dividers between visible tabs
+  type View = 'imminent' | 'new' | 'today' | 'week';
+  const tabDefs: Array<{ id: View; show: boolean; label: string; minClass: string }> = [
+    { id: 'new', show: showNew, label: 'New Tasks', minClass: 'min-w-[200px] sm:min-w-[240px]' },
+    { id: 'today', show: showToday, label: 'Today', minClass: 'min-w-[200px] sm:min-w-[240px]' },
+    { id: 'week', show: showWeek, label: 'This Week', minClass: 'min-w-[200px] sm:min-w-[240px]' },
+    {
+      id: 'imminent',
+      show: showImminent,
+      label: 'Imminent',
+      minClass: 'min-w-[180px] sm:min-w-[220px]',
+    },
+  ];
+
   // If the current view is disabled in settings, pick the first enabled view (priority: new, today, week, imminent)
   useEffect(() => {
     const enabled = {
@@ -412,19 +426,20 @@ export default function Dashboard() {
               </button>
             </div>
           </div>
+
+          <div className="hidden lg:block">
+            <ActivityHeatmap
+              open={heatmapOpen}
+              onOpenChange={(v) => {
+                console.debug('Dashboard: onOpenChange received', { v });
+                setHeatmapOpen(v);
+              }}
+              activity={activityMap}
+              activityDetails={activityDetails}
+            />
+          </div>
         </div>
 
-        <div className="hidden lg:block">
-          <ActivityHeatmap
-            open={heatmapOpen}
-            onOpenChange={(v) => {
-              console.debug('Dashboard: onOpenChange received', { v });
-              setHeatmapOpen(v);
-            }}
-            activity={activityMap}
-            activityDetails={activityDetails}
-          />
-        </div>
         {/* moved: view-toggle buttons will be rendered inside the task lists card below */}
       </div>
 
@@ -465,57 +480,40 @@ export default function Dashboard() {
                     aria-label="Task view tabs"
                     style={{ WebkitOverflowScrolling: 'touch' }}
                   >
-                    {showNew && (
-                      <button
-                        role="tab"
-                        aria-selected={view === 'new'}
-                        onClick={() => setView('new')}
-                        className={`tab tab-lg  flex-none min-w-[200px] sm:min-w-[240px] ${
-                          view === 'new' ? 'tab-active text-base-content' : 'text-base-content'
-                        } border-0 border-r border-base-200`}
-                      >
-                        New Tasks
-                      </button>
-                    )}
+                    {tabDefs
+                      .filter((t) => t.show)
+                      .map((t, i, arr) => {
+                        const isActive = view === t.id;
+                        const isLast = i === arr.length - 1;
+                        return (
+                          <div
+                            key={t.id}
+                            className={`flex items-center flex-none transition-opacity ${
+                              isActive ? 'opacity-100' : 'opacity-60 hover:opacity-100 focus-within:opacity-100'
+                            }`}
+                          >
+                            <button
+                              role="tab"
+                              aria-selected={isActive}
+                              onClick={() => setView(t.id)}
+                              className={`tab tab-lg flex-none ${t.minClass} ${
+                                isActive
+                                  ? 'tab-active bg-base-100 text-base-content'
+                                  : 'text-base-content'
+                              } border-0`}
+                            >
+                              {t.label}
+                            </button>
 
-                    {showToday && (
-                      <button
-                        role="tab"
-                        aria-selected={view === 'today'}
-                        onClick={() => setView('today')}
-                        className={`tab tab-lg flex-none min-w-[200px] sm:min-w-[240px] ${
-                          view === 'today' ? 'tab-active text-base-content' : 'text-base-content'
-                        } border-0 border-r border-base-200`}
-                      >
-                        Today
-                      </button>
-                    )}
-
-                    {showWeek && (
-                      <button
-                        role="tab"
-                        aria-selected={view === 'week'}
-                        onClick={() => setView('week')}
-                        className={`tab tab-lg flex-none min-w-[200px] sm:min-w-[240px] ${
-                          view === 'week' ? 'tab-active text-base-content' : 'text-base-content'
-                        } border-0 border-r border-base-200`}
-                      >
-                        This Week
-                      </button>
-                    )}
-
-                    {showImminent && (
-                      <button
-                        role="tab"
-                        aria-selected={view === 'imminent'}
-                        onClick={() => setView('imminent')}
-                        className={`tab tab-lg flex-none min-w-[180px] sm:min-w-[220px] ${
-                          view === 'imminent' ? 'tab-active text-base-content' : 'text-base-content'
-                        } border-0`}
-                      >
-                        Imminent
-                      </button>
-                    )}
+                            {!isLast && (
+                              <span
+                                className="mx-3 h-9 w-[3px] rounded-full bg-emerald-600 dark:bg-emerald-600"
+                                aria-hidden
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
                   </div>
 
                   <div className="flex-none px-3">

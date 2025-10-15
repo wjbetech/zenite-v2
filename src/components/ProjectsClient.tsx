@@ -220,30 +220,28 @@ export default function ProjectsClient({ initialProjects }: Props) {
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-x-visible pt-4 px-5">
-      <header className="pt-4 pb-6">
+    <div className="flex flex-col flex-1 min-h-0 overflow-x-visible px-6 pt-[124px]">
+      <header className="pb-6 px-3">
         <div className="mx-auto w-full max-w-6xl">
-          <div className="relative bg-gradient-to-br from-base-100 via-base-200/80 to-base-300/60 rounded-xl border-2 border-base-300/50 shadow-2xl shadow-accent/50 backdrop-blur-md px-6 py-6 mb-6 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
 
-            <div className="relative flex items-center justify-between">
-              <h1 className="text-3xl font-semibold mb-0 text-accent">Projects</h1>
+          <div className="relative flex items-center justify-between">
+            <h1 className="text-3xl font-semibold mb-0 text-emerald-600">Projects</h1>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setCreateModalOpen(true)}
-                  className="btn btn-success py-3 flex items-center gap-2 border-2 border-base-content"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span className="leading-none">New Project</span>
-                </button>
-              </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCreateModalOpen(true)}
+                className="btn btn-success py-3 flex items-center gap-2 border-2 border-base-content"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="leading-none">New Project</span>
+              </button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="flex flex-col gap-6 pb-10">
+      <div className="flex flex-col gap-6 pb-10 px-3">
         {loading ? (
           <div className="col-span-full min-h-[60vh] flex items-center justify-center">
             <div className="flex flex-col items-center">

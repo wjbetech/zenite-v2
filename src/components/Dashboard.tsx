@@ -13,6 +13,7 @@ import ConfirmDeleteModal from './ConfirmDeleteModal';
 import TaskModal from './TaskModal';
 import { useState } from 'react';
 import { useEffect } from 'react';
+import useSettingsStore from '../lib/settingsStore';
 
 function daysUntil(date?: string | null) {
   if (!date) return Infinity;
@@ -282,6 +283,27 @@ export default function Dashboard() {
     }
     return { activityMap: map, activityDetails: details };
   }, [storeTasks, persistedActivity]);
+  // Read settings for which views should be shown
+  const showNew = useSettingsStore((s) => s.newTasks);
+  const showToday = useSettingsStore((s) => s.today);
+  const showWeek = useSettingsStore((s) => s.week);
+  const showImminent = useSettingsStore((s) => s.imminent);
+
+  // If the current view is disabled in settings, pick the first enabled view (priority: new, today, week, imminent)
+  useEffect(() => {
+    const enabled = {
+      new: showNew,
+      today: showToday,
+      week: showWeek,
+      imminent: showImminent,
+    } as Record<string, boolean>;
+    if (!enabled[view]) {
+      if (showNew) setView('new');
+      else if (showToday) setView('today');
+      else if (showWeek) setView('week');
+      else if (showImminent) setView('imminent');
+    }
+  }, [showNew, showToday, showWeek, showImminent, view]);
 
   if (!mounted) {
     // render a simple placeholder during SSR so server and client markup match
@@ -289,19 +311,25 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="mx-2 py-8 flex flex-col flex-1 min-h-0 overflow-x-visible max-w-[95%]">
+    <div className="mx-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-visible max-w-[95%]">
       {/* Wrap header, heatmap and lists in shared px-3 container for alignment */}
       <div className="mx-auto w-full max-w-6xl px-3">
         {/* Header with depth - elevated card with layered backgrounds */}
-        <div className="relative bg-gradient-to-br from-base-100 via-base-200/80 to-base-300/60 rounded-xl border-2 border-base-300/50 shadow-2xl shadow-primary/50 backdrop-blur-md px-6 py-6 mb-6 overflow-hidden">
-          {/* Subtle inner glow for depth */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
 
-          <div className="relative flex items-center justify-between">
-            <h1 className="text-3xl font-bold tracking-tight text-primary">Dashboard</h1>
-            <div className="flex items-center gap-3">
+        <div className="relative pb-6">
+          {/*
+            On small screens we want the title centered with the action buttons
+            stacked under it. On md and up, keep the original layout with title
+            left and buttons inline on the right.
+          */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between items-center gap-3">
+            <h1 className="text-3xl font-semibold tracking-tight text-emerald-600 text-center md:text-left">
+              Dashboard
+            </h1>
+
+            <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
               <button
-                className="btn btn-md btn-primary border-2 border-base-content shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center"
+                className="btn btn-md btn-primary border-2 border-base-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center w-full md:w-auto"
                 type="button"
                 onClick={() => {
                   setEditing(undefined);
@@ -313,7 +341,7 @@ export default function Dashboard() {
                 New Task
               </button>
               <button
-                className="btn btn-md btn-secondary border-2 border-base-content shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center"
+                className="btn btn-md btn-secondary border-2 border-base-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center w-full md:w-auto"
                 type="button"
                 onClick={() => {
                   setEditing(undefined);
@@ -328,74 +356,95 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <ActivityHeatmap
-          open={heatmapOpen}
-          onOpenChange={(v) => {
-            console.debug('Dashboard: onOpenChange received', { v });
-            setHeatmapOpen(v);
-          }}
-          activity={activityMap}
-          activityDetails={activityDetails}
-        />
+        <div className="hidden lg:block">
+          <ActivityHeatmap
+            open={heatmapOpen}
+            onOpenChange={(v) => {
+              console.debug('Dashboard: onOpenChange received', { v });
+              setHeatmapOpen(v);
+            }}
+            activity={activityMap}
+            activityDetails={activityDetails}
+          />
+        </div>
         {/* moved: view-toggle buttons will be rendered inside the task lists card below */}
       </div>
 
       <div className="flex-1 flex flex-col min-h-0">
         {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
-        <div className="px-3 py-4 flex-1 min-h-0">
+        <div className="px-3 flex-1 min-h-0">
           <div className="mx-auto w-full max-w-6xl">
             {/* Toggle buttons */}
             <div className="mb-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div
+                className={`grid ${
+                  showNew && showToday && showWeek && showImminent
+                    ? 'grid-cols-2 md:grid-cols-4'
+                    : (showNew && showToday && (showWeek || showImminent)) ||
+                      (showWeek && showImminent)
+                    ? 'grid-cols-2 md:grid-cols-3'
+                    : 'grid-cols-1 md:grid-cols-2'
+                } gap-3`}
+              >
                 {/* New Tasks - primary */}
-                <button
-                  onClick={() => setView('new')}
-                  aria-pressed={view === 'new'}
-                  className={`btn w-full btn-primary btn-md border-2 border-base-content transition-all ${
-                    view === 'new'
-                      ? ''
-                      : 'bg-primary/20 text-primary-content/70 hover:bg-primary/30'
-                  }`}
-                >
-                  New Tasks
-                </button>
+                {showNew && (
+                  <button
+                    onClick={() => setView('new')}
+                    aria-pressed={view === 'new'}
+                    className={`btn w-full btn-primary btn-md border-2 border-base-content transition-all ${
+                      view === 'new'
+                        ? ''
+                        : 'bg-primary/20 text-primary-content/70 hover:bg-primary/30'
+                    }`}
+                  >
+                    New Tasks
+                  </button>
+                )}
 
                 {/* Today - secondary */}
-                <button
-                  onClick={() => setView('today')}
-                  aria-pressed={view === 'today'}
-                  className={`btn w-full btn-secondary btn-md border-2 border-base-content transition-all ${
-                    view === 'today'
-                      ? ''
-                      : 'bg-secondary/18 text-secondary-content/70 hover:bg-secondary/25'
-                  }`}
-                >
-                  Today
-                </button>
+                {showToday && (
+                  <button
+                    onClick={() => setView('today')}
+                    aria-pressed={view === 'today'}
+                    className={`btn w-full btn-secondary btn-md border-2 border-base-content transition-all ${
+                      view === 'today'
+                        ? ''
+                        : 'bg-secondary/18 text-secondary-content/70 hover:bg-secondary/25'
+                    }`}
+                  >
+                    Today
+                  </button>
+                )}
 
                 {/* This Week - accent */}
-                <button
-                  onClick={() => setView('week')}
-                  aria-pressed={view === 'week'}
-                  className={`btn w-full btn-accent btn-md border-2 border-base-content transition-all ${
-                    view === 'week' ? '' : 'bg-accent/18 text-accent-content/70 hover:bg-accent/25'
-                  }`}
-                >
-                  This Week
-                </button>
+                {showWeek && (
+                  <button
+                    onClick={() => setView('week')}
+                    aria-pressed={view === 'week'}
+                    className={`btn w-full btn-accent btn-md border-2 border-base-content transition-all ${
+                      view === 'week'
+                        ? ''
+                        : 'bg-accent/18 text-accent-content/70 hover:bg-accent/25'
+                    }`}
+                  >
+                    This Week
+                  </button>
+                )}
 
                 {/* Imminent - warning */}
-                <button
-                  onClick={() => setView('imminent')}
-                  aria-pressed={view === 'imminent'}
-                  className={`btn w-full btn-warning btn-md border-2 border-base-content transition-all ${
-                    view === 'imminent'
-                      ? ''
-                      : 'bg-warning/18 text-warning-content/70 hover:bg-warning/25'
-                  }`}
-                >
-                  Imminent
-                </button>
+                {showImminent && (
+                  <button
+                    onClick={() => setView('imminent')}
+                    aria-pressed={view === 'imminent'}
+                    className={`btn w-full btn-warning btn-md border-2 border-base-content transition-all ${
+                      view === 'imminent'
+                        ? ''
+                        : 'bg-warning/18 text-warning-content/70 hover:bg-warning/25'
+                    }`}
+                  >
+                    Imminent
+                  </button>
+                )}
               </div>
             </div>
 
@@ -428,7 +477,7 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <>
-                  {view === 'imminent' && (
+                  {showImminent && view === 'imminent' && (
                     <TaskSection
                       expanded={!heatmapOpen}
                       accentClass="border-rose-400"
@@ -452,7 +501,7 @@ export default function Dashboard() {
                     />
                   )}
 
-                  {view === 'new' && (
+                  {showNew && view === 'new' && (
                     <TaskSection
                       expanded={!heatmapOpen}
                       accentClass="border-emerald-400"
@@ -470,7 +519,8 @@ export default function Dashboard() {
                     />
                   )}
 
-                  {view === 'today' &&
+                  {showToday &&
+                    view === 'today' &&
                     (today.length === 0 ? (
                       <TaskSection
                         expanded={!heatmapOpen}
@@ -556,7 +606,7 @@ export default function Dashboard() {
                       </div>
                     ))}
 
-                  {view === 'week' && (
+                  {showWeek && view === 'week' && (
                     <div className="">
                       {week.length === 0 ? (
                         <TaskSection

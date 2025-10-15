@@ -11,8 +11,7 @@ import useTaskStore from '../lib/taskStore';
 import DashboardTaskCard from './DashboardTaskCard';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 import TaskModal from './TaskModal';
-import { useState } from 'react';
-import { useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import useSettingsStore from '../lib/settingsStore';
 
 function daysUntil(date?: string | null) {
@@ -80,6 +79,61 @@ export default function Dashboard() {
   const [deleting, setDeleting] = useState<Task | null>(null);
   const [modalMode, setModalMode] = useState<'task' | 'project'>('task');
   const [view, setView] = useState<'imminent' | 'new' | 'today' | 'week'>('new');
+
+  // Tabs scroll + drag refs/state
+  const tabsRef = useRef<HTMLDivElement | null>(null);
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const scrollStartX = useRef(0);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollButtons = useCallback(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  }, []);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    const el = tabsRef.current;
+    if (!el) return;
+    isDragging.current = true;
+    dragStartX.current = e.clientX;
+    scrollStartX.current = el.scrollLeft;
+    try {
+      (e.target as Element).setPointerCapture(e.pointerId);
+    } catch {}
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!isDragging.current || !tabsRef.current) return;
+    const dx = e.clientX - dragStartX.current;
+    tabsRef.current.scrollLeft = scrollStartX.current - dx;
+    updateScrollButtons();
+  };
+
+  const onPointerUp = (e: React.PointerEvent) => {
+    isDragging.current = false;
+    try {
+      (e.target as Element).releasePointerCapture(e.pointerId);
+    } catch {}
+  };
+
+  const scrollTabsBy = (amount: number) => {
+    const el = tabsRef.current;
+    if (!el) return;
+    el.scrollBy({ left: amount, behavior: 'smooth' });
+    // schedule an update after smooth scroll begins
+    setTimeout(updateScrollButtons, 250);
+  };
+
+  useEffect(() => {
+    updateScrollButtons();
+    const handleResize = () => updateScrollButtons();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [updateScrollButtons]);
 
   // derive `all` directly from the store to preserve the global ordering
   // (storeTasks is the canonical ordered list; use it as the source of truth)
@@ -374,78 +428,90 @@ export default function Dashboard() {
         {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
         <div className="px-3 flex-1 min-h-0">
           <div className="mx-auto w-full max-w-6xl">
-            {/* Toggle buttons */}
-            <div className="mb-4">
-              <div
-                className={`grid ${
-                  showNew && showToday && showWeek && showImminent
-                    ? 'grid-cols-2 md:grid-cols-4'
-                    : (showNew && showToday && (showWeek || showImminent)) ||
-                      (showWeek && showImminent)
-                    ? 'grid-cols-2 md:grid-cols-3'
-                    : 'grid-cols-1 md:grid-cols-2'
-                } gap-3`}
+            {/* Tabs - horizontally scrollable using daisyUI tabs-box + arrows */}
+            <div className="mb-4 flex items-center">
+              <button
+                type="button"
+                aria-hidden
+                onClick={() => scrollTabsBy(-200)}
+                className="btn btn-ghost btn-sm mr-2"
+                disabled={!canScrollLeft}
               >
-                {/* New Tasks - primary */}
+                ‹
+              </button>
+              <div className="flex-1">
+                <div
+                  ref={tabsRef}
+                  onPointerDown={onPointerDown}
+                  onPointerMove={onPointerMove}
+                  onPointerUp={onPointerUp}
+                  onScroll={updateScrollButtons}
+                  className="tabs tabs-box overflow-x-auto no-scrollbar w-full"
+                  role="tablist"
+                  aria-label="Task view tabs"
+                >
                 {showNew && (
                   <button
+                    role="tab"
+                    aria-selected={view === 'new'}
                     onClick={() => setView('new')}
-                    aria-pressed={view === 'new'}
-                    className={`btn w-full btn-primary btn-md border-2 border-base-content transition-all ${
-                      view === 'new'
-                        ? ''
-                        : 'bg-primary/20 text-primary-content/70 hover:bg-primary/30'
-                    }`}
+                    className={`tab tab-lg flex-1 text-center ${
+                      view === 'new' ? 'tab-active text-primary' : 'text-primary/70'
+                    } border-0 border-r border-base-200`}
                   >
-                    New Tasks
+                    New
                   </button>
                 )}
 
-                {/* Today - secondary */}
                 {showToday && (
                   <button
+                    role="tab"
+                    aria-selected={view === 'today'}
                     onClick={() => setView('today')}
-                    aria-pressed={view === 'today'}
-                    className={`btn w-full btn-secondary btn-md border-2 border-base-content transition-all ${
-                      view === 'today'
-                        ? ''
-                        : 'bg-secondary/18 text-secondary-content/70 hover:bg-secondary/25'
-                    }`}
+                    className={`tab tab-lg flex-1 text-center ${
+                      view === 'today' ? 'tab-active text-secondary' : 'text-secondary/70'
+                    } border-0 border-r border-base-200`}
                   >
                     Today
                   </button>
                 )}
 
-                {/* This Week - accent */}
                 {showWeek && (
                   <button
+                    role="tab"
+                    aria-selected={view === 'week'}
                     onClick={() => setView('week')}
-                    aria-pressed={view === 'week'}
-                    className={`btn w-full btn-accent btn-md border-2 border-base-content transition-all ${
-                      view === 'week'
-                        ? ''
-                        : 'bg-accent/18 text-accent-content/70 hover:bg-accent/25'
-                    }`}
+                    className={`tab tab-lg flex-1 text-center ${
+                      view === 'week' ? 'tab-active text-accent' : 'text-accent/70'
+                    } border-0 border-r border-base-200`}
                   >
                     This Week
                   </button>
                 )}
 
-                {/* Imminent - warning */}
                 {showImminent && (
                   <button
+                    role="tab"
+                    aria-selected={view === 'imminent'}
                     onClick={() => setView('imminent')}
-                    aria-pressed={view === 'imminent'}
-                    className={`btn w-full btn-warning btn-md border-2 border-base-content transition-all ${
-                      view === 'imminent'
-                        ? ''
-                        : 'bg-warning/18 text-warning-content/70 hover:bg-warning/25'
-                    }`}
+                    className={`tab tab-lg flex-1 text-center ${
+                      view === 'imminent' ? 'tab-active text-warning' : 'text-warning/70'
+                    } border-0`}
                   >
                     Imminent
                   </button>
                 )}
+                </div>
               </div>
+              <button
+                type="button"
+                aria-hidden
+                onClick={() => scrollTabsBy(200)}
+                className="btn btn-ghost btn-sm ml-2"
+                disabled={!canScrollRight}
+              >
+                ›
+              </button>
             </div>
 
             {/* Task list content */}

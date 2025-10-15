@@ -1,4 +1,5 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
+import { headers } from 'next/headers';
 import { Prisma } from '@prisma/client';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
@@ -11,6 +12,16 @@ const FALLBACK_OWNER_NAME = process.env.DEFAULT_TASK_OWNER_NAME ?? 'Zenite Demo 
  * If no session exists, returns the fallback demo user ID (for local dev).
  */
 export async function getAuthUserId(): Promise<string> {
+  // Snapshot request headers early in the request call stack. Calling
+  // `headers()` here ensures Next.js registers that the dynamic headers
+  // API is used at the route entrypoint instead of indirectly inside
+  // nested helpers (which can trigger the "sync-dynamic-apis" error).
+  try {
+    await headers();
+  } catch {
+    // headers() may not be available in all environments; ignore if so.
+  }
+
   const { userId } = await auth();
 
   // If we have a Clerk user ID, ensure there's a matching local user row.
@@ -46,6 +57,14 @@ export async function getAuthUserId(): Promise<string> {
 export async function requireAuth(): Promise<
   { userId: string; error: null } | { userId: null; error: NextResponse }
 > {
+  // Snapshot headers to avoid Next.js complaining about indirect use of
+  // headers()/cookies() inside nested helpers (Clerk's helpers call into
+  // next/headers internally). This should be called from the route
+  // entry in future, but calling it here is a safe fallback.
+  try {
+    await headers();
+  } catch {}
+
   const { userId } = await auth();
 
   if (!userId) {

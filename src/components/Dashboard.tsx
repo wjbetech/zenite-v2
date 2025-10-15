@@ -502,7 +502,7 @@ export default function Dashboard() {
 
                             {!isLast && (
                               <span
-                                className="mx-3 h-9 w-[3px] rounded-full bg-emerald-600 dark:bg-emerald-600"
+                                className="mx-3 h-9 w-[3px] rounded-full bg-base-content dark:bg-base-content"
                                 aria-hidden
                               />
                             )}

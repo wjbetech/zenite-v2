@@ -10,7 +10,6 @@
 }
 
 /* light theme styles for 'pastel' theme */
-
 [data-theme='pastel'] {
   .text-accent {
     color: #2e51b1;
@@ -81,25 +80,22 @@
   .text-neutral-content {
     color: #f3f4f6;
   }
+  .text-base-content {
+    color: #f3f4f6;
+  }
+  .border-base-content {
+    border-color: #f3f4f6;
+  }
 }
 
 a {
   color: inherit;
 }
 
-/* Prevent layout shift when the vertical scrollbar appears/disappears.
-   Use scrollbar-gutter where supported and fall back to forcing a stable
-   scrollbar on the body. This keeps the page width stable when content
-   loads (avoids the ~0.25s narrow/jump effect). */
-html {
-  scrollbar-gutter: stable;
-}
-
 body {
   min-height: 100vh;
-  /* Ensure a stable vertical scrollbar on platforms/browsers without
-     scrollbar-gutter support (Windows/Chromium). */
-  overflow-y: scroll;
+  /* Allow scrollbars to appear only when necessary while keeping layout width stable. */
+  overflow-y: auto;
 }
 
 /* Glassmorphism utilities for navbar and small cards. */

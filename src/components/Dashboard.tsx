@@ -429,7 +429,7 @@ export default function Dashboard() {
         <div className="px-3 flex-1 min-h-0">
           <div className="mx-auto w-full max-w-6xl">
             {/* Tabs - horizontally scrollable using daisyUI tabs-box + arrows */}
-            <div className="mb-4 flex items-center">
+            <div className="mb-4 flex items-center w-full max-w-full">
               <button
                 type="button"
                 aria-hidden
@@ -439,68 +439,68 @@ export default function Dashboard() {
               >
                 ‹
               </button>
-              <div className="flex-1">
+              <div className="flex-1 max-w-full">
                 <div
                   ref={tabsRef}
                   onPointerDown={onPointerDown}
                   onPointerMove={onPointerMove}
                   onPointerUp={onPointerUp}
                   onScroll={updateScrollButtons}
-                  className="tabs tabs-box overflow-x-auto no-scrollbar w-full"
+                  className="tabs tabs-box overflow-x-auto no-scrollbar w-full min-w-0 flex-nowrap whitespace-nowrap"
                   role="tablist"
                   aria-label="Task view tabs"
                 >
-                {showNew && (
-                  <button
-                    role="tab"
-                    aria-selected={view === 'new'}
-                    onClick={() => setView('new')}
-                    className={`tab tab-lg flex-1 text-center ${
-                      view === 'new' ? 'tab-active text-primary' : 'text-primary/70'
-                    } border-0 border-r border-base-200`}
-                  >
-                    New
-                  </button>
-                )}
+                  {showNew && (
+                    <button
+                      role="tab"
+                      aria-selected={view === 'new'}
+                      onClick={() => setView('new')}
+                      className={`tab tab-lg flex-none text-center min-w-[140px] md:min-w-[180px] ${
+                        view === 'new' ? 'tab-active text-primary' : 'text-primary/70'
+                      } border-0 border-r border-base-200`}
+                    >
+                      New
+                    </button>
+                  )}
 
-                {showToday && (
-                  <button
-                    role="tab"
-                    aria-selected={view === 'today'}
-                    onClick={() => setView('today')}
-                    className={`tab tab-lg flex-1 text-center ${
-                      view === 'today' ? 'tab-active text-secondary' : 'text-secondary/70'
-                    } border-0 border-r border-base-200`}
-                  >
-                    Today
-                  </button>
-                )}
+                  {showToday && (
+                    <button
+                      role="tab"
+                      aria-selected={view === 'today'}
+                      onClick={() => setView('today')}
+                      className={`tab tab-lg flex-none text-center min-w-[140px] md:min-w-[180px] ${
+                        view === 'today' ? 'tab-active text-secondary' : 'text-secondary/70'
+                      } border-0 border-r border-base-200`}
+                    >
+                      Today
+                    </button>
+                  )}
 
-                {showWeek && (
-                  <button
-                    role="tab"
-                    aria-selected={view === 'week'}
-                    onClick={() => setView('week')}
-                    className={`tab tab-lg flex-1 text-center ${
-                      view === 'week' ? 'tab-active text-accent' : 'text-accent/70'
-                    } border-0 border-r border-base-200`}
-                  >
-                    This Week
-                  </button>
-                )}
+                  {showWeek && (
+                    <button
+                      role="tab"
+                      aria-selected={view === 'week'}
+                      onClick={() => setView('week')}
+                      className={`tab tab-lg flex-none text-center min-w-[140px] md:min-w-[180px] ${
+                        view === 'week' ? 'tab-active text-accent' : 'text-accent/70'
+                      } border-0 border-r border-base-200`}
+                    >
+                      This Week
+                    </button>
+                  )}
 
-                {showImminent && (
-                  <button
-                    role="tab"
-                    aria-selected={view === 'imminent'}
-                    onClick={() => setView('imminent')}
-                    className={`tab tab-lg flex-1 text-center ${
-                      view === 'imminent' ? 'tab-active text-warning' : 'text-warning/70'
-                    } border-0`}
-                  >
-                    Imminent
-                  </button>
-                )}
+                  {showImminent && (
+                    <button
+                      role="tab"
+                      aria-selected={view === 'imminent'}
+                      onClick={() => setView('imminent')}
+                      className={`tab tab-lg flex-none text-center min-w-[140px] md:min-w-[180px] ${
+                        view === 'imminent' ? 'tab-active text-warning' : 'text-warning/70'
+                      } border-0`}
+                    >
+                      Imminent
+                    </button>
+                  )}
                 </div>
               </div>
               <button

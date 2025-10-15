@@ -437,7 +437,7 @@ export default function Dashboard() {
                   onPointerMove={onPointerMove}
                   onPointerUp={onPointerUp}
                   onScroll={updateScrollButtons}
-                  className="tabs tabs-box overflow-x-auto no-scrollbar flex flex-nowrap whitespace-nowrap align-middle"
+                  className="tabs tabs-box overflow-x-auto no-scrollbar flex items-center flex-nowrap whitespace-nowrap"
                   role="tablist"
                   aria-label="Task view tabs"
                 >
@@ -445,7 +445,7 @@ export default function Dashboard() {
                     type="button"
                     aria-label="Scroll tabs left"
                     onClick={() => scrollTabsBy(-220)}
-                    className="btn btn-ghost btn-sm pointer-events-auto align-middle"
+                    className="btn btn-ghost btn-sm pointer-events-auto self-center h-10 w-10 p-0 flex items-center justify-center"
                     disabled={!canScrollLeft}
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -505,7 +505,7 @@ export default function Dashboard() {
                     type="button"
                     aria-label="Scroll tabs right"
                     onClick={() => scrollTabsBy(220)}
-                    className="btn btn-ghost btn-sm pointer-events-auto"
+                    className="btn btn-ghost btn-sm pointer-events-auto self-center h-10 w-10 p-0 flex items-center justify-center"
                     disabled={!canScrollRight}
                   >
                     <ChevronRight className="h-4 w-4" />

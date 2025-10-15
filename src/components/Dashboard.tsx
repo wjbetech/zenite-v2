@@ -437,7 +437,7 @@ export default function Dashboard() {
                   onPointerMove={onPointerMove}
                   onPointerUp={onPointerUp}
                   onScroll={updateScrollButtons}
-                  className="tabs tabs-box overflow-x-auto no-scrollbar flex items-center flex-nowrap whitespace-nowrap"
+                  className="tabs tabs-box overflow-x-auto no-scrollbar flex items-center flex-nowrap whitespace-nowrap bg-base-300"
                   role="tablist"
                   aria-label="Task view tabs"
                 >
@@ -445,7 +445,7 @@ export default function Dashboard() {
                     type="button"
                     aria-label="Scroll tabs left"
                     onClick={() => scrollTabsBy(-220)}
-                    className="btn btn-ghost btn-sm pointer-events-auto self-center h-10 w-10 p-0 flex items-center justify-center"
+                    className="btn btn-ghost cursor-pointer btn-sm pointer-events-auto self-center h-10 w-10 p-0 flex items-center justify-center text-base-content"
                     disabled={!canScrollLeft}
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -455,11 +455,11 @@ export default function Dashboard() {
                       role="tab"
                       aria-selected={view === 'new'}
                       onClick={() => setView('new')}
-                      className={`tab tab-lg flex-none min-w-[200px] sm:min-w-[240px] ${
-                        view === 'new' ? 'tab-active text-primary' : 'text-primary/70'
+                      className={`tab tab-lg  flex-none min-w-[200px] sm:min-w-[240px] ${
+                        view === 'new' ? 'tab-active text-base-content' : 'text-base-content'
                       } border-0 border-r border-base-200`}
                     >
-                      New
+                      New Tasks
                     </button>
                   )}
 
@@ -469,7 +469,7 @@ export default function Dashboard() {
                       aria-selected={view === 'today'}
                       onClick={() => setView('today')}
                       className={`tab tab-lg flex-none min-w-[200px] sm:min-w-[240px] ${
-                        view === 'today' ? 'tab-active text-secondary' : 'text-secondary/70'
+                        view === 'today' ? 'tab-active text-base-content' : 'text-base-content'
                       } border-0 border-r border-base-200`}
                     >
                       Today
@@ -482,7 +482,7 @@ export default function Dashboard() {
                       aria-selected={view === 'week'}
                       onClick={() => setView('week')}
                       className={`tab tab-lg flex-none min-w-[200px] sm:min-w-[240px] ${
-                        view === 'week' ? 'tab-active text-accent' : 'text-accent/70'
+                        view === 'week' ? 'tab-active text-base-content' : 'text-base-content'
                       } border-0 border-r border-base-200`}
                     >
                       This Week
@@ -495,7 +495,7 @@ export default function Dashboard() {
                       aria-selected={view === 'imminent'}
                       onClick={() => setView('imminent')}
                       className={`tab tab-lg flex-none min-w-[200px] sm:min-w-[240px] ${
-                        view === 'imminent' ? 'tab-active text-warning' : 'text-warning/70'
+                        view === 'imminent' ? 'tab-active text-base-content' : 'text-base-content'
                       } border-0`}
                     >
                       Imminent
@@ -505,7 +505,7 @@ export default function Dashboard() {
                     type="button"
                     aria-label="Scroll tabs right"
                     onClick={() => scrollTabsBy(220)}
-                    className="btn btn-ghost btn-sm pointer-events-auto self-center h-10 w-10 p-0 flex items-center justify-center"
+                    className="btn btn-ghost btn-sm pointer-events-auto self-center h-10 w-10 p-0 flex items-center justify-center text-base-content"
                     disabled={!canScrollRight}
                   >
                     <ChevronRight className="h-4 w-4" />

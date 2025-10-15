@@ -2,7 +2,7 @@
 
 import React from 'react';
 // ...existing code...
-import { Plus } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import TaskSection from './TaskSection';
 import NativeSortableDaily from './NativeSortableDaily';
 import ActivityHeatmap from './ActivityHeatmap';
@@ -365,7 +365,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="mx-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-visible max-w-[95%]">
+    <div className="mx-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-hidden">
       {/* Wrap header, heatmap and lists in shared px-3 container for alignment */}
       <div className="mx-auto w-full max-w-6xl px-3">
         {/* Header with depth - elevated card with layered backgrounds */}
@@ -429,24 +429,37 @@ export default function Dashboard() {
         <div className="px-3 flex-1 min-h-0">
           <div className="mx-auto w-full max-w-6xl">
             {/* Tabs - horizontally scrollable using daisyUI tabs-box + arrows */}
-            <div className="mb-4 flex items-center w-full max-w-full">
-              <button
-                type="button"
-                aria-hidden
-                onClick={() => scrollTabsBy(-200)}
-                className="btn btn-ghost btn-sm mr-2"
-                disabled={!canScrollLeft}
-              >
-                ‹
-              </button>
-              <div className="flex-1 max-w-full">
+            <div className="mb-4 relative w-full">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-1">
+                <button
+                  type="button"
+                  aria-label="Scroll tabs left"
+                  onClick={() => scrollTabsBy(-220)}
+                  className="btn btn-ghost btn-sm pointer-events-auto"
+                  disabled={!canScrollLeft}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1">
+                <button
+                  type="button"
+                  aria-label="Scroll tabs right"
+                  onClick={() => scrollTabsBy(220)}
+                  className="btn btn-ghost btn-sm pointer-events-auto"
+                  disabled={!canScrollRight}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="overflow-hidden px-12">
                 <div
                   ref={tabsRef}
                   onPointerDown={onPointerDown}
                   onPointerMove={onPointerMove}
                   onPointerUp={onPointerUp}
                   onScroll={updateScrollButtons}
-                  className="tabs tabs-box overflow-x-auto no-scrollbar w-full min-w-0 flex-nowrap whitespace-nowrap"
+                  className="tabs tabs-box overflow-x-auto no-scrollbar w-full max-w-full flex flex-nowrap whitespace-nowrap"
                   role="tablist"
                   aria-label="Task view tabs"
                 >
@@ -455,7 +468,7 @@ export default function Dashboard() {
                       role="tab"
                       aria-selected={view === 'new'}
                       onClick={() => setView('new')}
-                      className={`tab tab-lg flex-none text-center min-w-[140px] md:min-w-[180px] ${
+                      className={`tab tab-lg flex-none min-w-[200px] sm:min-w-[240px] ${
                         view === 'new' ? 'tab-active text-primary' : 'text-primary/70'
                       } border-0 border-r border-base-200`}
                     >
@@ -468,7 +481,7 @@ export default function Dashboard() {
                       role="tab"
                       aria-selected={view === 'today'}
                       onClick={() => setView('today')}
-                      className={`tab tab-lg flex-none text-center min-w-[140px] md:min-w-[180px] ${
+                      className={`tab tab-lg flex-none min-w-[200px] sm:min-w-[240px] ${
                         view === 'today' ? 'tab-active text-secondary' : 'text-secondary/70'
                       } border-0 border-r border-base-200`}
                     >
@@ -481,7 +494,7 @@ export default function Dashboard() {
                       role="tab"
                       aria-selected={view === 'week'}
                       onClick={() => setView('week')}
-                      className={`tab tab-lg flex-none text-center min-w-[140px] md:min-w-[180px] ${
+                      className={`tab tab-lg flex-none min-w-[200px] sm:min-w-[240px] ${
                         view === 'week' ? 'tab-active text-accent' : 'text-accent/70'
                       } border-0 border-r border-base-200`}
                     >
@@ -494,7 +507,7 @@ export default function Dashboard() {
                       role="tab"
                       aria-selected={view === 'imminent'}
                       onClick={() => setView('imminent')}
-                      className={`tab tab-lg flex-none text-center min-w-[140px] md:min-w-[180px] ${
+                      className={`tab tab-lg flex-none min-w-[200px] sm:min-w-[240px] ${
                         view === 'imminent' ? 'tab-active text-warning' : 'text-warning/70'
                       } border-0`}
                     >
@@ -503,15 +516,6 @@ export default function Dashboard() {
                   )}
                 </div>
               </div>
-              <button
-                type="button"
-                aria-hidden
-                onClick={() => scrollTabsBy(200)}
-                className="btn btn-ghost btn-sm ml-2"
-                disabled={!canScrollRight}
-              >
-                ›
-              </button>
             </div>
 
             {/* Task list content */}

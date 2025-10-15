@@ -63,7 +63,7 @@ export default function Navbar() {
             className="flex items-center gap-3 text-2xl md:text-3xl font-extrabold text-emerald-600"
           >
             <DiamondLogo className="w-7 h-7 inline-block transform translate-y-0.5" />
-            <h5 className="text-emerald-600 text-4xl font-semibold">Zenite</h5>
+            <h5 className="display-font text-emerald-600 text-4xl font-semibold">Zenite</h5>
           </Link>
         </div>
 

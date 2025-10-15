@@ -395,7 +395,7 @@ export default function Dashboard() {
             left and buttons inline on the right.
           */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between items-center gap-3">
-            <h1 className="text-3xl font-semibold tracking-tight text-emerald-600 text-center md:text-left">
+            <h1 className="display-font text-3xl font-semibold tracking-tight text-emerald-600 text-center md:text-left">
               Dashboard
             </h1>
 
@@ -457,12 +457,12 @@ export default function Dashboard() {
             <div className="mb-4">
               <div className="mx-auto w-full">
                 <div className="tabs tabs-box bg-base-300 w-full flex items-center">
-                  <div className="flex-none px-3">
+                  <div className="flex-none px-1">
                     <button
                       type="button"
                       aria-label="Scroll tabs left"
                       onClick={() => scrollTabsBy(-220)}
-                      className="btn btn-ghost btn-sm pointer-events-auto h-10 w-10 p-0 flex items-center justify-center text-base-content"
+                      className="btn btn-ghost btn-sm pointer-events-auto h-8 w-8 p-0 flex items-center justify-center text-base-content"
                       disabled={!canScrollLeft}
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -511,12 +511,12 @@ export default function Dashboard() {
                       })}
                   </div>
 
-                  <div className="flex-none px-3">
+                  <div className="flex-none px-1">
                     <button
                       type="button"
                       aria-label="Scroll tabs right"
                       onClick={() => scrollTabsBy(220)}
-                      className="btn btn-ghost btn-sm pointer-events-auto h-10 w-10 p-0 flex items-center justify-center text-base-content"
+                      className="btn btn-ghost btn-sm pointer-events-auto h-8 w-8 p-0 flex items-center justify-center text-base-content"
                       disabled={!canScrollRight}
                     >
                       <ChevronRight className="h-4 w-4" />

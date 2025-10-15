@@ -108,7 +108,7 @@ export default function DailiesClient() {
         <div className="mx-auto w-full max-w-6xl">
           <div className="relative flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h1 className="text-3xl md:text-3xl font-semibold mb-0 text-center text-emerald-600 md:text-left w-full md:w-auto">
+              <h1 className="display-font text-3xl md:text-3xl font-semibold mb-0 text-center text-emerald-600 md:text-left w-full md:w-auto">
                 Dailies
               </h1>
               <div className="hidden md:flex items-center gap-3">

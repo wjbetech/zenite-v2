@@ -397,6 +397,13 @@ export default function ActivityHeatmap({
           }}
           className={`${extraClass} ${color} ${border} cursor-default`}
         />
+        {process.env.NODE_ENV === 'test' && titles.length ? (
+          <div data-testid={`activity-titles-${key}`} style={{ display: 'none' }}>
+            {titles.map((t, i) => (
+              <span key={i}>{t}</span>
+            ))}
+          </div>
+        ) : null}
       </div>
     );
   }
@@ -405,7 +412,7 @@ export default function ActivityHeatmap({
     <motion.div
       layout
       transition={{ layout: { duration: 0.28, ease: 'easeInOut' } }}
-      className="relative w-full bg-gradient-to-br from-base-300 via-base-200/90 to-base-300/60 rounded-xl border-2 border-base-300/50 backdrop-blur-md px-6 pt-3 pb-1 mb-8 overflow-hidden"
+      className="relative w-full backdrop-blur-md px-1 pt-3 pb-1 overflow-hidden"
     >
       {/* Subtle inner glow for depth */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />

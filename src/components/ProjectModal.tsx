@@ -111,7 +111,7 @@ export default function ProjectModal({ open, onSubmit, onCancel, initial }: Proj
 
         <div className="mt-6 flex justify-end gap-2">
           <button
-            className="btn btn-warning border-2 border-base-content"
+            className="btn btn-warning border-2 border-warning-content text-warning-content"
             type="button"
             onClick={onCancel}
             disabled={submitting}
@@ -119,7 +119,7 @@ export default function ProjectModal({ open, onSubmit, onCancel, initial }: Proj
             Cancel
           </button>
           <button
-            className="btn btn-success border-2 border-base-content"
+            className="btn btn-success border-2 border-success-content text-success-content"
             type="submit"
             disabled={submitting}
           >

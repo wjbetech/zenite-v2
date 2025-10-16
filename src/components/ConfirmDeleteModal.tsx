@@ -39,17 +39,17 @@ export default function ConfirmDeleteModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
       <div className="absolute inset-0 bg-black/60" onClick={onCancel} />
-      <div className="relative z-10 w-full max-w-md sm:max-w-lg bg-red-200 border border-error rounded-lg p-6 shadow-lg">
+      <div className="relative z-10 w-full max-w-md sm:max-w-lg bg-red-100 border border-error rounded-lg p-6 shadow-lg">
         <h3 id="confirm-delete-title" className="text-lg font-medium mb-2">
           {`Delete ${itemTitle ?? 'task'}?`}
         </h3>
-        <div className="text-lg font-semibold text-error mb-2">Warning!</div>
+        <div className="text-lg font-semibold text-error-content mb-2">Warning!</div>
         <div className=" text-neutral mb-4">
           {`This will permanently remove ${itemTitle ?? 'the task'}. Are you sure?`}
         </div>
         <div className="flex justify-end gap-2">
           <button
-            className="btn btn-warning border-2 border-base-content"
+            className="btn btn-warning border-2 border-warning-content text-warning-content"
             onClick={onCancel}
             type="button"
             disabled={!!loading}
@@ -57,7 +57,7 @@ export default function ConfirmDeleteModal({
             Cancel
           </button>
           <button
-            className="btn btn-error border-2 border-base-content"
+            className="btn btn-error border-2 border-error-content text-error-content"
             onClick={onConfirm}
             type="button"
             disabled={!!loading}

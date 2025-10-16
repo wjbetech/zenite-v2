@@ -2,17 +2,17 @@
 
 import React from 'react';
 // ...existing code...
-import { Plus } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import TaskSection from './TaskSection';
 import NativeSortableDaily from './NativeSortableDaily';
 import ActivityHeatmap from './ActivityHeatmap';
 import type { Task } from '../lib/taskStore';
 import useTaskStore from '../lib/taskStore';
+import { buildActivityFrom, TaskLike } from '../lib/activityUtils';
 import DashboardTaskCard from './DashboardTaskCard';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 import TaskModal from './TaskModal';
-import { useState } from 'react';
-import { useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import useSettingsStore from '../lib/settingsStore';
 
 function daysUntil(date?: string | null) {
@@ -80,6 +80,64 @@ export default function Dashboard() {
   const [deleting, setDeleting] = useState<Task | null>(null);
   const [modalMode, setModalMode] = useState<'task' | 'project'>('task');
   const [view, setView] = useState<'imminent' | 'new' | 'today' | 'week'>('new');
+
+  // Tabs scroll + drag refs/state
+  const tabsRef = useRef<HTMLDivElement | null>(null);
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const scrollStartX = useRef(0);
+  const didDrag = useRef(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollButtons = useCallback(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  }, []);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    const el = tabsRef.current;
+    if (!el) return;
+    isDragging.current = true;
+    dragStartX.current = e.clientX;
+    scrollStartX.current = el.scrollLeft;
+    didDrag.current = false;
+    try {
+      (e.target as Element).setPointerCapture(e.pointerId);
+    } catch {}
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!isDragging.current || !tabsRef.current) return;
+    const dx = e.clientX - dragStartX.current;
+    if (Math.abs(dx) > 6) didDrag.current = true;
+    tabsRef.current.scrollLeft = scrollStartX.current - dx;
+    updateScrollButtons();
+  };
+
+  const onPointerUp = (e: React.PointerEvent) => {
+    isDragging.current = false;
+    try {
+      (e.target as Element).releasePointerCapture(e.pointerId);
+    } catch {}
+  };
+
+  const scrollTabsBy = (amount: number) => {
+    const el = tabsRef.current;
+    if (!el) return;
+    el.scrollBy({ left: amount, behavior: 'smooth' });
+    // schedule an update after smooth scroll begins
+    setTimeout(updateScrollButtons, 250);
+  };
+
+  useEffect(() => {
+    updateScrollButtons();
+    const handleResize = () => updateScrollButtons();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [updateScrollButtons]);
 
   // derive `all` directly from the store to preserve the global ordering
   // (storeTasks is the canonical ordered list; use it as the source of truth)
@@ -248,46 +306,27 @@ export default function Dashboard() {
   }, []);
 
   const { activityMap, activityDetails } = React.useMemo(() => {
-    const map: Record<string, number> = {};
-    const details: Record<string, string[]> = {};
-    // Start with persisted snapshots
-    for (const [date, info] of Object.entries(persistedActivity)) {
-      map[date] = (map[date] || 0) + info.count;
-      details[date] = [...(details[date] ?? []), ...info.titles];
-    }
-    // Merge live task completions only into today's bucket so past days remain locked
-    const now = new Date();
-    const todayY = now.getFullYear();
-    const todayM = `${now.getMonth() + 1}`.padStart(2, '0');
-    const todayD = `${now.getDate()}`.padStart(2, '0');
-    const todayKey = `${todayY}-${todayM}-${todayD}`;
-    for (const t of storeTasks) {
-      if (!t.completed) continue;
-      // Only count live completions that belong to today; previous days must come from persistedActivity
-      const when = t.completedAt || t.createdAt;
-      if (!when) continue;
-      let date: string;
-      if (/^\d{4}-\d{2}-\d{2}$/.test(when)) {
-        date = when as string;
-      } else {
-        const d = new Date(when);
-        const y = d.getFullYear();
-        const m = `${d.getMonth() + 1}`.padStart(2, '0');
-        const day = `${d.getDate()}`.padStart(2, '0');
-        date = `${y}-${m}-${day}`;
-      }
-      if (date !== todayKey) continue;
-      map[date] = (map[date] || 0) + 1;
-      if (!details[date]) details[date] = [];
-      details[date].push(t.title || 'Untitled');
-    }
-    return { activityMap: map, activityDetails: details };
+    return buildActivityFrom(persistedActivity, storeTasks as unknown as TaskLike[]);
   }, [storeTasks, persistedActivity]);
   // Read settings for which views should be shown
   const showNew = useSettingsStore((s) => s.newTasks);
   const showToday = useSettingsStore((s) => s.today);
   const showWeek = useSettingsStore((s) => s.week);
   const showImminent = useSettingsStore((s) => s.imminent);
+
+  // Define tabs in a single place so we can insert dividers between visible tabs
+  type View = 'imminent' | 'new' | 'today' | 'week';
+  const tabDefs: Array<{ id: View; show: boolean; label: string; minClass: string }> = [
+    { id: 'new', show: showNew, label: 'New Tasks', minClass: 'min-w-[200px] sm:min-w-[240px]' },
+    { id: 'today', show: showToday, label: 'Today', minClass: 'min-w-[200px] sm:min-w-[240px]' },
+    { id: 'week', show: showWeek, label: 'This Week', minClass: 'min-w-[200px] sm:min-w-[240px]' },
+    {
+      id: 'imminent',
+      show: showImminent,
+      label: 'Imminent',
+      minClass: 'min-w-[180px] sm:min-w-[220px]',
+    },
+  ];
 
   // If the current view is disabled in settings, pick the first enabled view (priority: new, today, week, imminent)
   useEffect(() => {
@@ -311,11 +350,15 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="mx-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-visible max-w-[95%]">
-      {/* Wrap header, heatmap and lists in shared px-3 container for alignment */}
-      <div className="mx-auto w-full max-w-6xl px-3">
-        {/* Header with depth - elevated card with layered backgrounds */}
-
+    <div
+      className="px-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-hidden"
+      style={{ boxSizing: 'border-box' }}
+    >
+      {/* Wrap header, heatmap and lists in a centered container; use no extra inner padding so the title sits flush with the outer padding */}
+      <div
+        className="mx-auto w-full px-0"
+        style={{ maxWidth: 'calc(100vw - var(--sidebar-width) - 3rem)', boxSizing: 'border-box' }}
+      >
         <div className="relative pb-6">
           {/*
             On small screens we want the title centered with the action buttons
@@ -323,13 +366,13 @@ export default function Dashboard() {
             left and buttons inline on the right.
           */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between items-center gap-3">
-            <h1 className="text-3xl font-semibold tracking-tight text-emerald-600 text-center md:text-left">
+            <h1 className="display-font text-3xl font-semibold tracking-tight text-emerald-600 text-center md:text-left">
               Dashboard
             </h1>
 
-            <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+            <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto mb-8">
               <button
-                className="btn btn-md btn-primary border-2 border-base-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center w-full md:w-auto"
+                className="btn btn-md btn-primary border-2 border-primary-content text-primary-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center w-full md:w-auto"
                 type="button"
                 onClick={() => {
                   setEditing(undefined);
@@ -341,7 +384,7 @@ export default function Dashboard() {
                 New Task
               </button>
               <button
-                className="btn btn-md btn-secondary border-2 border-base-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center w-full md:w-auto"
+                className="btn btn-md btn-accent border-2 border-accent-content text-accent-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center w-full md:w-auto"
                 type="button"
                 onClick={() => {
                   setEditing(undefined);
@@ -354,97 +397,122 @@ export default function Dashboard() {
               </button>
             </div>
           </div>
+
+          <div className="hidden lg:block">
+            <ActivityHeatmap
+              open={heatmapOpen}
+              onOpenChange={(v) => {
+                console.debug('Dashboard: onOpenChange received', { v });
+                setHeatmapOpen(v);
+              }}
+              activity={activityMap}
+              activityDetails={activityDetails}
+            />
+          </div>
         </div>
 
-        <div className="hidden lg:block">
-          <ActivityHeatmap
-            open={heatmapOpen}
-            onOpenChange={(v) => {
-              console.debug('Dashboard: onOpenChange received', { v });
-              setHeatmapOpen(v);
-            }}
-            activity={activityMap}
-            activityDetails={activityDetails}
-          />
-        </div>
         {/* moved: view-toggle buttons will be rendered inside the task lists card below */}
       </div>
 
       <div className="flex-1 flex flex-col min-h-0">
         {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
-        <div className="px-3 flex-1 min-h-0">
-          <div className="mx-auto w-full max-w-6xl">
-            {/* Toggle buttons */}
+        <div className="flex-1 min-h-0">
+          <div
+            className="mx-auto w-full"
+            style={{
+              maxWidth: 'calc(100vw - var(--sidebar-width) - 3rem)',
+              boxSizing: 'border-box',
+            }}
+          >
+            {/* Tabs - horizontally scrollable using daisyUI tabs-box + arrows */}
             <div className="mb-4">
-              <div
-                className={`grid ${
-                  showNew && showToday && showWeek && showImminent
-                    ? 'grid-cols-2 md:grid-cols-4'
-                    : (showNew && showToday && (showWeek || showImminent)) ||
-                      (showWeek && showImminent)
-                    ? 'grid-cols-2 md:grid-cols-3'
-                    : 'grid-cols-1 md:grid-cols-2'
-                } gap-3`}
-              >
-                {/* New Tasks - primary */}
-                {showNew && (
-                  <button
-                    onClick={() => setView('new')}
-                    aria-pressed={view === 'new'}
-                    className={`btn w-full btn-primary btn-md border-2 border-base-content transition-all ${
-                      view === 'new'
-                        ? ''
-                        : 'bg-primary/20 text-primary-content/70 hover:bg-primary/30'
-                    }`}
-                  >
-                    New Tasks
-                  </button>
-                )}
+              <div className="mx-auto w-full">
+                <div className="tabs tabs-box bg-base-300 w-full flex items-center">
+                  <div className="flex-none px-1">
+                    <button
+                      type="button"
+                      aria-label="Scroll tabs left"
+                      onClick={() => scrollTabsBy(-220)}
+                      className="btn btn-ghost btn-sm pointer-events-auto h-8 w-8 p-0 flex items-center justify-center text-base-content"
+                      disabled={!canScrollLeft}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                  </div>
 
-                {/* Today - secondary */}
-                {showToday && (
-                  <button
-                    onClick={() => setView('today')}
-                    aria-pressed={view === 'today'}
-                    className={`btn w-full btn-secondary btn-md border-2 border-base-content transition-all ${
-                      view === 'today'
-                        ? ''
-                        : 'bg-secondary/18 text-secondary-content/70 hover:bg-secondary/25'
-                    }`}
+                  <div
+                    ref={tabsRef}
+                    onPointerDown={onPointerDown}
+                    onPointerMove={onPointerMove}
+                    onPointerUp={onPointerUp}
+                    onScroll={updateScrollButtons}
+                    className="overflow-x-auto no-scrollbar flex items-center flex-nowrap whitespace-nowrap flex-1 px-3"
+                    role="tablist"
+                    aria-label="Task view tabs"
+                    style={{
+                      WebkitOverflowScrolling: 'touch',
+                      scrollSnapType: 'x mandatory' as const,
+                    }}
                   >
-                    Today
-                  </button>
-                )}
+                    {tabDefs
+                      .filter((t) => t.show)
+                      .map((t, i, arr) => {
+                        const isActive = view === t.id;
+                        const isLast = i === arr.length - 1;
+                        return (
+                          <React.Fragment key={t.id}>
+                            {/* Make each tab wrapper a flex item that can grow on md+ and snap on small screens.
+                                Apply the per-tab minimum width here so the button itself doesn't overflow and cover siblings. */}
+                            <div
+                              className={`flex items-center flex-none min-w-full md:flex-1 md:min-w-0 ${t.minClass}`}
+                              style={{ scrollSnapAlign: 'start' as const }}
+                            >
+                              <button
+                                role="tab"
+                                aria-selected={isActive}
+                                onClick={(e) => {
+                                  // Prevent click-through when user was dragging the tabs
+                                  if (didDrag.current) {
+                                    // Stop the click from doing anything
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    return;
+                                  }
+                                  setView(t.id);
+                                }}
+                                className={`tab tab-lg w-full text-center ${
+                                  isActive
+                                    ? 'tab-active bg-base-100 text-base-content'
+                                    : 'text-base-content'
+                                } border-0`}
+                              >
+                                {t.label}
+                              </button>
+                            </div>
 
-                {/* This Week - accent */}
-                {showWeek && (
-                  <button
-                    onClick={() => setView('week')}
-                    aria-pressed={view === 'week'}
-                    className={`btn w-full btn-accent btn-md border-2 border-base-content transition-all ${
-                      view === 'week'
-                        ? ''
-                        : 'bg-accent/18 text-accent-content/70 hover:bg-accent/25'
-                    }`}
-                  >
-                    This Week
-                  </button>
-                )}
+                            {!isLast && (
+                              // Render the divider as its own non-growing flex item so it always sits between tab wrappers
+                              <div className="hidden md:flex items-center flex-none" aria-hidden>
+                                <span className="mx-3 h-6 w-[2px] bg-gray-300 flex-shrink-0" />
+                              </div>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                  </div>
 
-                {/* Imminent - warning */}
-                {showImminent && (
-                  <button
-                    onClick={() => setView('imminent')}
-                    aria-pressed={view === 'imminent'}
-                    className={`btn w-full btn-warning btn-md border-2 border-base-content transition-all ${
-                      view === 'imminent'
-                        ? ''
-                        : 'bg-warning/18 text-warning-content/70 hover:bg-warning/25'
-                    }`}
-                  >
-                    Imminent
-                  </button>
-                )}
+                  <div className="flex-none px-1">
+                    <button
+                      type="button"
+                      aria-label="Scroll tabs right"
+                      onClick={() => scrollTabsBy(220)}
+                      className="btn btn-ghost btn-sm pointer-events-auto h-8 w-8 p-0 flex items-center justify-center text-base-content"
+                      disabled={!canScrollRight}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 

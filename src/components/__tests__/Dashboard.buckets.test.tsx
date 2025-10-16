@@ -59,7 +59,7 @@ describe('Dashboard bucketing', () => {
     render(React.createElement(Dashboard));
 
     // Click the Today tab
-    const todayBtn = screen.getByRole('button', { name: /today/i });
+    const todayBtn = screen.getByRole('tab', { name: /today/i });
     fireEvent.click(todayBtn);
 
     // Both 'Daily Task' and 'Due Today' should be visible (query via role=article with accessible name)
@@ -70,7 +70,7 @@ describe('Dashboard bucketing', () => {
   it('shows tasks due within the next 6 days in Week view, but not 7+ days', () => {
     render(React.createElement(Dashboard));
 
-    const weekBtn = screen.getByRole('button', { name: /this week/i });
+    const weekBtn = screen.getByRole('tab', { name: /this week/i });
     fireEvent.click(weekBtn);
 
     // 'Due In 3' should appear; 'Due In 8' should not (query via role=article)

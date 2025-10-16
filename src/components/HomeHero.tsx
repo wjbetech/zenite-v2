@@ -31,7 +31,7 @@ export default function HomeHero() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center justify-center gap-x-4 xl:gap-x-6 xl:mt-4 2xl:mt-6">
               {isSignedIn ? (
                 <button
-                  className="btn btn-success border-2 border-base-content inline-flex items-center justify-center font-semibold text-base-content shadow-[0_20px_45px_-20px_rgba(16,185,129,0.75)] transition"
+                  className="btn btn-success border-2 border-success-content inline-flex items-center justify-center font-semibold text-success-content shadow-[0_20px_45px_-20px_rgba(16,185,129,0.75)] transition"
                   onClick={() => {
                     router.push('/dashboard');
                   }}

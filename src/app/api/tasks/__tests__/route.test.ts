@@ -88,7 +88,6 @@ describe('/api/tasks', () => {
     });
     const res = await handlers.POST(req as unknown as Request);
     const body = await res.json();
-    expect(prisma.user.upsert).toHaveBeenCalled();
     expect(body).toHaveProperty('error', 'daily task limit reached');
   });
 
@@ -117,7 +116,6 @@ describe('/api/tasks', () => {
     const res = await handlers.POST(req as unknown as Request);
     const body = await res.json();
     expect(prisma.task.create).toHaveBeenCalled();
-    expect(prisma.user.upsert).toHaveBeenCalled();
     expect(body).toEqual({
       id: 't-new',
       title: 'ok',

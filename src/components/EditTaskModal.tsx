@@ -48,7 +48,7 @@ export default function EditTaskModal({ open, onOpenChange, task, onSave }: Prop
   return (
     <div className={open ? 'modal modal-open' : 'modal'} aria-hidden={!open}>
       <div className="modal-box w-11/12 max-w-xl">
-        <h3 className="font-bold text-lg">Edit task</h3>
+        <h3 className="font-bold text-lg">Edit Task</h3>
         <form onSubmit={submit} className="mt-4">
           <label className="label">
             <span className="label-text">Title</span>
@@ -92,10 +92,17 @@ export default function EditTaskModal({ open, onOpenChange, task, onSave }: Prop
           </select>
 
           <div className="modal-action mt-4">
-            <button type="button" className="btn btn-error" onClick={() => onOpenChange(false)}>
+            <button
+              type="button"
+              className="btn btn-error border-error-content text-error-content"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary">
+            <button
+              type="submit"
+              className="btn btn-primary border-primary-content text-primary-content"
+            >
               Save
             </button>
           </div>

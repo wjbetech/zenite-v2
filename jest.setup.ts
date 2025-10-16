@@ -4,9 +4,7 @@ import React from 'react';
 // Mock next/link simple behavior used in components
 jest.mock('next/link', () => ({
   __esModule: true,
-  default: ({ children }: { children?: React.ReactNode }) => {
-    return children ?? null;
-  },
+  default: ({ children }: { children?: React.ReactNode }) => children ?? null,
 }));
 
 jest.mock('next/router', () => ({
@@ -17,12 +15,7 @@ jest.mock('next/router', () => ({
 
 // Provide a minimal Request polyfill for tests so `next/server` can import safely
 if (typeof (global as unknown as { Request?: unknown }).Request === 'undefined') {
-  // lightweight polyfill used only for reading `url` and `json()` in handlers
-  type TestRequestOptions = {
-    method?: string;
-    headers?: Record<string, string>;
-    body?: string;
-  };
+  type TestRequestOptions = { method?: string; headers?: Record<string, string>; body?: string };
 
   class TestRequest {
     url: string;
@@ -44,11 +37,39 @@ if (typeof (global as unknown as { Request?: unknown }).Request === 'undefined')
     }
   }
   // attach test polyfill Request
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   (global as unknown as { Request?: unknown }).Request = TestRequest;
 }
 
+// Shim window.scrollTo / requestAnimationFrame which are not implemented in JSDOM
+if (typeof (global as unknown as { scrollTo?: unknown }).scrollTo === 'undefined') {
+  global.scrollTo = () => {};
+}
+
+try {
+  // attach to window if present in the test environment
+  if (typeof window !== 'undefined') {
+    if (typeof window.scrollTo === 'undefined') window.scrollTo = () => {};
+    // basic rAF shim used by animation libraries
+    if (typeof window.requestAnimationFrame === 'undefined') {
+      window.requestAnimationFrame = (cb: FrameRequestCallback) =>
+        setTimeout(cb, 0) as unknown as number;
+    }
+    if (typeof window.cancelAnimationFrame === 'undefined') {
+      window.cancelAnimationFrame = (id?: number) => clearTimeout(id as unknown as number);
+    }
+  }
+} catch {
+  // ignore when window isn't available
+}
+
+// Mock auth helpers used by API routes so tests run with a deterministic
+// authenticated user. This only affects the Jest environment (via setup file).
+jest.mock('src/lib/auth-helpers', () => ({
+  requireAuth: async () => ({ userId: 'test_user', error: null }),
+  getAuthUserId: async () => 'test_user',
+}));
+
+// Provide a minimal Response polyfill used by some test helpers
 if (typeof (global as unknown as { Response?: unknown }).Response === 'undefined') {
   class TestResponse {
     _body: unknown;
@@ -67,22 +88,12 @@ if (typeof (global as unknown as { Response?: unknown }).Response === 'undefined
       return typeof this._body === 'string' ? (this._body as string) : JSON.stringify(this._body);
     }
   }
-  // attach test polyfill Response
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   (global as unknown as { Response?: unknown }).Response = TestResponse;
 }
 
 // Provide a lightweight global.fetch if not provided by the Node/JSDOM environment.
-// Tests that need specific fetch behavior should mock fetch per-test.
 if (typeof (global as unknown as { fetch?: unknown }).fetch === 'undefined') {
-  // a minimal fetch mock that test files can spyOn/mockImplementation as needed
-  // it returns a Response-like object with ok=false by default
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   global.fetch = async () => {
-    // default simulated network response
-    // shape matches what's used by src/lib/api.safeJson (res.ok and res.json())
     return {
       ok: false,
       status: 500,

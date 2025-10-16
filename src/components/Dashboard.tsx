@@ -457,7 +457,7 @@ export default function Dashboard() {
                         const isActive = view === t.id;
                         const isLast = i === arr.length - 1;
                         return (
-                          <div key={t.id} className="flex items-center flex-none">
+                          <div key={t.id} className="flex items-center flex-none lg:flex-1">
                             <button
                               role="tab"
                               aria-selected={isActive}
@@ -471,7 +471,9 @@ export default function Dashboard() {
                                 }
                                 setView(t.id);
                               }}
-                              className={`tab tab-lg flex-none ${t.minClass} ${
+                              className={`tab tab-lg flex-none ${
+                                t.minClass
+                              } lg:flex-1 lg:min-w-0 w-full text-center ${
                                 isActive
                                   ? 'tab-active bg-base-100 text-base-content'
                                   : 'text-base-content'

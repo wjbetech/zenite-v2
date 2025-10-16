@@ -14,20 +14,20 @@ test('view toggle buttons update aria-pressed when clicked', async () => {
   render(<Dashboard />);
   const user = userEvent.setup();
 
-  const newBtn = screen.getByRole('button', { name: /new tasks/i });
-  const todayBtn = screen.getByRole('button', { name: /today/i });
-  const weekBtn = screen.getByRole('button', { name: /this week/i });
-  const imminentBtn = screen.getByRole('button', { name: /imminent/i });
+  const newBtn = screen.getByRole('tab', { name: /new tasks/i });
+  const todayBtn = screen.getByRole('tab', { name: /today/i });
+  const weekBtn = screen.getByRole('tab', { name: /this week/i });
+  const imminentBtn = screen.getByRole('tab', { name: /imminent/i });
 
-  // initial: 'New Tasks' is pressed by default
-  expect(newBtn).toHaveAttribute('aria-pressed', 'true');
+  // initial: 'New Tasks' is selected by default
+  expect(newBtn).toHaveAttribute('aria-selected', 'true');
 
   await user.click(todayBtn);
-  expect(todayBtn).toHaveAttribute('aria-pressed', 'true');
+  expect(todayBtn).toHaveAttribute('aria-selected', 'true');
 
   await user.click(weekBtn);
-  expect(weekBtn).toHaveAttribute('aria-pressed', 'true');
+  expect(weekBtn).toHaveAttribute('aria-selected', 'true');
 
   await user.click(imminentBtn);
-  expect(imminentBtn).toHaveAttribute('aria-pressed', 'true');
+  expect(imminentBtn).toHaveAttribute('aria-selected', 'true');
 });

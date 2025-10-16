@@ -8,6 +8,7 @@ import NativeSortableDaily from './NativeSortableDaily';
 import ActivityHeatmap from './ActivityHeatmap';
 import type { Task } from '../lib/taskStore';
 import useTaskStore from '../lib/taskStore';
+import { buildActivityFrom, TaskLike } from '../lib/activityUtils';
 import DashboardTaskCard from './DashboardTaskCard';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 import TaskModal from './TaskModal';
@@ -305,58 +306,7 @@ export default function Dashboard() {
   }, []);
 
   const { activityMap, activityDetails } = React.useMemo(() => {
-    // Use Sets to deduplicate task titles and track task ids for live-only items
-    const titleSets: Record<string, Set<string>> = {};
-    const idSets: Record<string, Set<string>> = {};
-
-    // Start with persisted snapshots (titles only)
-    for (const [date, info] of Object.entries(persistedActivity)) {
-      titleSets[date] = titleSets[date] ?? new Set();
-      for (const t of info.titles) {
-        titleSets[date].add(t);
-      }
-    }
-
-    // Merge live task completions only into today's bucket so past days remain locked
-    const now = new Date();
-    const todayY = now.getFullYear();
-    const todayM = `${now.getMonth() + 1}`.padStart(2, '0');
-    const todayD = `${now.getDate()}`.padStart(2, '0');
-    const todayKey = `${todayY}-${todayM}-${todayD}`;
-    for (const t of storeTasks) {
-      if (!t.completed) continue;
-      const when = t.completedAt || t.createdAt;
-      if (!when) continue;
-      let date: string;
-      if (/^\d{4}-\d{2}-\d{2}$/.test(when)) {
-        date = when as string;
-      } else {
-        const d = new Date(when);
-        const y = d.getFullYear();
-        const m = `${d.getMonth() + 1}`.padStart(2, '0');
-        const day = `${d.getDate()}`.padStart(2, '0');
-        date = `${y}-${m}-${day}`;
-      }
-      if (date !== todayKey) continue;
-
-      // ensure id-based de-duplication for live items
-      idSets[date] = idSets[date] ?? new Set();
-      if (t.id && idSets[date].has(t.id)) continue;
-      if (t.id) idSets[date].add(t.id);
-
-      titleSets[date] = titleSets[date] ?? new Set();
-      titleSets[date].add(t.title || 'Untitled');
-    }
-
-    // Build final map/details from the sets
-    const map: Record<string, number> = {};
-    const details: Record<string, string[]> = {};
-    for (const [date, set] of Object.entries(titleSets)) {
-      map[date] = set.size;
-      details[date] = Array.from(set);
-    }
-
-    return { activityMap: map, activityDetails: details };
+    return buildActivityFrom(persistedActivity, storeTasks as unknown as TaskLike[]);
   }, [storeTasks, persistedActivity]);
   // Read settings for which views should be shown
   const showNew = useSettingsStore((s) => s.newTasks);
@@ -420,7 +370,7 @@ export default function Dashboard() {
               Dashboard
             </h1>
 
-            <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+            <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto mb-8">
               <button
                 className="btn btn-md btn-primary border-2 border-primary-content text-primary-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center w-full md:w-auto"
                 type="button"

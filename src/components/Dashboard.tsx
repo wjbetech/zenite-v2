@@ -305,13 +305,18 @@ export default function Dashboard() {
   }, []);
 
   const { activityMap, activityDetails } = React.useMemo(() => {
-    const map: Record<string, number> = {};
-    const details: Record<string, string[]> = {};
-    // Start with persisted snapshots
+    // Use Sets to deduplicate task titles and track task ids for live-only items
+    const titleSets: Record<string, Set<string>> = {};
+    const idSets: Record<string, Set<string>> = {};
+
+    // Start with persisted snapshots (titles only)
     for (const [date, info] of Object.entries(persistedActivity)) {
-      map[date] = (map[date] || 0) + info.count;
-      details[date] = [...(details[date] ?? []), ...info.titles];
+      titleSets[date] = titleSets[date] ?? new Set();
+      for (const t of info.titles) {
+        titleSets[date].add(t);
+      }
     }
+
     // Merge live task completions only into today's bucket so past days remain locked
     const now = new Date();
     const todayY = now.getFullYear();
@@ -320,7 +325,6 @@ export default function Dashboard() {
     const todayKey = `${todayY}-${todayM}-${todayD}`;
     for (const t of storeTasks) {
       if (!t.completed) continue;
-      // Only count live completions that belong to today; previous days must come from persistedActivity
       const when = t.completedAt || t.createdAt;
       if (!when) continue;
       let date: string;
@@ -334,10 +338,24 @@ export default function Dashboard() {
         date = `${y}-${m}-${day}`;
       }
       if (date !== todayKey) continue;
-      map[date] = (map[date] || 0) + 1;
-      if (!details[date]) details[date] = [];
-      details[date].push(t.title || 'Untitled');
+
+      // ensure id-based de-duplication for live items
+      idSets[date] = idSets[date] ?? new Set();
+      if (t.id && idSets[date].has(t.id)) continue;
+      if (t.id) idSets[date].add(t.id);
+
+      titleSets[date] = titleSets[date] ?? new Set();
+      titleSets[date].add(t.title || 'Untitled');
     }
+
+    // Build final map/details from the sets
+    const map: Record<string, number> = {};
+    const details: Record<string, string[]> = {};
+    for (const [date, set] of Object.entries(titleSets)) {
+      map[date] = set.size;
+      details[date] = Array.from(set);
+    }
+
     return { activityMap: map, activityDetails: details };
   }, [storeTasks, persistedActivity]);
   // Read settings for which views should be shown

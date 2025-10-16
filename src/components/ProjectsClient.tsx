@@ -231,7 +231,7 @@ export default function ProjectsClient({ initialProjects }: Props) {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setCreateModalOpen(true)}
-                className="btn btn-success py-3 flex items-center gap-2 border-2 border-base-content"
+                className="btn btn-success border-success-content text-success-content py-3 flex items-center gap-2 border-2"
               >
                 <Plus className="h-4 w-4" />
                 <span className="leading-none">New Project</span>

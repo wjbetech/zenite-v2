@@ -50,13 +50,14 @@ export default function CreateDailyModal({ open, onOpenChange, onCreated }: Prop
   return (
     <div className="modal modal-open" aria-hidden={!open} role="dialog" aria-modal="true">
       <div className="modal-box w-11/12 max-w-md">
-        <h3 className="font-bold text-lg">Create daily task</h3>
+        <h3 className="font-bold text-lg">Create Daily Task</h3>
         <form onSubmit={submit} className="mt-4">
           <label className="label">
             <span className="label-text">Title</span>
           </label>
           <input
-            className="input input-bordered rounded-md w-full"
+            className="input input-bordered rounded-md w-full focus:outline-none focus-visible:outline-none focus:ring-0 active:outline-none active:ring-0 shadow-none focus:shadow-none focus-visible:shadow-none outline-none"
+            style={{ outline: 'none', boxShadow: 'none' }}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             aria-label="Daily task title"
@@ -68,7 +69,8 @@ export default function CreateDailyModal({ open, onOpenChange, onCreated }: Prop
             <span className="label-text">Notes (optional)</span>
           </label>
           <textarea
-            className="textarea textarea-bordered rounded-md w-full"
+            className="textarea textarea-bordered rounded-md w-full focus:outline-none focus-visible:outline-none focus:ring-0 active:outline-none active:ring-0 shadow-none focus:shadow-none focus-visible:shadow-none outline-none"
+            style={{ outline: 'none', boxShadow: 'none' }}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             aria-label="Daily task notes"
@@ -79,7 +81,8 @@ export default function CreateDailyModal({ open, onOpenChange, onCreated }: Prop
             <span className="label-text">Connect to project (optional)</span>
           </label>
           <select
-            className="select select-bordered w-full"
+            className="select select-bordered w-full focus:outline-none focus-visible:outline-none focus:ring-0 active:outline-none active:ring-0 shadow-none focus:shadow-none focus-visible:shadow-none outline-none"
+            style={{ outline: 'none', boxShadow: 'none' }}
             value={projectId}
             onChange={(e) => setProjectId(e.target.value as string)}
             aria-label="Select project"
@@ -95,12 +98,15 @@ export default function CreateDailyModal({ open, onOpenChange, onCreated }: Prop
           <div className="modal-action mt-4">
             <button
               type="button"
-              className="btn btn-warning border-2 border-base-content"
+              className="btn btn-warning border-2 border-warning-content text-warning-content"
               onClick={() => onOpenChange(false)}
             >
               Cancel
             </button>
-            <button type="submit" className="btn btn-success border-2 border-base-content">
+            <button
+              type="submit"
+              className="btn btn-success border-2 border-success-content text-success-content"
+            >
               Create Daily
             </button>
           </div>

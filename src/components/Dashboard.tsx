@@ -482,7 +482,7 @@ export default function Dashboard() {
 
                             {!isLast && (
                               <span
-                                className="mx-3 h-9 w-[3px] rounded-full bg-base-content dark:bg-base-content"
+                                className="mx-3 h-9 w-[3px] rounded-full bg-gray-300"
                                 aria-hidden
                               />
                             )}

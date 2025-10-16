@@ -123,7 +123,7 @@ export default function DailiesClient() {
                   onClick={() => {
                     setCreating(true);
                   }}
-                  className="btn btn-success  border-2 border-base-content"
+                  className="btn btn-success  border-2 border-success-content text-success-content"
                   aria-label="Add daily task"
                 >
                   + Add Daily Task

@@ -89,9 +89,9 @@ export default function Navbar() {
                   aria-haspopup="menu"
                   aria-expanded={open}
                   onClick={() => setOpen((s) => !s)}
-                  className="flex items-center focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-md px-2 py-1 cursor-pointer hover:bg-base-300 transition-colors duration-150"
+                  className="flex items-center focus:outline-none rounded-md px-2 py-1 cursor-pointer"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-base-300 focus-within:ring-2 focus-within:ring-emerald-300 transition-colors">
                     {profileImage ? (
                       <Image
                         src={profileImage}
@@ -150,7 +150,7 @@ export default function Navbar() {
               </div>
 
               <SignOutButton>
-                <button className="btn border-2 border-base-content btn-warning cursor-pointer">
+                <button className="btn border-2 border-warning-content btn-warning text-warning-content cursor-pointer">
                   Sign out
                 </button>
               </SignOutButton>

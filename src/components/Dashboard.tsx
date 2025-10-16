@@ -85,6 +85,7 @@ export default function Dashboard() {
   const isDragging = useRef(false);
   const dragStartX = useRef(0);
   const scrollStartX = useRef(0);
+  const didDrag = useRef(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
@@ -101,6 +102,7 @@ export default function Dashboard() {
     isDragging.current = true;
     dragStartX.current = e.clientX;
     scrollStartX.current = el.scrollLeft;
+    didDrag.current = false;
     try {
       (e.target as Element).setPointerCapture(e.pointerId);
     } catch {}
@@ -109,6 +111,7 @@ export default function Dashboard() {
   const onPointerMove = (e: React.PointerEvent) => {
     if (!isDragging.current || !tabsRef.current) return;
     const dx = e.clientX - dragStartX.current;
+    if (Math.abs(dx) > 6) didDrag.current = true;
     tabsRef.current.scrollLeft = scrollStartX.current - dx;
     updateScrollButtons();
   };
@@ -401,7 +404,7 @@ export default function Dashboard() {
 
             <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
               <button
-                className="btn btn-md btn-primary border-2 border-base-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center w-full md:w-auto"
+                className="btn btn-md btn-primary border-2 border-primary-content text-primary-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center w-full md:w-auto"
                 type="button"
                 onClick={() => {
                   setEditing(undefined);
@@ -413,7 +416,7 @@ export default function Dashboard() {
                 New Task
               </button>
               <button
-                className="btn btn-md btn-secondary border-2 border-base-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center w-full md:w-auto"
+                className="btn btn-md btn-accent border-2 border-accent-content text-accent-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center w-full md:w-auto"
                 type="button"
                 onClick={() => {
                   setEditing(undefined);
@@ -490,7 +493,16 @@ export default function Dashboard() {
                             <button
                               role="tab"
                               aria-selected={isActive}
-                              onClick={() => setView(t.id)}
+                              onClick={(e) => {
+                                // Prevent click-through when user was dragging the tabs
+                                if (didDrag.current) {
+                                  // Stop the click from doing anything
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  return;
+                                }
+                                setView(t.id);
+                              }}
                               className={`tab tab-lg flex-none ${t.minClass} ${
                                 isActive
                                   ? 'tab-active bg-base-100 text-base-content'

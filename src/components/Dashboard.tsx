@@ -449,7 +449,10 @@ export default function Dashboard() {
                     className="overflow-x-auto no-scrollbar flex items-center flex-nowrap whitespace-nowrap flex-1 px-3"
                     role="tablist"
                     aria-label="Task view tabs"
-                    style={{ WebkitOverflowScrolling: 'touch', scrollSnapType: 'x mandatory' as const }}
+                    style={{
+                      WebkitOverflowScrolling: 'touch',
+                      scrollSnapType: 'x mandatory' as const,
+                    }}
                   >
                     {tabDefs
                       .filter((t) => t.show)
@@ -478,7 +481,9 @@ export default function Dashboard() {
                                   setView(t.id);
                                 }}
                                 className={`tab tab-lg w-full text-center ${
-                                  isActive ? 'tab-active bg-base-100 text-base-content' : 'text-base-content'
+                                  isActive
+                                    ? 'tab-active bg-base-100 text-base-content'
+                                    : 'text-base-content'
                                 } border-0`}
                               >
                                 {t.label}

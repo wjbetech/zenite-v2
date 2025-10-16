@@ -449,7 +449,7 @@ export default function Dashboard() {
                     className="overflow-x-auto no-scrollbar flex items-center flex-nowrap whitespace-nowrap flex-1 px-3"
                     role="tablist"
                     aria-label="Task view tabs"
-                    style={{ WebkitOverflowScrolling: 'touch' }}
+                    style={{ WebkitOverflowScrolling: 'touch', scrollSnapType: 'x mandatory' as const }}
                   >
                     {tabDefs
                       .filter((t) => t.show)
@@ -457,38 +457,41 @@ export default function Dashboard() {
                         const isActive = view === t.id;
                         const isLast = i === arr.length - 1;
                         return (
-                          <div key={t.id} className="flex items-center flex-none lg:flex-1">
-                            <button
-                              role="tab"
-                              aria-selected={isActive}
-                              onClick={(e) => {
-                                // Prevent click-through when user was dragging the tabs
-                                if (didDrag.current) {
-                                  // Stop the click from doing anything
-                                  e.stopPropagation();
-                                  e.preventDefault();
-                                  return;
-                                }
-                                setView(t.id);
-                              }}
-                              className={`tab tab-lg flex-none ${
-                                t.minClass
-                              } lg:flex-1 lg:min-w-0 w-full text-center ${
-                                isActive
-                                  ? 'tab-active bg-base-100 text-base-content'
-                                  : 'text-base-content'
-                              } border-0`}
+                          <React.Fragment key={t.id}>
+                            {/* Make each tab wrapper a flex item that can grow on md+ and snap on small screens.
+                                Apply the per-tab minimum width here so the button itself doesn't overflow and cover siblings. */}
+                            <div
+                              className={`flex items-center flex-none min-w-full md:flex-1 md:min-w-0 ${t.minClass}`}
+                              style={{ scrollSnapAlign: 'start' as const }}
                             >
-                              {t.label}
-                            </button>
+                              <button
+                                role="tab"
+                                aria-selected={isActive}
+                                onClick={(e) => {
+                                  // Prevent click-through when user was dragging the tabs
+                                  if (didDrag.current) {
+                                    // Stop the click from doing anything
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    return;
+                                  }
+                                  setView(t.id);
+                                }}
+                                className={`tab tab-lg w-full text-center ${
+                                  isActive ? 'tab-active bg-base-100 text-base-content' : 'text-base-content'
+                                } border-0`}
+                              >
+                                {t.label}
+                              </button>
+                            </div>
 
                             {!isLast && (
-                              <span
-                                className="mx-3 h-9 w-[3px] rounded-full bg-gray-300"
-                                aria-hidden
-                              />
+                              // Render the divider as its own non-growing flex item so it always sits between tab wrappers
+                              <div className="hidden md:flex items-center flex-none" aria-hidden>
+                                <span className="mx-3 h-6 w-[2px] bg-gray-300 flex-shrink-0" />
+                              </div>
                             )}
-                          </div>
+                          </React.Fragment>
                         );
                       })}
                   </div>

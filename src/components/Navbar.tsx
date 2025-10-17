@@ -168,7 +168,15 @@ export default function Navbar({ initialIsSignedIn, initialUser }: Props) {
                     </button>
                   </li>
                   <li>
-                    <button role="menuitem" onClick={() => setOpen(false)} className="text-base w-full text-left py-2 px-3">
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        setOpen(false);
+                        // Use a hard navigation to avoid requiring the Next app router in tests
+                        window.location.assign('/settings');
+                      }}
+                      className="text-base w-full text-left py-2 px-3"
+                    >
                       Settings
                     </button>
                   </li>

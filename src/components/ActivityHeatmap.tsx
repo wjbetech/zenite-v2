@@ -414,7 +414,6 @@ export default function ActivityHeatmap({
       transition={{ layout: { duration: 0.28, ease: 'easeInOut' } }}
       className="relative w-full px-1 pt-3 pb-1 overflow-hidden"
     >
-
       <div className="relative flex items-center mb-2 select-none">
         <h5
           className="font-semibold cursor-pointer"
@@ -480,9 +479,6 @@ export default function ActivityHeatmap({
                 >
                   1 week
                 </button>
-              </div>
-              <div className="text-xs text-gray-500">
-                {formatDateISO(startDate)} → {formatDateISO(endDate)}
               </div>
             </div>
             {tooltipPortal}

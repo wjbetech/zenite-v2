@@ -33,7 +33,10 @@ describe('toInitialUser', () => {
 
   test('handles malformed email shapes gracefully', () => {
     // intentionally malformed shapes: primaryEmailAddress missing emailAddress, and emailAddresses contains null
-    const malformed: { primaryEmailAddress?: object; emailAddresses?: Array<{ emailAddress?: string | null } | null> } = {
+    const malformed: {
+      primaryEmailAddress?: object;
+      emailAddresses?: Array<{ emailAddress?: string | null } | null>;
+    } = {
       primaryEmailAddress: {},
       emailAddresses: [null],
     };

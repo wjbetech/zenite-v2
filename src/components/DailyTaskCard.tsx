@@ -26,16 +26,16 @@ function statusClasses(task: DailyTask) {
     return {
       ring: 'ring-2 ring-success/40',
       bg: 'bg-success/10',
-      text: 'text-success',
-      dot: 'bg-success',
+      text: 'text-success-content dark:text-success',
+      dot: 'bg-success-content',
     };
   }
   if (task.started) {
     return {
       ring: 'ring-2 ring-accent/30',
       bg: 'bg-accent/10',
-      text: 'text-accent',
-      dot: 'bg-accent',
+      text: 'text-accent-content dark:text-accent',
+      dot: 'bg-accent-content',
     };
   }
   return {
@@ -55,6 +55,7 @@ export default function DailyTaskCard({ task, onToggle, onEdit, onDelete }: Prop
       aria-label={`Task ${task.title}`}
       tabIndex={0}
       className={`group flex items-center gap-4 p-3 rounded-lg shadow-sm transition-transform duration-150 ${classes.bg} ${classes.ring} hover:scale-[1.01] focus:scale-[1.01] focus:outline-none`}
+      style={{ boxSizing: 'border-box' }}
     >
       <button
         aria-pressed={!!task.started || !!task.completed}
@@ -67,9 +68,9 @@ export default function DailyTaskCard({ task, onToggle, onEdit, onDelete }: Prop
         }}
         className={`flex items-center justify-center h-9 w-9 rounded-lg shrink-0 transition-colors cursor-pointer ${
           task.completed
-            ? 'bg-success text-white'
+            ? 'bg-success text-success-content'
             : task.started
-            ? 'bg-accent text-white'
+            ? 'bg-accent text-accent-content'
             : 'bg-white border'
         }`}
       >
@@ -84,8 +85,16 @@ export default function DailyTaskCard({ task, onToggle, onEdit, onDelete }: Prop
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-3">
-          <div className={`truncate font-medium ${classes.text}`}>
-            {task.projectName ? `${task.title} - (${task.projectName})` : task.title}
+          <div className={`flex items-center gap-2 min-w-0`}>
+            {/* Title and project pill are inline so the pill sits immediately after the title text */}
+            <div className={`font-medium ${classes.text} break-words min-w-0`}>
+              <span className="align-middle">{task.title}</span>
+              {task.projectName && (
+                <span className="text-sm text-base-content bg-base-200 px-2 py-0.5 rounded-full truncate ml-2 align-middle">
+                  {task.projectName}
+                </span>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             {onEdit && (
@@ -116,7 +125,7 @@ export default function DailyTaskCard({ task, onToggle, onEdit, onDelete }: Prop
         </div>
 
         {task.notes && (
-          <div className="text-sm text-muted-foreground truncate mt-1">{task.notes}</div>
+          <div className="text-sm text-muted-foreground break-words mt-1 pr-4">{task.notes}</div>
         )}
       </div>
     </div>

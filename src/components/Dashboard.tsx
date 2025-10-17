@@ -10,6 +10,7 @@ import type { Task } from '../lib/taskStore';
 import useTaskStore from '../lib/taskStore';
 import { buildActivityFrom, TaskLike } from '../lib/activityUtils';
 import DashboardTaskCard from './DashboardTaskCard';
+import useProjectStore from '../lib/projectStore';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 import TaskModal from './TaskModal';
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -370,7 +371,7 @@ export default function Dashboard() {
               Dashboard
             </h1>
 
-            <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto mb-8">
+            <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto mb-8 md:mb-0">
               <button
                 className="btn btn-md btn-primary border-2 border-primary-content text-primary-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center w-full md:w-auto"
                 type="button"
@@ -640,6 +641,7 @@ export default function Dashboard() {
                             started?: boolean;
                             completed?: boolean;
                             href?: string;
+                            projectId?: string | null;
                           }) => (
                             <div className="px-1.5 sm:px-2" key={t.id}>
                               <DashboardTaskCard
@@ -650,6 +652,7 @@ export default function Dashboard() {
                                     notes?: string;
                                     completed?: boolean;
                                     started?: boolean;
+                                    projectId?: string | null;
                                   }
                                 }
                                 onStatusChange={(id: string, status: 'none' | 'done' | 'tilde') =>
@@ -666,6 +669,12 @@ export default function Dashboard() {
                                   const found = storeTasks.find((x) => x.id === id) ?? null;
                                   setDeleting(found);
                                 }}
+                                // derive projectName from projectId in the main store
+                                projectName={
+                                  useProjectStore
+                                    .getState()
+                                    .projects.find((p) => p.id === t.projectId)?.name
+                                }
                               />
                             </div>
                           )}
@@ -733,6 +742,7 @@ export default function Dashboard() {
                               started?: boolean;
                               completed?: boolean;
                               href?: string;
+                              projectId?: string | null;
                             }) => (
                               <div className="mb-6 px-1.5 sm:px-2" key={t.id}>
                                 <DashboardTaskCard
@@ -751,6 +761,11 @@ export default function Dashboard() {
                                     const found = storeTasks.find((x) => x.id === id) ?? null;
                                     setDeleting(found);
                                   }}
+                                  projectName={
+                                    useProjectStore
+                                      .getState()
+                                      .projects.find((p) => p.id === t.projectId)?.name
+                                  }
                                 />
                               </div>
                             )}

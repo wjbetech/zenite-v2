@@ -155,8 +155,13 @@ describe('DailiesClient integration', () => {
 
     render(<DailiesClient />);
 
-    // Should show 'Workout - (Health and Lifestyle)'
-    const labeled = await screen.findByText('Workout - (Health and Lifestyle)');
-    expect(labeled).toBeInTheDocument();
+    // Should show the task title and the connected project name
+    // Scope assertions to the task card to avoid matching the project select option
+    const card = await screen.findByLabelText('Task Workout');
+    const withinCard = within(card);
+    const title = withinCard.getByText('Workout');
+    expect(title).toBeInTheDocument();
+    const proj = withinCard.getByText('Health and Lifestyle');
+    expect(proj).toBeInTheDocument();
   });
 });

@@ -4,6 +4,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import './globals.css';
 import Script from 'next/script';
 import { Navbar, Sidebar } from '../components';
+import { currentUser } from '@clerk/nextjs/server';
 import Providers from '../components/Providers';
 import { cookies } from 'next/headers';
 
@@ -17,8 +18,20 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // TODO: replace with real auth logic
-  const isLoggedIn = false;
+  // derive auth state server-side so client components can hydrate without layout shift
+  const clerkUser = await currentUser();
+  const isLoggedIn = !!clerkUser;
+  const initialUser = clerkUser
+    ? {
+        fullName: (clerkUser as any)?.fullName ?? undefined,
+        imageUrl: (clerkUser as any)?.imageUrl ?? undefined,
+        email:
+          // prefer primaryEmailAddress shape if available, otherwise try emailAddresses
+          (clerkUser as any)?.primaryEmailAddress?.emailAddress ||
+          (clerkUser as any)?.emailAddresses?.[0]?.emailAddress ||
+          undefined,
+      }
+    : undefined;
 
   // read cookies at request-time
   const cookieStore = await cookies();
@@ -116,7 +129,7 @@ export default async function RootLayout({
 
       <body className={`font-vend text-base-content`}>
         <Providers>
-          <Navbar />
+          <Navbar initialIsSignedIn={isLoggedIn} initialUser={initialUser} />
           {/* Navbar now overlays content. Do not apply top padding so pages sit underneath the absolute navbar. */}
           <div className="flex h-screen">
             <Sidebar isLoggedIn={isLoggedIn} />

@@ -6,24 +6,46 @@ import Image from 'next/image';
 // ThemeToggle removed; theme selection is done in Settings via ThemeDropdown
 import React from 'react';
 import DiamondLogo from './DiamondLogo';
-import { SignedIn, SignedOut, SignInButton, SignOutButton, useUser } from '@clerk/nextjs';
+import { SignInButton, SignOutButton, useUser } from '@clerk/nextjs';
 import { useState, useRef, useEffect } from 'react';
 
-export default function Navbar() {
-  const { user } = useUser();
+type InitialUserShape = {
+  fullName?: string | null;
+  imageUrl?: string | null;
+  email?: string | null;
+};
+
+type Props = {
+  initialIsSignedIn?: boolean;
+  initialUser?: InitialUserShape;
+};
+
+export default function Navbar({ initialIsSignedIn, initialUser }: Props) {
+  const { user, isLoaded, isSignedIn } = useUser();
+  // In tests or certain mocks, isLoaded/isSignedIn may be undefined. Treat undefined as "loaded"
+  // to keep tests and server-seeded rendering predictable.
+  const clientIsLoaded = isLoaded === undefined ? true : isLoaded;
+  const clientIsSignedIn = isSignedIn === undefined ? !!user : isSignedIn;
+
+  // Effective signed-in state: while Clerk client isn't loaded, prefer the server-seeded value
+  const effectiveSignedIn = clientIsLoaded ? clientIsSignedIn : initialIsSignedIn ?? false;
+
+  // Prefer client user, otherwise fall back to server-seeded initialUser
+  const effectiveUser = (user as unknown as InitialUserShape) ?? initialUser ?? null;
 
   // Compute initials fallback for users without an avatar image
   const initials = (() => {
-    if (!user) return '';
-    const full = (user.fullName || `${user.firstName ?? ''} ${user.lastName ?? ''}`).trim();
+    if (!effectiveUser) return '';
+    const full = (effectiveUser.fullName || '').trim();
     if (!full) return '';
     const parts = full.split(/\s+/).filter(Boolean);
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   })();
 
-  // Clerk's User has `imageUrl` per @clerk/nextjs types; prefer that.
-  const profileImage = user?.imageUrl ?? null;
+  // Prefer client imageUrl, otherwise use initialUser.imageUrl
+  const profileImage =
+    (user as unknown as InitialUserShape)?.imageUrl ?? initialUser?.imageUrl ?? null;
 
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -69,17 +91,23 @@ export default function Navbar() {
 
         {/* Right: auth buttons + avatar */}
         <div className="flex items-center gap-3">
-          <SignedIn>
+          {!clientIsLoaded && (
+            // reserve space until Clerk client hydrates
+            <div className="flex items-center gap-4">
+              <div className="w-8 h-8 rounded-full bg-base-300/30 animate-pulse" />
+              <div className="w-24 h-10 rounded-md bg-base-300/30 animate-pulse" />
+            </div>
+          )}
+
+          {clientIsLoaded && effectiveSignedIn && (
             <div className="flex items-center gap-4 ">
               <div
                 className="dropdown dropdown-end"
                 ref={menuRef}
                 onClick={(e) => {
-                  // If the click was inside the dropdown-content (menu items), don't force-open.
                   const target = e.target as Node;
                   const ul = menuRef.current?.querySelector('ul');
                   if (ul && ul.contains(target)) return;
-                  // Ensure the menu is open when clicking the container/button area.
                   setOpen(true);
                 }}
               >
@@ -106,9 +134,7 @@ export default function Navbar() {
                       </div>
                     )}
 
-                    <div className="text-sm">
-                      {user?.fullName ?? user?.primaryEmailAddress?.emailAddress}
-                    </div>
+                    <div className="text-sm">{effectiveUser?.fullName ?? effectiveUser?.email}</div>
                   </div>
                 </button>
 
@@ -155,23 +181,26 @@ export default function Navbar() {
                 </button>
               </SignOutButton>
             </div>
-          </SignedIn>
-          <SignedOut>
-            <SignInButton mode="modal">
-              <span>
-                <button className="btn border-2 border-base-content btn-success cursor-pointer">
-                  Login
-                </button>
-              </span>
-            </SignInButton>
-            <SignInButton mode="modal">
-              <span>
-                <button className="btn border-2 border-base-content btn-accent cursor-pointer">
-                  Sign up
-                </button>
-              </span>
-            </SignInButton>
-          </SignedOut>
+          )}
+
+          {clientIsLoaded && !effectiveSignedIn && (
+            <>
+              <SignInButton mode="modal">
+                <span>
+                  <button className="btn border-2 border-base-content btn-success cursor-pointer">
+                    Login
+                  </button>
+                </span>
+              </SignInButton>
+              <SignInButton mode="modal">
+                <span>
+                  <button className="btn border-2 border-base-content btn-accent cursor-pointer">
+                    Sign up
+                  </button>
+                </span>
+              </SignInButton>
+            </>
+          )}
         </div>
       </div>
     </nav>

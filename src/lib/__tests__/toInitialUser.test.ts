@@ -32,7 +32,12 @@ describe('toInitialUser', () => {
   });
 
   test('handles malformed email shapes gracefully', () => {
-    const res = toInitialUser({ primaryEmailAddress: {}, emailAddresses: [null] as any });
+    // intentionally malformed shapes: primaryEmailAddress missing emailAddress, and emailAddresses contains null
+    const malformed: { primaryEmailAddress?: object; emailAddresses?: Array<{ emailAddress?: string | null } | null> } = {
+      primaryEmailAddress: {},
+      emailAddresses: [null],
+    };
+    const res = toInitialUser(malformed as unknown);
     expect(res).toEqual({ fullName: undefined, imageUrl: undefined, email: undefined });
   });
 });

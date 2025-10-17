@@ -41,17 +41,17 @@ export default function ConfirmModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
       <div className="absolute inset-0 bg-black/60" onClick={onCancel} />
-      <div className="relative z-10 w-full max-w-md sm:max-w-lg bg-red-200 border border-error rounded-lg p-6 shadow-lg">
+      <div className="relative z-10 w-full max-w-md sm:max-w-lg bg-red-500 border-2 border-error-content text-gray-100 rounded-lg p-6 shadow-lg">
         <h3 id="confirm-title" className="text-lg font-medium mb-2">
           {title ?? 'Delete Project?'}
         </h3>
-        <div className="text-lg font-semibold text-error mb-2">Warning!</div>
-        <div className=" text-neutral mb-4">
+        <div className="text-lg font-semibold text-red-800 mb-2">Warning!</div>
+        <div className="text-gray-100 mb-4">
           {message ?? 'This will permanently remove the project and its tasks. Are you sure?'}
         </div>
         <div className="flex justify-end gap-2">
           <button
-            className="btn btn-warning border-warning-content text-warning-content"
+            className="btn btn-warning border-2 border-warning-content text-warning-content"
             onClick={onCancel}
             type="button"
             disabled={!!loading}
@@ -59,7 +59,7 @@ export default function ConfirmModal({
             Cancel
           </button>
           <button
-            className="btn btn-error border-error-content text-error-content"
+            className="btn btn-error border-2 border-error-content text-error-content"
             onClick={onConfirm}
             type="button"
             disabled={!!loading}

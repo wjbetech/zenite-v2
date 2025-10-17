@@ -142,7 +142,7 @@ export default function Navbar({ initialIsSignedIn, initialUser }: Props) {
                   tabIndex={0}
                   role="menu"
                   aria-label="Profile menu"
-                  className={`menu menu-sm dropdown-content mt-2 p-2 shadow bg-base-100 rounded-box w-48 text-base space-y-1 ${
+                  className={`menu menu-sm dropdown-content mt-2 p-2 shadow bg-base-200 rounded-box w-48 text-base space-y-1 ${
                     open ? 'block' : 'hidden'
                   }`}
                 >

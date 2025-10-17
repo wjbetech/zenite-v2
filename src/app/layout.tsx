@@ -7,6 +7,7 @@ import { Navbar, Sidebar } from '../components';
 import { currentUser } from '@clerk/nextjs/server';
 import Providers from '../components/Providers';
 import { cookies } from 'next/headers';
+import { toInitialUser } from '../lib/auth-utils';
 
 export const metadata: Metadata = {
   title: 'Zenite',
@@ -21,17 +22,8 @@ export default async function RootLayout({
   // derive auth state server-side so client components can hydrate without layout shift
   const clerkUser = await currentUser();
   const isLoggedIn = !!clerkUser;
-  const initialUser = clerkUser
-    ? {
-        fullName: (clerkUser as any)?.fullName ?? undefined,
-        imageUrl: (clerkUser as any)?.imageUrl ?? undefined,
-        email:
-          // prefer primaryEmailAddress shape if available, otherwise try emailAddresses
-          (clerkUser as any)?.primaryEmailAddress?.emailAddress ||
-          (clerkUser as any)?.emailAddresses?.[0]?.emailAddress ||
-          undefined,
-      }
-    : undefined;
+
+  const initialUser = toInitialUser(clerkUser);
 
   // read cookies at request-time
   const cookieStore = await cookies();

@@ -2,19 +2,34 @@
 
 import React from 'react';
 import DailyTaskCard, { DailyTask } from './DailyTaskCard';
-import type { Task as OldTask } from './TaskCard';
+import type { Task } from '../lib/taskStore';
+import useProjectStore from '../lib/projectStore';
+
+// Dashboard sometimes passes a slimmed task shape; include optional project fields
+type DashboardTaskLike = Partial<Task> & { projectName?: string; projectId?: string | null };
 
 type Props = {
-  task: Partial<OldTask>;
+  task: DashboardTaskLike;
   right?: React.ReactNode;
   href?: string;
-  onEdit?: (task: Partial<OldTask>) => void;
+  onEdit?: (task: DashboardTaskLike) => void;
   onDelete?: (id: string) => void;
   onStatusChange?: (id: string, status: 'none' | 'done' | 'tilde') => void;
+  projectName?: string;
 };
 
 // Small adapter that maps the Task shape used by Dashboard -> DailyTaskCard
-export default function DashboardTaskCard({ task, onEdit, onDelete, onStatusChange }: Props) {
+export default function DashboardTaskCard({
+  task,
+  onEdit,
+  onDelete,
+  onStatusChange,
+  projectName: incomingProjectName,
+}: Props) {
+  // derive linked project (subscribe to store so name updates are reflected)
+  const linkedProject = useProjectStore((s) =>
+    task.projectId ? s.projects.find((p) => p.id === task.projectId) : undefined,
+  );
   const dt: DailyTask = {
     id: (task.id as string) || 'unknown',
     title: (task.title as string) || 'Untitled',
@@ -22,7 +37,9 @@ export default function DashboardTaskCard({ task, onEdit, onDelete, onStatusChan
     completed: !!task.completed,
     started: !!task.started,
     href: undefined,
-    projectName: undefined,
+    // forward projectName prop from parent if provided; otherwise resolve via projectId
+    projectName:
+      incomingProjectName ?? task.projectName ?? (linkedProject ? linkedProject.name : undefined),
   };
 
   const handleToggle = (id: string) => {

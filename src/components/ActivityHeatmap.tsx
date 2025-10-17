@@ -412,10 +412,8 @@ export default function ActivityHeatmap({
     <motion.div
       layout
       transition={{ layout: { duration: 0.28, ease: 'easeInOut' } }}
-      className="relative w-full backdrop-blur-md px-1 pt-3 pb-1 overflow-hidden"
+      className="relative w-full px-1 pt-3 pb-1 overflow-hidden"
     >
-      {/* Subtle inner glow for depth */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
 
       <div className="relative flex items-center mb-2 select-none">
         <h5

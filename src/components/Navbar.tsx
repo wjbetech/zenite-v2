@@ -142,7 +142,7 @@ export default function Navbar({ initialIsSignedIn, initialUser }: Props) {
                   tabIndex={0}
                   role="menu"
                   aria-label="Profile menu"
-                  className={`menu menu-sm dropdown-content mt-2 p-2 shadow bg-base-100 rounded-box w-40 text-base ${
+                  className={`menu menu-sm dropdown-content mt-2 p-2 shadow bg-base-100 rounded-box w-48 text-base space-y-1 ${
                     open ? 'block' : 'hidden'
                   }`}
                 >
@@ -162,13 +162,13 @@ export default function Navbar({ initialIsSignedIn, initialUser }: Props) {
                           alert('Profile page is not available yet.');
                         }
                       }}
-                      className="w-full text-left text-base"
+                      className="w-full text-left text-base py-2 px-3"
                     >
                       Profile
                     </button>
                   </li>
                   <li>
-                    <button role="menuitem" onClick={() => setOpen(false)} className="text-base">
+                    <button role="menuitem" onClick={() => setOpen(false)} className="text-base w-full text-left py-2 px-3">
                       Settings
                     </button>
                   </li>

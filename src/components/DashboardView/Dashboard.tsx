@@ -2,30 +2,23 @@
 
 import React from 'react';
 // ...existing code...
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
-import TaskSection from '../TaskSection';
-import NativeSortableDaily from '../NativeSortableDaily';
-import ActivityHeatmap from '../ActivityTracker/ActivityHeatmap';
+import TabsBox from './TabsBox';
+import DashboardHeader from './DashboardHeader';
+import ImminentList from './ImminentList';
+import NewList from './NewList';
+import TodayList from './TodayList';
+import WeekList from './WeekList';
 import type { Task } from '../../lib/taskStore';
 import useTaskStore from '../../lib/taskStore';
 import { buildActivityFrom, TaskLike } from '../../lib/activityUtils';
-import DashboardTaskCard from './DashboardTaskCard';
-import useProjectStore from '../../lib/projectStore';
 import ConfirmDeleteModal from '../modals/ConfirmDeleteModal';
 import TaskModal from '../modals/TaskModal';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import useScrollableTabs from '../../hooks/useScrollableTabs';
+import { daysUntil } from '../../lib/date-utils';
 import useSettingsStore from '../../lib/settingsStore';
-
-function daysUntil(date?: string | null) {
-  if (!date) return Infinity;
-  const d = new Date(date);
-  const now = new Date();
-  // compute date-only UTC timestamps to avoid local timezone shifting seeded ISO dates
-  const dUtc = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
-  const nowUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  const diff = Math.ceil((dUtc - nowUtc) / (1000 * 60 * 60 * 24));
-  return diff;
-}
+import useDashboardTabs from '../../hooks/useDashboardTabs';
+import usePersistedActivity from '../../hooks/usePersistedActivity';
 
 export default function Dashboard() {
   const storeTasks = useTaskStore((s) => s.tasks);
@@ -80,65 +73,20 @@ export default function Dashboard() {
   const [editing, setEditing] = useState<Partial<Task> | undefined>(undefined);
   const [deleting, setDeleting] = useState<Task | null>(null);
   const [modalMode, setModalMode] = useState<'task' | 'project'>('task');
-  const [view, setView] = useState<'imminent' | 'new' | 'today' | 'week'>('new');
+  // view state moved into useDashboardTabs hook
 
-  // Tabs scroll + drag refs/state
+  // Tabs scroll + drag refs/state (extracted to hook)
   const tabsRef = useRef<HTMLDivElement | null>(null);
-  const isDragging = useRef(false);
-  const dragStartX = useRef(0);
-  const scrollStartX = useRef(0);
-  const didDrag = useRef(false);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const updateScrollButtons = useCallback(() => {
-    const el = tabsRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 0);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
-  }, []);
-
-  const onPointerDown = (e: React.PointerEvent) => {
-    const el = tabsRef.current;
-    if (!el) return;
-    isDragging.current = true;
-    dragStartX.current = e.clientX;
-    scrollStartX.current = el.scrollLeft;
-    didDrag.current = false;
-    try {
-      (e.target as Element).setPointerCapture(e.pointerId);
-    } catch {}
-  };
-
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!isDragging.current || !tabsRef.current) return;
-    const dx = e.clientX - dragStartX.current;
-    if (Math.abs(dx) > 6) didDrag.current = true;
-    tabsRef.current.scrollLeft = scrollStartX.current - dx;
-    updateScrollButtons();
-  };
-
-  const onPointerUp = (e: React.PointerEvent) => {
-    isDragging.current = false;
-    try {
-      (e.target as Element).releasePointerCapture(e.pointerId);
-    } catch {}
-  };
-
-  const scrollTabsBy = (amount: number) => {
-    const el = tabsRef.current;
-    if (!el) return;
-    el.scrollBy({ left: amount, behavior: 'smooth' });
-    // schedule an update after smooth scroll begins
-    setTimeout(updateScrollButtons, 250);
-  };
-
-  useEffect(() => {
-    updateScrollButtons();
-    const handleResize = () => updateScrollButtons();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [updateScrollButtons]);
+  const {
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    onScroll,
+    scrollTabsBy,
+    canScrollLeft,
+    canScrollRight,
+    didDrag,
+  } = useScrollableTabs(tabsRef);
 
   // derive `all` directly from the store to preserve the global ordering
   // (storeTasks is the canonical ordered list; use it as the source of truth)
@@ -239,72 +187,7 @@ export default function Dashboard() {
   );
 
   // Build activity map and details from task completions
-  const [persistedActivity, setPersistedActivity] = React.useState<
-    Record<string, { count: number; titles: string[] }>
-  >({});
-
-  React.useEffect(() => {
-    // Fetch recent persisted activity (last 90 days) to merge with in-memory task completions
-    (async () => {
-      try {
-        const res = await fetch('/api/activity');
-        if (!res.ok) return;
-        const rows = (await res.json()) as Array<Record<string, unknown>>;
-        const agg: Record<string, { count: number; titles: string[] }> = {};
-        // Track which taskIds the server already reported for each date so we can
-        // avoid double-counting local snapshot items that are duplicates.
-        const serverSeen: Record<string, Set<string>> = {};
-        for (const r of rows) {
-          const date = String(r.date ?? '');
-          const title = String(r.taskTitle ?? 'Untitled');
-          const taskId = String(r.taskId ?? '');
-          if (!date) continue;
-          if (!agg[date]) agg[date] = { count: 0, titles: [] };
-          agg[date].count += 1;
-          agg[date].titles.push(title);
-          if (taskId) {
-            serverSeen[date] = serverSeen[date] ?? new Set();
-            serverSeen[date].add(taskId);
-          }
-        }
-
-        // Merge with any local snapshots; local snapshots are fallbacks when server POST failed.
-        // We prefer server data for a given date/taskId, but still include local-only items.
-        try {
-          if (typeof window !== 'undefined') {
-            // find local snapshot keys for last 90 days
-            const now = new Date();
-            for (let i = 0; i < 90; i++) {
-              const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-              const key = `zenite:activity:snapshots:v1:${d.toISOString().slice(0, 10)}`;
-              const raw = window.localStorage.getItem(key);
-              if (!raw) continue;
-              try {
-                const items = JSON.parse(raw) as Array<Record<string, unknown>>;
-                for (const it of items) {
-                  const date = String(it.date ?? d.toISOString().slice(0, 10));
-                  const title = String(it.taskTitle ?? 'Untitled');
-                  const taskId = String(it.taskId ?? '');
-                  // If the server already reported this taskId for the same date, skip it.
-                  if (taskId && serverSeen[date] && serverSeen[date].has(taskId)) continue;
-                  if (!agg[date]) agg[date] = { count: 0, titles: [] };
-                  agg[date].count += 1;
-                  agg[date].titles.push(title);
-                }
-              } catch {
-                // ignore parse errors
-              }
-            }
-          }
-        } catch {
-          // ignore local snapshot errors
-        }
-        setPersistedActivity(agg);
-      } catch {
-        // ignore
-      }
-    })();
-  }, []);
+  const persistedActivity = usePersistedActivity();
 
   const { activityMap, activityDetails } = React.useMemo(() => {
     return buildActivityFrom(persistedActivity, storeTasks as unknown as TaskLike[]);
@@ -315,35 +198,19 @@ export default function Dashboard() {
   const showWeek = useSettingsStore((s) => s.week);
   const showImminent = useSettingsStore((s) => s.imminent);
 
-  // Define tabs in a single place so we can insert dividers between visible tabs
-  type View = 'imminent' | 'new' | 'today' | 'week';
-  const tabDefs: Array<{ id: View; show: boolean; label: string; minClass: string }> = [
-    { id: 'new', show: showNew, label: 'New Tasks', minClass: 'min-w-[200px] sm:min-w-[240px]' },
-    { id: 'today', show: showToday, label: 'Today', minClass: 'min-w-[200px] sm:min-w-[240px]' },
-    { id: 'week', show: showWeek, label: 'This Week', minClass: 'min-w-[200px] sm:min-w-[240px]' },
-    {
-      id: 'imminent',
-      show: showImminent,
-      label: 'Imminent',
-      minClass: 'min-w-[180px] sm:min-w-[220px]',
-    },
-  ];
-
-  // If the current view is disabled in settings, pick the first enabled view (priority: new, today, week, imminent)
-  useEffect(() => {
-    const enabled = {
-      new: showNew,
-      today: showToday,
-      week: showWeek,
-      imminent: showImminent,
-    } as Record<string, boolean>;
-    if (!enabled[view]) {
-      if (showNew) setView('new');
-      else if (showToday) setView('today');
-      else if (showWeek) setView('week');
-      else if (showImminent) setView('imminent');
-    }
-  }, [showNew, showToday, showWeek, showImminent, view]);
+  const {
+    tabs: tabDefs,
+    view: effectiveView,
+    setView: setEffectiveView,
+  } = useDashboardTabs({
+    showNew,
+    showToday,
+    showWeek,
+    showImminent,
+    initialView: 'new',
+  });
+  // The hook owns the canonical view state (effectiveView). We will use
+  // `effectiveView` throughout the render and call `setEffectiveView` to update it.
 
   if (!mounted) {
     // render a simple placeholder during SSR so server and client markup match
@@ -355,65 +222,26 @@ export default function Dashboard() {
       className="px-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-hidden"
       style={{ boxSizing: 'border-box' }}
     >
-      {/* Wrap header, heatmap and lists in a centered container; use no extra inner padding so the title sits flush with the outer padding */}
-      <div
-        className="mx-auto w-full px-0"
-        style={{ maxWidth: 'calc(100vw - var(--sidebar-width) - 3rem)', boxSizing: 'border-box' }}
-      >
-        <div className="relative pb-6">
-          {/*
-            On small screens we want the title centered with the action buttons
-            stacked under it. On md and up, keep the original layout with title
-            left and buttons inline on the right.
-          */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between items-center gap-3">
-            <h1 className="display-font text-3xl font-semibold tracking-tight text-emerald-600 text-center md:text-left">
-              Dashboard
-            </h1>
-
-            <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto mb-8 md:mb-0">
-              <button
-                className="btn btn-md btn-primary border-2 border-primary-content text-primary-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center w-full md:w-auto"
-                type="button"
-                onClick={() => {
-                  setEditing(undefined);
-                  setModalMode('task');
-                  setModalOpen(true);
-                }}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                New Task
-              </button>
-              <button
-                className="btn btn-md btn-accent border-2 border-accent-content text-accent-content shadow-lg hover:shadow-xl transition-all duration-200 flex items-center w-full md:w-auto"
-                type="button"
-                onClick={() => {
-                  setEditing(undefined);
-                  setModalMode('project');
-                  setModalOpen(true);
-                }}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                New Project
-              </button>
-            </div>
-          </div>
-
-          <div className="hidden lg:block">
-            <ActivityHeatmap
-              open={heatmapOpen}
-              onOpenChange={(v) => {
-                console.debug('Dashboard: onOpenChange received', { v });
-                setHeatmapOpen(v);
-              }}
-              activity={activityMap}
-              activityDetails={activityDetails}
-            />
-          </div>
-        </div>
-
-        {/* moved: view-toggle buttons will be rendered inside the task lists card below */}
-      </div>
+      {/* Header, heatmap and lists container */}
+      <DashboardHeader
+        onNewTask={() => {
+          setEditing(undefined);
+          setModalMode('task');
+          setModalOpen(true);
+        }}
+        onNewProject={() => {
+          setEditing(undefined);
+          setModalMode('project');
+          setModalOpen(true);
+        }}
+        heatmapOpen={heatmapOpen}
+        onHeatmapOpenChange={(v) => {
+          console.debug('Dashboard: onOpenChange received', { v });
+          setHeatmapOpen(v);
+        }}
+        activityMap={activityMap}
+        activityDetails={activityDetails}
+      />
 
       <div className="flex-1 flex flex-col min-h-0">
         {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
@@ -425,97 +253,21 @@ export default function Dashboard() {
               boxSizing: 'border-box',
             }}
           >
-            {/* Tabs - horizontally scrollable using daisyUI tabs-box + arrows */}
-            <div className="mb-4">
-              <div className="mx-auto w-full">
-                <div className="tabs tabs-box bg-base-300 w-full flex items-center">
-                  <div className="flex-none px-1">
-                    <button
-                      type="button"
-                      aria-label="Scroll tabs left"
-                      onClick={() => scrollTabsBy(-220)}
-                      className="btn btn-ghost btn-sm pointer-events-auto h-8 w-8 p-0 flex items-center justify-center text-base-content"
-                      disabled={!canScrollLeft}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  <div
-                    ref={tabsRef}
-                    onPointerDown={onPointerDown}
-                    onPointerMove={onPointerMove}
-                    onPointerUp={onPointerUp}
-                    onScroll={updateScrollButtons}
-                    className="overflow-x-auto no-scrollbar flex items-center flex-nowrap whitespace-nowrap flex-1 px-3"
-                    role="tablist"
-                    aria-label="Task view tabs"
-                    style={{
-                      WebkitOverflowScrolling: 'touch',
-                      scrollSnapType: 'x mandatory' as const,
-                    }}
-                  >
-                    {tabDefs
-                      .filter((t) => t.show)
-                      .map((t, i, arr) => {
-                        const isActive = view === t.id;
-                        const isLast = i === arr.length - 1;
-                        return (
-                          <React.Fragment key={t.id}>
-                            {/* Make each tab wrapper a flex item that can grow on md+ and snap on small screens.
-                                Apply the per-tab minimum width here so the button itself doesn't overflow and cover siblings. */}
-                            <div
-                              className={`flex items-center flex-none min-w-full md:flex-1 md:min-w-0 ${t.minClass}`}
-                              style={{ scrollSnapAlign: 'start' as const }}
-                            >
-                              <button
-                                role="tab"
-                                aria-selected={isActive}
-                                onClick={(e) => {
-                                  // Prevent click-through when user was dragging the tabs
-                                  if (didDrag.current) {
-                                    // Stop the click from doing anything
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                    return;
-                                  }
-                                  setView(t.id);
-                                }}
-                                className={`tab tab-lg w-full text-center ${
-                                  isActive
-                                    ? 'tab-active bg-base-100 text-base-content'
-                                    : 'text-base-content'
-                                } border-0`}
-                              >
-                                {t.label}
-                              </button>
-                            </div>
-
-                            {!isLast && (
-                              // Render the divider as its own non-growing flex item so it always sits between tab wrappers
-                              <div className="hidden md:flex items-center flex-none" aria-hidden>
-                                <span className="mx-3 h-6 w-[2px] bg-gray-300 flex-shrink-0" />
-                              </div>
-                            )}
-                          </React.Fragment>
-                        );
-                      })}
-                  </div>
-
-                  <div className="flex-none px-1">
-                    <button
-                      type="button"
-                      aria-label="Scroll tabs right"
-                      onClick={() => scrollTabsBy(220)}
-                      className="btn btn-ghost btn-sm pointer-events-auto h-8 w-8 p-0 flex items-center justify-center text-base-content"
-                      disabled={!canScrollRight}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Tabs - horizontally scrollable using TabsBox component */}
+            <TabsBox
+              tabsRef={tabsRef}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onScroll={onScroll}
+              scrollTabsBy={scrollTabsBy}
+              canScrollLeft={canScrollLeft}
+              canScrollRight={canScrollRight}
+              didDrag={didDrag}
+              tabDefs={tabDefs}
+              activeView={effectiveView}
+              setView={setEffectiveView}
+            />
 
             {/* Task list content */}
             <div className="pt-4 overflow-hidden w-full">
@@ -546,234 +298,71 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <>
-                  {showImminent && view === 'imminent' && (
-                    <TaskSection
-                      expanded={!heatmapOpen}
-                      accentClass="border-rose-400"
-                      tasks={soonest}
-                      noInnerScroll
-                      renderRight={(t: Task) => {
-                        const days = daysUntil(t.dueDate);
-                        const dueLabel =
-                          days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days}d`;
-                        return <span className="text-xs text-gray-100">{dueLabel}</span>;
-                      }}
-                      onEdit={(t) => {
-                        setEditing(t);
-                        setModalOpen(true);
-                      }}
-                      onDelete={(id) => {
-                        const found = storeTasks.find((x) => x.id === id) ?? null;
-                        setDeleting(found);
-                      }}
-                      onStatusChange={handleStatusChange}
-                    />
-                  )}
-
-                  {showNew && view === 'new' && (
-                    <TaskSection
-                      expanded={!heatmapOpen}
-                      accentClass="border-emerald-400"
-                      tasks={newTasks}
-                      noInnerScroll
-                      onEdit={(t) => {
-                        setEditing(t);
-                        setModalOpen(true);
-                      }}
-                      onDelete={(id) => {
-                        const found = storeTasks.find((x) => x.id === id) ?? null;
-                        setDeleting(found);
-                      }}
-                      onStatusChange={handleStatusChange}
-                    />
-                  )}
-
-                  {showToday &&
-                    view === 'today' &&
-                    (today.length === 0 ? (
-                      <TaskSection
-                        expanded={!heatmapOpen}
-                        accentClass="border-sky-500"
-                        tasks={today}
-                        noInnerScroll
-                        renderRight={() => <span className="text-xs text-gray-100">Due today</span>}
-                        onEdit={(t) => {
+                  {showImminent && effectiveView === 'imminent' && (
+                    <React.Suspense>
+                      <ImminentList
+                        tasks={soonest}
+                        heatmapOpen={heatmapOpen}
+                        onEdit={(t: Partial<Task>) => {
                           setEditing(t);
                           setModalOpen(true);
                         }}
-                        onDelete={(id) => deleteTask(id)}
+                        onDeleteById={(id: string) => {
+                          const found = storeTasks.find((x) => x.id === id) ?? null;
+                          setDeleting(found);
+                        }}
                         onStatusChange={handleStatusChange}
                       />
-                    ) : (
-                      <div className="pt-2">
-                        <NativeSortableDaily
-                          items={today.map((t) => ({
-                            id: t.id,
-                            title: t.title,
-                            notes: t.notes,
-                            started: !!t.started,
-                            completed: !!t.completed,
-                            // omit `href` in draggable lists so the card isn't wrapped with an anchor
-                          }))}
-                          onReorder={(next) => {
-                            const idOrder = next.map((n) => n.id);
-                            const reordered = idOrder
-                              .map((id) => storeTasks.find((t) => t.id === id))
-                              .filter(Boolean) as typeof storeTasks;
-                            // Determine the original positions of the subset within the global store
-                            const positions: number[] = [];
-                            const idSet = new Set(idOrder);
-                            storeTasks.forEach((t, idx) => {
-                              if (idSet.has(t.id)) positions.push(idx);
-                            });
-                            // Place reordered items back into their original indices
-                            const merged = [...storeTasks];
-                            for (let i = 0; i < positions.length; i++) {
-                              const pos = positions[i];
-                              merged[pos] = reordered[i] || merged[pos];
-                            }
-                            setTasks(merged);
-                          }}
-                          renderItem={(t: {
-                            id: string;
-                            title: string;
-                            notes?: string;
-                            started?: boolean;
-                            completed?: boolean;
-                            href?: string;
-                            projectId?: string | null;
-                          }) => (
-                            <div className="px-1.5 sm:px-2" key={t.id}>
-                              <DashboardTaskCard
-                                task={
-                                  t as unknown as {
-                                    id: string;
-                                    title: string;
-                                    notes?: string;
-                                    completed?: boolean;
-                                    started?: boolean;
-                                    projectId?: string | null;
-                                  }
-                                }
-                                onStatusChange={(id: string, status: 'none' | 'done' | 'tilde') =>
-                                  handleStatusChange(id, status)
-                                }
-                                onEdit={(task) => {
-                                  const found = storeTasks.find((x) => x.id === task.id) ?? null;
-                                  if (found) {
-                                    setEditing(found);
-                                    setModalOpen(true);
-                                  }
-                                }}
-                                onDelete={(id: string) => {
-                                  const found = storeTasks.find((x) => x.id === id) ?? null;
-                                  setDeleting(found);
-                                }}
-                                // derive projectName from projectId in the main store
-                                projectName={
-                                  useProjectStore
-                                    .getState()
-                                    .projects.find((p) => p.id === t.projectId)?.name
-                                }
-                              />
-                            </div>
-                          )}
-                          containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
-                        />
-                      </div>
-                    ))}
+                    </React.Suspense>
+                  )}
 
-                  {showWeek && view === 'week' && (
-                    <div className="">
-                      {week.length === 0 ? (
-                        <TaskSection
-                          expanded={!heatmapOpen}
-                          accentClass="border-indigo-300"
-                          tasks={week}
-                          noInnerScroll
-                          renderRight={(t: Task) => {
-                            const days = daysUntil(t.dueDate);
-                            const dueLabel =
-                              days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days}d`;
-                            return <span className="text-xs text-gray-100">{dueLabel}</span>;
-                          }}
-                          onEdit={(t) => {
-                            setEditing(t);
-                            setModalOpen(true);
-                          }}
-                          onDelete={(id) => {
-                            const found = storeTasks.find((x) => x.id === id) ?? null;
-                            setDeleting(found);
-                          }}
-                          onStatusChange={handleStatusChange}
-                        />
-                      ) : (
-                        <div className="p-0 pt-2">
-                          <NativeSortableDaily
-                            items={week.map((t) => ({
-                              id: t.id,
-                              title: t.title,
-                              notes: t.notes,
-                              started: !!t.started,
-                              completed: !!t.completed,
-                              // omit `href` in draggable lists so the card isn't wrapped with an anchor
-                            }))}
-                            onReorder={(next) => {
-                              const idOrder = next.map((n) => n.id);
-                              const reordered = idOrder
-                                .map((id) => storeTasks.find((t) => t.id === id))
-                                .filter(Boolean) as typeof storeTasks;
-                              const positions: number[] = [];
-                              const idSet = new Set(idOrder);
-                              storeTasks.forEach((t, idx) => {
-                                if (idSet.has(t.id)) positions.push(idx);
-                              });
-                              const merged = [...storeTasks];
-                              for (let i = 0; i < positions.length; i++) {
-                                const pos = positions[i];
-                                merged[pos] = reordered[i] || merged[pos];
-                              }
-                              setTasks(merged);
-                            }}
-                            renderItem={(t: {
-                              id: string;
-                              title: string;
-                              notes?: string;
-                              started?: boolean;
-                              completed?: boolean;
-                              href?: string;
-                              projectId?: string | null;
-                            }) => (
-                              <div className="mb-6 px-1.5 sm:px-2" key={t.id}>
-                                <DashboardTaskCard
-                                  task={t as unknown as Partial<Task>}
-                                  onStatusChange={(id: string, status: 'none' | 'done' | 'tilde') =>
-                                    handleStatusChange(id, status)
-                                  }
-                                  onEdit={(task) => {
-                                    const found = storeTasks.find((x) => x.id === task.id) ?? null;
-                                    if (found) {
-                                      setEditing(found);
-                                      setModalOpen(true);
-                                    }
-                                  }}
-                                  onDelete={(id: string) => {
-                                    const found = storeTasks.find((x) => x.id === id) ?? null;
-                                    setDeleting(found);
-                                  }}
-                                  projectName={
-                                    useProjectStore
-                                      .getState()
-                                      .projects.find((p) => p.id === t.projectId)?.name
-                                  }
-                                />
-                              </div>
-                            )}
-                            containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
-                          />
-                        </div>
-                      )}
-                    </div>
+                  {showNew && effectiveView === 'new' && (
+                    <NewList
+                      tasks={newTasks}
+                      heatmapOpen={heatmapOpen}
+                      onEdit={(t: Partial<Task>) => {
+                        setEditing(t);
+                        setModalOpen(true);
+                      }}
+                      onDeleteById={(id: string) => {
+                        const found = storeTasks.find((x) => x.id === id) ?? null;
+                        setDeleting(found);
+                      }}
+                      onStatusChange={handleStatusChange}
+                    />
+                  )}
+
+                  {showToday && effectiveView === 'today' && (
+                    <TodayList
+                      tasks={today}
+                      heatmapOpen={heatmapOpen}
+                      storeTasks={storeTasks}
+                      setTasks={setTasks}
+                      onEdit={(t: Partial<Task>) => {
+                        setEditing(t);
+                        setModalOpen(true);
+                      }}
+                      onDeleteById={(id: string) => deleteTask(id)}
+                      onStatusChange={handleStatusChange}
+                    />
+                  )}
+
+                  {showWeek && effectiveView === 'week' && (
+                    <WeekList
+                      tasks={week}
+                      heatmapOpen={heatmapOpen}
+                      storeTasks={storeTasks}
+                      setTasks={setTasks}
+                      onEdit={(t: Partial<Task>) => {
+                        setEditing(t);
+                        setModalOpen(true);
+                      }}
+                      onDeleteById={(id: string) => {
+                        const found = storeTasks.find((x) => x.id === id) ?? null;
+                        setDeleting(found);
+                      }}
+                      onStatusChange={handleStatusChange}
+                    />
                   )}
                 </>
               )}

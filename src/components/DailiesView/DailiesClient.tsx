@@ -9,6 +9,11 @@ import NativeSortableDaily from '../NativeSortableDaily';
 import EditTaskModal from '../modals/EditTaskModal';
 import ConfirmDeleteModal from '../modals/ConfirmDeleteModal';
 import CreateDailyModal from '../modals/CreateDailyModal';
+import useDailyResetScheduler from '../../hooks/useDailyResetScheduler';
+import DailiesLoading from './DailiesLoading';
+import DailiesEmpty from './DailiesEmpty';
+import DailiesError from './DailiesError';
+import { mapTasksToSortableItems } from '../../lib/task-mappers';
 
 export default function DailiesClient() {
   const tasks = useTaskStore((s) => s.tasks) as Task[];
@@ -34,52 +39,8 @@ export default function DailiesClient() {
   const daily = tasks.filter((t) => (t.recurrence ?? 'once') === 'daily');
   const [timerOpen, setTimerOpen] = React.useState(false); // default closed
 
-  // Run reset check on mount, on visibility/focus, and schedule next midnight reset
-  React.useEffect(() => {
-    // Ensure tasks are loaded when visiting Dailies. Previously only Dashboard
-    // triggered `loadTasks()` which caused /dailies to be empty until Dashboard
-    // was visited. Call loadTasks here to keep behavior consistent.
-    void loadTasks();
-
-    // initial check
-    try {
-      resetIfNeeded();
-    } catch (e) {
-      console.error('error running resetIfNeeded', e);
-    }
-
-    let timeoutId: number | undefined;
-
-    const scheduleNext = () => {
-      const now = new Date();
-      const next = new Date(now);
-      next.setDate(now.getDate() + 1);
-      next.setHours(0, 0, 0, 0);
-      const ms = next.getTime() - now.getTime();
-      timeoutId = window.setTimeout(() => {
-        try {
-          resetNow();
-        } catch (e) {
-          console.error('error running resetNow', e);
-        }
-        // schedule again for the following midnight
-        scheduleNext();
-      }, ms);
-    };
-
-    scheduleNext();
-
-    const onVisibility = () => resetIfNeeded();
-    const onFocus = () => resetIfNeeded();
-    document.addEventListener('visibilitychange', onVisibility);
-    window.addEventListener('focus', onFocus);
-
-    return () => {
-      if (timeoutId) window.clearTimeout(timeoutId);
-      document.removeEventListener('visibilitychange', onVisibility);
-      window.removeEventListener('focus', onFocus);
-    };
-  }, [resetIfNeeded, resetNow, loadTasks]);
+  // Extracted to a hook for testability and separation of concerns
+  useDailyResetScheduler({ loadTasks, resetIfNeeded, resetNow });
 
   const toggle = (id: string) => {
     const t = tasks.find((x) => x.id === id);
@@ -160,52 +121,16 @@ export default function DailiesClient() {
             <section className="mb-[74px]">
               <div className="transition-all duration-300 ease-in-out pt-4 pb-2 px-0">
                 {tasksLoading ? (
-                  <div className="flex flex-col items-center justify-center py-24 text-center w-full">
-                    <svg
-                      className="animate-spin h-10 w-10 text-success"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      aria-hidden
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                      ></path>
-                    </svg>
-                    <div className="mt-3 text-sm text-base-content/50">Fetching tasks…</div>
-                  </div>
+                  <DailiesLoading />
                 ) : daily.length === 0 ? (
                   tasksError ? (
-                    <div className="flex items-center justify-center py-24 w-full">
-                      <div className="text-center text-base-content/50">
-                        <p>
-                          Unable to load tasks — the database may be unavailable. Check your local
-                          DB and try again, or contact the administrator (wjbetech@gmail.com)
-                        </p>
-                      </div>
-                    </div>
-                  ) : null
+                    <DailiesError />
+                  ) : (
+                    <DailiesEmpty />
+                  )
                 ) : (
                   <NativeSortableDaily
-                    items={daily.map((t) => ({
-                      id: t.id,
-                      title: t.title,
-                      notes: t.notes,
-                      started: !!t.started,
-                      completed: !!t.completed,
-                      href: undefined,
-                      projectName: projects.find((p) => p.id === t.projectId)?.name,
-                    }))}
+                    items={mapTasksToSortableItems(daily, projects)}
                     onReorder={(next) => {
                       const idOrder = next.map((n) => n.id);
                       const reordered = idOrder

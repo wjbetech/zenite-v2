@@ -38,6 +38,26 @@ export default function CreateDailyModal({ open, onOpenChange, onCreated }: Prop
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onOpenChange]);
 
+  // Prevent layout shift when modal opens by compensating for scrollbar disappearance
+  React.useEffect(() => {
+    if (!open) return;
+
+    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
+
+    // hide scroll and add padding to avoid content shift
+    document.body.style.overflow = 'hidden';
+    if (scrollBarWidth > 0) {
+      document.body.style.paddingRight = `${scrollBarWidth}px`;
+    }
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
+    };
+  }, [open]);
+
   const submit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     const payload = {

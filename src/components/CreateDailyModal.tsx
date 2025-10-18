@@ -28,6 +28,36 @@ export default function CreateDailyModal({ open, onOpenChange, onCreated }: Prop
     }
   }, [open]);
 
+  // Close on Escape key when open
+  React.useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onOpenChange(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onOpenChange]);
+
+  // Prevent layout shift when modal opens by compensating for scrollbar disappearance
+  React.useEffect(() => {
+    if (!open) return;
+
+    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
+
+    // hide scroll and add padding to avoid content shift
+    document.body.style.overflow = 'hidden';
+    if (scrollBarWidth > 0) {
+      document.body.style.paddingRight = `${scrollBarWidth}px`;
+    }
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
+    };
+  }, [open]);
+
   const submit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     const payload = {
@@ -48,8 +78,19 @@ export default function CreateDailyModal({ open, onOpenChange, onCreated }: Prop
   if (!open) return null;
 
   return (
-    <div className="modal modal-open" aria-hidden={!open} role="dialog" aria-modal="true">
-      <div className="modal-box w-11/12 max-w-md">
+    <div
+      className="modal modal-open"
+      aria-hidden={!open}
+      role="dialog"
+      aria-modal="true"
+      // close when clicking on the backdrop only
+      onMouseDown={(e) => {
+        // only close when the backdrop (currentTarget) was the actual event target
+        if (e.target === e.currentTarget) onOpenChange(false);
+      }}
+    >
+      {/* stop propagation inside the modal so clicks don't bubble to the backdrop */}
+      <div className="modal-box w-11/12 max-w-md" onMouseDown={(e) => e.stopPropagation()}>
         <h3 className="font-bold text-lg">Create Daily Task</h3>
         <form onSubmit={submit} className="mt-4">
           <label className="label">

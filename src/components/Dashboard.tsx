@@ -678,7 +678,7 @@ export default function Dashboard() {
                               />
                             </div>
                           )}
-                          containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
+                          containerClassName="space-y-6 md:space-y-7"
                         />
                       </div>
                     ))}
@@ -769,7 +769,7 @@ export default function Dashboard() {
                                 />
                               </div>
                             )}
-                            containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
+                            containerClassName="space-y-6 md:space-y-7"
                           />
                         </div>
                       )}

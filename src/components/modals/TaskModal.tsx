@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from 'react';
 // ...existing code...
 // import { Input } from './ui/input';
-import useTaskStore, { Task } from '../lib/taskStore';
-import useProjectStore, { RemoteProject, normalizeRemoteProject } from '../lib/projectStore';
-import api from '../lib/api';
+import useTaskStore, { Task } from '../../lib/taskStore';
+import useProjectStore, { RemoteProject, normalizeRemoteProject } from '../../lib/projectStore';
+import api from '../../lib/api';
 import { toast } from 'react-toastify';
-import ChevronDown from './icons/ChevronDown';
+import ChevronDown from '../icons/ChevronDown';
 
 export default function TaskModal({
   open,

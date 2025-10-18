@@ -1,6 +1,6 @@
 import React from 'react';
 import ThemeDropdown from '../components/ThemeDropdown';
-import DashboardViewsSettings from '../components/DashboardViewsSettings';
+import DashboardViewsSettings from '@/components/DashboardView/DashboardViewsSettings';
 import {
   TaskCreationDefaults,
   TaskListSettings,

@@ -1,14 +1,14 @@
 'use client';
 
 import React from 'react';
-import useTaskStore, { Task } from '../lib/taskStore';
-import useProjectStore from '../lib/projectStore';
-import TimerWidget from './TimerWidget';
+import useTaskStore, { Task } from '../../lib/taskStore';
+import useProjectStore from '../../lib/projectStore';
+import TimerWidget from '../TimerWidget';
 import DailyTaskCard from './DailyTaskCard';
-import NativeSortableDaily from './NativeSortableDaily';
-import EditTaskModal from './EditTaskModal';
-import ConfirmDeleteModal from './ConfirmDeleteModal';
-import CreateDailyModal from './CreateDailyModal';
+import NativeSortableDaily from '../NativeSortableDaily';
+import EditTaskModal from '../modals/EditTaskModal';
+import ConfirmDeleteModal from '../modals/ConfirmDeleteModal';
+import CreateDailyModal from '../modals/CreateDailyModal';
 
 export default function DailiesClient() {
   const tasks = useTaskStore((s) => s.tasks) as Task[];

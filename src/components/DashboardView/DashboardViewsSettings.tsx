@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import useSettingsStore from '../lib/settingsStore';
+import useSettingsStore from '@/lib/settingsStore';
 
 export default function DashboardViewsSettings() {
   const newTasks = useSettingsStore((s) => s.newTasks);

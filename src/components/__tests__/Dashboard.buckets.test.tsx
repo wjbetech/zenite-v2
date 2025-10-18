@@ -52,7 +52,7 @@ jest.mock('../../lib/taskStore', () => {
   };
 });
 
-import Dashboard from '../Dashboard';
+import Dashboard from '../DashboardView/Dashboard';
 
 describe('Dashboard bucketing', () => {
   it('shows daily and due-today tasks in Today view', () => {

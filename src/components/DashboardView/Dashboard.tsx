@@ -3,18 +3,18 @@
 import React from 'react';
 // ...existing code...
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
-import TaskSection from './TaskSection';
-import NativeSortableDaily from './NativeSortableDaily';
-import ActivityHeatmap from './ActivityHeatmap';
-import type { Task } from '../lib/taskStore';
-import useTaskStore from '../lib/taskStore';
-import { buildActivityFrom, TaskLike } from '../lib/activityUtils';
+import TaskSection from '../TaskSection';
+import NativeSortableDaily from '../NativeSortableDaily';
+import ActivityHeatmap from '../ActivityTracker/ActivityHeatmap';
+import type { Task } from '../../lib/taskStore';
+import useTaskStore from '../../lib/taskStore';
+import { buildActivityFrom, TaskLike } from '../../lib/activityUtils';
 import DashboardTaskCard from './DashboardTaskCard';
-import useProjectStore from '../lib/projectStore';
-import ConfirmDeleteModal from './ConfirmDeleteModal';
-import TaskModal from './TaskModal';
+import useProjectStore from '../../lib/projectStore';
+import ConfirmDeleteModal from '../modals/ConfirmDeleteModal';
+import TaskModal from '../modals/TaskModal';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import useSettingsStore from '../lib/settingsStore';
+import useSettingsStore from '../../lib/settingsStore';
 
 function daysUntil(date?: string | null) {
   if (!date) return Infinity;

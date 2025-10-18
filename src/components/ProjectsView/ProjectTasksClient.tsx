@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import TaskSection from './TaskSection';
-import type { Task } from './TaskCard';
-import api from '../lib/api';
+import TaskSection from '../TaskSection';
+import type { Task } from '../TaskCard';
+import api from '../../lib/api';
 
 // local task store is no longer used here; always prefer server
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import ActivityHeatmap from '../src/components/ActivityHeatmap';
+import ActivityHeatmap from '../src/components/ActivityTracker/ActivityHeatmap';
 
 function localIso(d: Date) {
   const y = d.getFullYear();

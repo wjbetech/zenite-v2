@@ -5,16 +5,16 @@ import useProjectStore, {
   Project,
   RemoteProject,
   normalizeRemoteProject,
-} from '../lib/projectStore';
+} from '../../lib/projectStore';
 // import { Input } from './ui/input';
 // ...existing code...
 import { Plus } from 'lucide-react';
-import api from '../lib/api';
+import api from '../../lib/api';
 import { toast } from 'react-toastify';
 import ProjectCard from './ProjectCard';
-import ConfirmModal from './ConfirmModal';
-import ProjectModal from '@/components/ProjectModal';
-import { projectSlug } from '../lib/utils';
+import ConfirmModal from '../modals/ConfirmModal';
+import ProjectModal from '@/components/ProjectsView/ProjectModal';
+import { projectSlug } from '../../lib/utils';
 
 type Props = {
   initialProjects: Project[];

@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Dashboard from '../src/components/Dashboard';
+import Dashboard from '../src/components/DashboardView/Dashboard';
 
 // Helper to format local YYYY-MM-DD
 function localIso(d: Date) {

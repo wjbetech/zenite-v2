@@ -43,7 +43,7 @@ jest.mock('../../lib/projectStore', () => {
 });
 
 // Render Dashboard and assert modals open with correct content
-import Dashboard from '../Dashboard';
+import Dashboard from '../DashboardView/Dashboard';
 
 describe('Dashboard modals', () => {
   it('opens Add New Task modal when New Task clicked', () => {

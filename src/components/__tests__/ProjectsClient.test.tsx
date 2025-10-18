@@ -61,7 +61,7 @@ jest.mock('../../lib/api', () => ({
   },
 }));
 
-import ProjectsClient from '../ProjectsClient';
+import ProjectsClient from '../ProjectsView/ProjectsClient';
 import { toast } from 'react-toastify';
 import { Project } from '../../lib/projectStore';
 

@@ -6,9 +6,7 @@ global.fetch = jest.fn(() =>
   Promise.resolve({
     ok: true,
     json: () =>
-      Promise.resolve([
-        { date: '2025-10-03', taskTitle: 'Server Task', taskId: 'srv-1' },
-      ]),
+      Promise.resolve([{ date: '2025-10-03', taskTitle: 'Server Task', taskId: 'srv-1' }]),
   } as unknown as Response),
 ) as unknown as typeof global.fetch;
 
@@ -41,7 +39,7 @@ jest.mock('../../lib/taskStore', () => {
   };
 });
 
-import Dashboard from '../Dashboard';
+import Dashboard from '../DashboardView/Dashboard';
 
 describe('Dashboard local snapshot merge/dedupe', () => {
   beforeEach(() => {

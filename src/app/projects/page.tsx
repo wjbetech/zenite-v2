@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 
-import ProjectsClient from '../../components/ProjectsClient';
+import ProjectsClient from '../../components/ProjectsView/ProjectsClient';
 import prisma from '../../lib/prisma';
 import { requireAuth } from '../../lib/auth-helpers';
 import { redirect } from 'next/navigation';

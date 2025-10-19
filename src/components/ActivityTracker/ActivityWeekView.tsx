@@ -20,9 +20,9 @@ export default function ActivityWeekView({
   const start = addDays(endDate, -6);
   const dates: Date[] = [];
   for (let cur = new Date(start); cur <= endDate; cur = addDays(cur, 1)) dates.push(new Date(cur));
-
   return (
-    <div>
+    <div className="flex-none w-max">
+      <div className="mb-2 font-semibold text-sm">This Week</div>
       <div className="flex gap-2 items-center mb-2">
         {dates.map((d, i) => (
           <div key={i} className="text-xs text-gray-500 w-8 text-center">

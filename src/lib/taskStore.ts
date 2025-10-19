@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import api, { UpdateTaskPayload } from './api';
+import { sanitizeTitle, sanitizeDescription } from './text-format';
 
 export type Task = {
   id: string;
@@ -85,17 +86,22 @@ const useTaskStore = create<State>((set, get) => ({
   },
 
   async createTask(payload) {
-    const response = await api.createTask({
-      title: payload.title,
-      description: payload.notes,
+    const requestPayload = {
+      title: sanitizeTitle(payload.title),
+      description: sanitizeDescription(payload.notes || ''),
       dueDate: payload.dueDate ?? null,
       recurrence: payload.recurrence ?? null,
       projectId: payload.projectId ?? null,
       started: payload.started,
       completed: payload.completed,
       completedAt: payload.completedAt ?? null,
-    });
+    };
+
+    const response = await api.createTask(requestPayload);
     const created = mapRemoteTask(response as Record<string, unknown>);
+    // Ensure client-side copy is sanitized as well
+    created.title = sanitizeTitle(created.title);
+    if (created.notes) created.notes = sanitizeDescription(created.notes);
     set({ tasks: [created, ...get().tasks] });
     return created;
   },
@@ -104,11 +110,11 @@ const useTaskStore = create<State>((set, get) => ({
     const payload: UpdateTaskPayload = { id };
 
     if (patch.title !== undefined) {
-      payload.title = patch.title;
+      payload.title = sanitizeTitle(patch.title as string);
     }
     if (patch.notes !== undefined) {
-      payload.notes = patch.notes;
-      payload.description = patch.notes;
+      payload.notes = sanitizeDescription(patch.notes as string);
+      payload.description = sanitizeDescription(patch.notes as string);
     }
     if (patch.dueDate !== undefined) {
       payload.dueDate = patch.dueDate;
@@ -134,6 +140,9 @@ const useTaskStore = create<State>((set, get) => ({
 
     const response = await api.updateTask(payload);
     const updated = mapRemoteTask(response as Record<string, unknown>);
+    // Ensure client-side copy is sanitized as well
+    updated.title = sanitizeTitle(updated.title);
+    if (updated.notes) updated.notes = sanitizeDescription(updated.notes);
     const tasks = get().tasks.map((t) => (t.id === id ? { ...t, ...updated } : t));
     set({ tasks });
     return updated;

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import useTaskStore, { Task } from '../../lib/taskStore';
 import useProjectStore, { RemoteProject, normalizeRemoteProject } from '../../lib/projectStore';
 import api from '../../lib/api';
+import { sanitizeTitle, sanitizeDescription } from '../../lib/text-format';
+import { normalizeWhitespaceForTyping } from '../../lib/text-sanitizer';
 import { toast } from 'react-toastify';
 import ChevronDown from '../icons/ChevronDown';
 import TaskModalLocalToast from './TaskModalLocalToast';
@@ -84,8 +86,8 @@ export default function TaskModal({
         const id = initial.id;
         await tryCreateProjectBeforeTask();
         await updateTask(id, {
-          title: title.trim(),
-          notes: notes.trim(),
+          title: sanitizeTitle(title || ''),
+          notes: sanitizeDescription(notes || ''),
           dueDate,
           projectId,
           recurrence: recurrence ?? undefined,
@@ -94,8 +96,8 @@ export default function TaskModal({
         createdProjectName = await tryCreateProjectBeforeTask();
 
         await createTask({
-          title: title.trim(),
-          notes: notes.trim(),
+          title: sanitizeTitle(title || ''),
+          notes: sanitizeDescription(notes || ''),
           dueDate,
           projectId,
           recurrence: recurrence ?? undefined,
@@ -156,6 +158,10 @@ export default function TaskModal({
         createdRemote = null;
       }
 
+      // sanitize project name/description on create path
+      const sanitizedName = sanitizeTitle(name);
+      const sanitizedDescription = sanitizeDescription(description || '');
+
       if (createdRemote) {
         const normalized = normalizeRemoteProject(createdRemote as RemoteProject);
         if (normalized.id) {
@@ -167,14 +173,14 @@ export default function TaskModal({
           setProjectId(normalized.id);
         } else {
           // remote returned no id - fall back to local
-          const p = store.createProject(name);
+          const p = store.createProject(sanitizedName);
           store.setProjects([p, ...store.projects.filter((project) => project.id !== p.id)]);
           setProjectId(p.id);
         }
       } else {
-        const p = store.createProject(name);
+        const p = store.createProject(sanitizedName);
         // set description on local fallback project
-        p.description = description || undefined;
+        p.description = sanitizedDescription || undefined;
         store.setProjects([p, ...store.projects.filter((project) => project.id !== p.id)]);
         setProjectId(p.id);
       }
@@ -261,7 +267,15 @@ export default function TaskModal({
             <label className="block mb-1">Title</label>
             <input
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                // Lightweight: capitalize first alpha character as user types
+                const firstAlphaIndex = v.search(/[A-Za-zÀ-ÖØ-öø-ÿ]/);
+                if (firstAlphaIndex === -1) return setTitle(v);
+                const char = v.charAt(firstAlphaIndex).toUpperCase();
+                setTitle(v.slice(0, firstAlphaIndex) + char + v.slice(firstAlphaIndex + 1));
+              }}
+              onBlur={() => setTitle(sanitizeTitle(title || ''))}
               required
               className="input w-full rounded-lg focus:border-content"
             />
@@ -269,7 +283,10 @@ export default function TaskModal({
             <label className="block mt-5 mb-1">Notes</label>
             <textarea
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={(e) => {
+                setNotes(normalizeWhitespaceForTyping(e.target.value));
+              }}
+              onBlur={() => setNotes(sanitizeDescription(notes || ''))}
               className="w-full p-2 rounded-lg textarea bg-base-100 focus:border-content"
               rows={4}
             />

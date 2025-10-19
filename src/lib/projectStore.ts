@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid/non-secure';
 import api from './api';
+import { sanitizeTitle, sanitizeDescription } from './text-format';
 
 export type Project = {
   id: string;
@@ -84,8 +85,12 @@ export const normalizeRemoteProject = (raw: RemoteProject): Project => {
 
   return {
     id: typeof raw.id === 'string' ? raw.id : '',
-    name: typeof raw.name === 'string' && raw.name.trim().length > 0 ? raw.name : 'Untitled',
-    description: typeof raw.description === 'string' ? raw.description : undefined,
+    name:
+      typeof raw.name === 'string' && raw.name.trim().length > 0
+        ? sanitizeTitle(raw.name)
+        : 'Untitled',
+    description:
+      typeof raw.description === 'string' ? sanitizeDescription(raw.description) : undefined,
     createdAt,
     taskCount: taskCount ?? 0,
   };
@@ -98,9 +103,10 @@ const useProjectStore = create<State>((set, get) => ({
     save(projects);
   },
   createProject(name) {
+    const sanitized = sanitizeTitle(name);
     const p: Project = {
       id: nanoid(),
-      name,
+      name: sanitized,
       createdAt: new Date().toISOString(),
       view: 'list',
       starred: false,

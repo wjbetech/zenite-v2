@@ -3,6 +3,7 @@
 import React from 'react';
 import useProjectStore, { Project } from '../../lib/projectStore';
 import useTaskStore from '../../lib/taskStore';
+import { sanitizeTitle, sanitizeDescription } from '../../lib/text-format';
 
 import type { Task } from '../../lib/taskStore';
 
@@ -31,8 +32,8 @@ export default function CreateDailyModal({ open, onOpenChange, onCreated }: Prop
   const submit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     const payload = {
-      title: (title || 'Untitled Daily').trim(),
-      notes: notes.trim() || undefined,
+      title: sanitizeTitle(title || 'Untitled Daily'),
+      notes: sanitizeDescription(notes || '') || undefined,
       recurrence: 'daily',
       projectId: projectId === 'none' ? null : projectId,
     };

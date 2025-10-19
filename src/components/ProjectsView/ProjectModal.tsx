@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { sanitizeTitle, sanitizeDescription } from '../../lib/text-format';
 
 export type ProjectModalSubmit = {
   name: string;
@@ -55,8 +56,8 @@ export default function ProjectModal({ open, onSubmit, onCancel, initial }: Proj
 
     try {
       await onSubmit({
-        name: trimmedName,
-        description: trimmedDescription ? trimmedDescription : undefined,
+        name: sanitizeTitle(trimmedName),
+        description: trimmedDescription ? sanitizeDescription(trimmedDescription) : undefined,
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create project';

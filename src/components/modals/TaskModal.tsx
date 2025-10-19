@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import useTaskStore, { Task } from '../../lib/taskStore';
 import useProjectStore, { RemoteProject, normalizeRemoteProject } from '../../lib/projectStore';
 import api from '../../lib/api';
+import { sanitizeTitle, sanitizeDescription } from '../../lib/text-format';
 import { toast } from 'react-toastify';
 import ChevronDown from '../icons/ChevronDown';
 import TaskModalLocalToast from './TaskModalLocalToast';
@@ -84,8 +85,8 @@ export default function TaskModal({
         const id = initial.id;
         await tryCreateProjectBeforeTask();
         await updateTask(id, {
-          title: title.trim(),
-          notes: notes.trim(),
+          title: sanitizeTitle(title || ''),
+          notes: sanitizeDescription(notes || ''),
           dueDate,
           projectId,
           recurrence: recurrence ?? undefined,
@@ -94,8 +95,8 @@ export default function TaskModal({
         createdProjectName = await tryCreateProjectBeforeTask();
 
         await createTask({
-          title: title.trim(),
-          notes: notes.trim(),
+          title: sanitizeTitle(title || ''),
+          notes: sanitizeDescription(notes || ''),
           dueDate,
           projectId,
           recurrence: recurrence ?? undefined,
@@ -156,6 +157,10 @@ export default function TaskModal({
         createdRemote = null;
       }
 
+      // sanitize project name/description on create path
+      const sanitizedName = sanitizeTitle(name);
+      const sanitizedDescription = sanitizeDescription(description || '');
+
       if (createdRemote) {
         const normalized = normalizeRemoteProject(createdRemote as RemoteProject);
         if (normalized.id) {
@@ -167,14 +172,14 @@ export default function TaskModal({
           setProjectId(normalized.id);
         } else {
           // remote returned no id - fall back to local
-          const p = store.createProject(name);
+          const p = store.createProject(sanitizedName);
           store.setProjects([p, ...store.projects.filter((project) => project.id !== p.id)]);
           setProjectId(p.id);
         }
       } else {
-        const p = store.createProject(name);
+        const p = store.createProject(sanitizedName);
         // set description on local fallback project
-        p.description = description || undefined;
+        p.description = sanitizedDescription || undefined;
         store.setProjects([p, ...store.projects.filter((project) => project.id !== p.id)]);
         setProjectId(p.id);
       }

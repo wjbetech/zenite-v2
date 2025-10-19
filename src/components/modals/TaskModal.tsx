@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-// ...existing code...
-// import { Input } from './ui/input';
 import useTaskStore, { Task } from '../../lib/taskStore';
 import useProjectStore, { RemoteProject, normalizeRemoteProject } from '../../lib/projectStore';
 import api from '../../lib/api';
 import { toast } from 'react-toastify';
 import ChevronDown from '../icons/ChevronDown';
+import TaskModalLocalToast from './TaskModalLocalToast';
+import ProjectCreationFields from './ProjectCreationFields';
+import ModalActions from './ModalActions';
 
 export default function TaskModal({
   open,
@@ -69,8 +70,6 @@ export default function TaskModal({
     setSubmitError(null);
     setSaving(true);
 
-    // If user typed a new project name but didn't press Enter to create it,
-    // create the project first so the task can reference it.
     const tryCreateProjectBeforeTask = async (): Promise<string | null> => {
       if (allowCreateProject && newProjectName.trim() && !projectId) {
         return await createAndSelectProject(newProjectName.trim(), newProjectDescription.trim());
@@ -142,8 +141,6 @@ export default function TaskModal({
       // Try remote-first: prefer creating the project via the API so it persists.
       // Fall back to local store if the API is unavailable or returns no id.
       let createdRemote: RemoteProject | null = null;
-      // Always attempt remote creation first so projects persist. If the
-      // network/API fails for any reason, we'll fall back to the local store.
       try {
         const created = (await api.createProject({ name, description })) as {
           id?: unknown;
@@ -218,17 +215,7 @@ export default function TaskModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {localToast && (
-        <div className="fixed right-4 top-4 z-50">
-          <div
-            className={`px-4 py-2 rounded shadow-lg text-sm ${
-              localToast.type === 'error' ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'
-            }`}
-          >
-            {localToast.message}
-          </div>
-        </div>
-      )}
+      <TaskModalLocalToast toast={localToast} />
       <div className="absolute inset-0 bg-black/80" onClick={() => onOpenChange(false)} />
       <form
         onSubmit={submit}
@@ -237,39 +224,21 @@ export default function TaskModal({
         <h3 className="text-lg font-medium mb-3">
           {initial?.id ? 'Edit Task' : allowCreateProject ? 'Add New Project' : 'Add New Task'}
         </h3>
-        {/* Secondary subheader: show 'New Task' when opened for creating a project or when a project was just created from this modal */}
 
         {allowCreateProject && (
-          <div className="mb-8">
-            <label className="block mb-2">New project</label>
-            <input
-              value={newProjectName}
-              onChange={(e) => setNewProjectName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleCreateProject();
-                }
-              }}
-              className="input w-full mb-2 rounded-lg"
-              disabled={newProjectLoading}
-            />
-            <label
-              className="block mt-2 mb-2 text-sm font-medium"
-              htmlFor="new-project-description"
-            >
-              Description <span className="text-xs text-gray-500">(optional)</span>
-            </label>
-            <textarea
-              id="new-project-description"
-              value={newProjectDescription}
-              onChange={(e) => setNewProjectDescription(e.target.value)}
-              className="textarea w-full rounded-lg bg-base-100"
-              rows={3}
-              disabled={newProjectLoading}
-              placeholder="Optional description for the project"
-            />
-          </div>
+          <ProjectCreationFields
+            newProjectName={newProjectName}
+            setNewProjectName={setNewProjectName}
+            newProjectDescription={newProjectDescription}
+            setNewProjectDescription={setNewProjectDescription}
+            newProjectLoading={newProjectLoading}
+            onCreateProjectKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleCreateProject();
+              }
+            }}
+          />
         )}
         {(allowCreateProject || newProjectCreated) && !initial?.id && (
           <div className="flex items-center justify-between text-muted mb-3">
@@ -305,8 +274,6 @@ export default function TaskModal({
               rows={4}
             />
 
-            {/* status & priority removed — default unstarted; priorities inferred by due date */}
-
             <label className="block mt-5">
               <div className="text-sm">Due date</div>
               <input
@@ -318,8 +285,6 @@ export default function TaskModal({
                 className="pika-single p-2 rounded-lg bg-base-100"
               />
             </label>
-
-            {/* starts/completed/estimate/time spent removed per simplified schema */}
 
             <div className="mt-5 flex flex-col gap-4 md:flex-row md:gap-4">
               <div className="w-full md:w-1/2">
@@ -359,25 +324,12 @@ export default function TaskModal({
           </>
         )}
 
-        {/* project creation moved above title; Create button removed per request */}
-
-        <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
-          {submitError && <span className="mr-auto text-sm text-error">{submitError}</span>}
-          <button
-            className="btn btn-warning border-2 border-warning-content text-warning-content"
-            onClick={() => onOpenChange(false)}
-            type="button"
-          >
-            Cancel
-          </button>
-          <button
-            className="btn btn-success border-2 border-success-content text-success-content"
-            type="submit"
-            disabled={saving}
-          >
-            {saving ? 'Saving…' : initial?.id ? 'Save' : 'Create'}
-          </button>
-        </div>
+        <ModalActions
+          submitError={submitError}
+          onCancel={() => onOpenChange(false)}
+          saving={saving}
+          submitLabel={initial?.id ? 'Save' : 'Create'}
+        />
       </form>
     </div>
   );

@@ -16,7 +16,8 @@ export function isDbUnavailableError(err: unknown, res?: Response) {
   }
 
   // Fallback: network failure
-  if (err instanceof TypeError && String(err.message).toLowerCase().includes('failed to fetch')) return true;
+  if (err instanceof TypeError && String(err.message).toLowerCase().includes('failed to fetch'))
+    return true;
 
   return false;
 }

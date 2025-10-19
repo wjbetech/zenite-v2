@@ -34,8 +34,8 @@ describe('text-format.sanitizeTitle/sanitizeDescription', () => {
     expect(sanitizeTitle('  multiple   spaces here  ')).toBe('Multiple Spaces Here');
   });
 
-  test('sanitizeDescription normalizes whitespace and trims', () => {
-    expect(sanitizeDescription('  line1\n\n line2  ')).toBe('line1 line2');
+  test('sanitizeDescription normalizes whitespace and trims, capitalizes and adds terminal punctuation', () => {
+    expect(sanitizeDescription('  line1\n\n line2  ')).toBe('Line1 line2.');
     expect(sanitizeDescription('')).toBe('');
   });
 });

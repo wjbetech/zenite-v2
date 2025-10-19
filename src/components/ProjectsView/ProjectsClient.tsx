@@ -6,15 +6,17 @@ import useProjectStore, {
   RemoteProject,
   normalizeRemoteProject,
 } from '../../lib/projectStore';
-// import { Input } from './ui/input';
-// ...existing code...
 import { Plus } from 'lucide-react';
 import api from '../../lib/api';
 import { toast } from 'react-toastify';
-import ProjectCard from './ProjectCard';
-import ConfirmModal from '../modals/ConfirmModal';
-import ProjectModal from '@/components/ProjectsView/ProjectModal';
-import { projectSlug } from '../../lib/utils';
+import { createProjectAndUpdateStore } from './projectsClientActions';
+import ProjectsList from './ProjectsList';
+import ProjectsLoading from './ProjectsLoading';
+import ProjectsDbUnavailable from './ProjectsDbUnavailable';
+import ProjectsEmpty from './ProjectsEmpty';
+import useProjectsInitializer from './useProjectsInitializer';
+import ConfirmModal from '../modals/ConfirmProjectDeleteModal';
+import ProjectModal from './ProjectModal';
 
 type Props = {
   initialProjects: Project[];
@@ -23,20 +25,16 @@ type Props = {
 export default function ProjectsClient({ initialProjects }: Props) {
   const projects = useProjectStore((s) => s.projects);
   const deleteProject = useProjectStore((s) => s.deleteProject);
-  const setProjects = useProjectStore((s) => s.setProjects);
 
-  const [loading, setLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [displayedProjects, setDisplayedProjects] = useState<Project[]>(
-    (initialProjects || []).map((p) => {
-      const pp = p as Partial<Project>;
-      return {
-        ...(pp as Project),
-        taskCount: typeof pp.taskCount === 'number' ? pp.taskCount : 0,
-      } as Project;
-    }),
-  );
-  const [dbUnavailable, setDbUnavailable] = useState(false);
+  const {
+    displayedProjects,
+    setDisplayedProjects,
+    loading,
+    mounted,
+    setMounted,
+    dbUnavailable,
+    setDbUnavailable,
+  } = useProjectsInitializer(initialProjects);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -48,120 +46,16 @@ export default function ProjectsClient({ initialProjects }: Props) {
   useEffect(() => {
     if (!mounted) return;
     setDisplayedProjects(projects);
-  }, [projects, mounted]);
+  }, [projects, mounted, setDisplayedProjects]);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const commitProjects = (list: Project[], options?: { dbAvailable?: boolean }) => {
-      if (cancelled) return;
-      setProjects(list);
-      setDisplayedProjects(list);
-      setMounted(true);
-      if (options && options.dbAvailable !== undefined) {
-        setDbUnavailable(!options.dbAvailable);
-      }
-    };
-
-    async function initProjects() {
-      setLoading(true);
-      try {
-        if (!initialProjects || initialProjects.length === 0) {
-          const remote = (await fetch('/api/projects')
-            .then((r) => (r.ok ? r.json() : null))
-            .catch(() => null)) as unknown;
-          if (Array.isArray(remote)) {
-            const remapped = (remote as RemoteProject[])
-              .map((item) => normalizeRemoteProject(item))
-              .filter((project): project is Project => Boolean(project.id));
-            commitProjects(remapped, { dbAvailable: true });
-            return;
-          }
-
-          commitProjects([], { dbAvailable: false });
-          return;
-        }
-
-        const allHaveCounts = (initialProjects as Project[]).every(
-          (p) => typeof p.taskCount === 'number',
-        );
-        if (allHaveCounts) {
-          commitProjects(initialProjects as Project[], { dbAvailable: true });
-          return;
-        }
-
-        const remote = (await fetch('/api/projects')
-          .then((r) => (r.ok ? r.json() : null))
-          .catch(() => null)) as unknown;
-        if (Array.isArray(remote) && remote.length > 0) {
-          const remapped = (remote as RemoteProject[])
-            .map((item) => normalizeRemoteProject(item))
-            .filter((project): project is Project => Boolean(project.id));
-          commitProjects(remapped, { dbAvailable: true });
-          return;
-        }
-
-        const tasks = await api.fetchTasks().catch(() => []);
-        type ApiTask = { id?: string; projectId?: string | null; project?: { id?: string } };
-        const taskArr = Array.isArray(tasks) ? (tasks as ApiTask[]) : [];
-
-        const counts = taskArr.reduce<Record<string, number>>((acc, task) => {
-          const pid = (task && (task.projectId ?? task.project?.id)) || null;
-          if (!pid) return acc;
-          acc[pid] = (acc[pid] ?? 0) + 1;
-          return acc;
-        }, {});
-
-        const merged = (initialProjects as Project[]).map((project) => ({
-          ...project,
-          taskCount:
-            typeof project.taskCount === 'number' ? project.taskCount : counts[project.id] ?? 0,
-        }));
-
-        commitProjects(merged, { dbAvailable: true });
-      } catch (err) {
-        console.warn('ProjectsClient: failed to fetch projects; showing initial data', err);
-        commitProjects(initialProjects ? (initialProjects as Project[]) : [], {
-          dbAvailable: true,
-        });
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    initProjects();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [initialProjects, setProjects]);
+  // initialization logic handled by useProjectsInitializer hook
 
   const handleCreateProject = useCallback(
     async ({ name, description }: { name: string; description?: string }) => {
-      const trimmedName = name.trim();
-      const trimmedDescription = description?.trim();
-      if (!trimmedName) {
-        throw new Error('Project name is required');
-      }
-
-      const store = useProjectStore.getState();
-
       try {
-        const response = (await api.createProject({
-          name: trimmedName,
-          description: trimmedDescription || undefined,
-        })) as Record<string, unknown>;
-
-        const normalized = normalizeRemoteProject(response as RemoteProject);
-        if (!normalized.id) {
-          throw new Error('The server returned a project without an id');
-        }
-
-        const current = store.projects;
-        const nextProjects = [normalized, ...current.filter((p) => p.id !== normalized.id)];
-        store.setProjects(nextProjects);
+        const normalized = await createProjectAndUpdateStore({ name, description });
+        const store = useProjectStore.getState();
+        const nextProjects = [normalized, ...store.projects.filter((p) => p.id !== normalized.id)];
         setDisplayedProjects(nextProjects);
         setMounted(true);
         setDbUnavailable(false);
@@ -178,7 +72,7 @@ export default function ProjectsClient({ initialProjects }: Props) {
         throw new Error('Failed to create project');
       }
     },
-    [],
+    [setDbUnavailable, setDisplayedProjects, setMounted],
   );
 
   const handleEditProject = useCallback(
@@ -216,7 +110,7 @@ export default function ProjectsClient({ initialProjects }: Props) {
         throw new Error('Failed to update project');
       }
     },
-    [],
+    [setDbUnavailable, setDisplayedProjects],
   );
 
   return (
@@ -243,66 +137,23 @@ export default function ProjectsClient({ initialProjects }: Props) {
 
       <div className="flex flex-col gap-6 pb-10 px-3">
         {loading ? (
-          <div className="col-span-full min-h-[60vh] flex items-center justify-center">
-            <div className="flex flex-col items-center">
-              <svg
-                className="animate-spin h-10 w-10 text-accent"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                aria-hidden
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                ></path>
-              </svg>
-              <div className="mt-3 text-sm text-base-content/50">Loading projects…</div>
-            </div>
-          </div>
+          <ProjectsLoading />
         ) : dbUnavailable ? (
-          <div className="col-span-full min-h-[60vh] flex items-center justify-center">
-            <div className="text-center text-base-content/50">
-              <p>
-                Unable to load tasks — the database may be unavailable. Check your local DB and try
-                again, or contact the administrator (wjbetech@gmail.com)
-              </p>
-            </div>
-          </div>
+          <ProjectsDbUnavailable />
         ) : (mounted ? projects.length === 0 : (initialProjects?.length ?? 0) === 0) ? (
-          <div className="col-span-full min-h-[60vh] flex items-center justify-center">
-            <div className="text-lg md:text-xl text-gray-500">- No projects yet! -</div>
-          </div>
+          <ProjectsEmpty />
         ) : (
-          (mounted ? displayedProjects : initialProjects).map((p) => {
-            const slug = projectSlug(p.name);
-            const href = `/projects/${slug}`;
-            return (
-              <div key={p.id} className="w-full">
-                <ProjectCard
-                  project={p as Project}
-                  href={href}
-                  onDelete={(id) => {
-                    setPendingDeleteId(id);
-                    setConfirmOpen(true);
-                  }}
-                  onEdit={(id) => {
-                    setEditingProjectId(id);
-                    setEditModalOpen(true);
-                  }}
-                />
-              </div>
-            );
-          })
+          <ProjectsList
+            projects={mounted ? displayedProjects : initialProjects ?? []}
+            onDelete={(id) => {
+              setPendingDeleteId(id);
+              setConfirmOpen(true);
+            }}
+            onEdit={(id) => {
+              setEditingProjectId(id);
+              setEditModalOpen(true);
+            }}
+          />
         )}
       </div>
       <ConfirmModal

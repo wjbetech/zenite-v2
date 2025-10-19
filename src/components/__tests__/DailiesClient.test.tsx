@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
-import DailiesClient from '../DailiesClient';
+import DailiesClient from '../DailiesView/DailiesClient';
 import useTaskStore, { type Task } from '../../lib/taskStore';
 import useProjectStore from '../../lib/projectStore';
 import api from '../../lib/api';

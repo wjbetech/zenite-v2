@@ -5,6 +5,7 @@ import Image from 'next/image';
 // ...existing code...
 // ThemeToggle removed; theme selection is done in Settings via ThemeDropdown
 import React from 'react';
+import { useNavigate } from '../lib/useNavigate';
 import DiamondLogo from './DiamondLogo';
 import { SignInButton, SignOutButton, useUser } from '@clerk/nextjs';
 import { useState, useRef, useEffect } from 'react';
@@ -49,6 +50,7 @@ export default function Navbar({ initialIsSignedIn, initialUser }: Props) {
 
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
@@ -154,7 +156,7 @@ export default function Navbar({ initialIsSignedIn, initialUser }: Props) {
                           const res = await fetch('/profile', { method: 'HEAD' });
                           if (res.ok) {
                             setOpen(false);
-                            window.location.assign('/profile');
+                            navigate('/profile');
                           } else {
                             alert('Profile page is not available yet.');
                           }

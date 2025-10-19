@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import type { Task } from '../lib/taskStore';
-import useProjectStore from '../lib/projectStore';
+import type { Task } from '../../lib/taskStore';
+import useProjectStore from '../../lib/projectStore';
 
 type Props = {
   open: boolean;

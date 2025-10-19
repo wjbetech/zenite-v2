@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import DailyTaskCard, { DailyTask } from './DailyTaskCard';
-import type { Task } from '../lib/taskStore';
-import useProjectStore from '../lib/projectStore';
+import DailyTaskCard, { DailyTask } from '../DailiesView/DailyTaskCard';
+import type { Task } from '../../lib/taskStore';
+import useProjectStore from '../../lib/projectStore';
 
 // Dashboard sometimes passes a slimmed task shape; include optional project fields
 type DashboardTaskLike = Partial<Task> & { projectName?: string; projectId?: string | null };

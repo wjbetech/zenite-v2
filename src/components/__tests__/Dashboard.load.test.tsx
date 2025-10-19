@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
-import Dashboard from '../Dashboard';
+import Dashboard from '../DashboardView/Dashboard';
 jest.mock('../../lib/taskStore', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { createUseTaskStoreMock } = require('../../test-utils/useTaskStoreMock');

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import useProjectStore from '../lib/projectStore';
+import useProjectStore from '../../lib/projectStore';
 import Link from 'next/link';
 import { Star } from 'lucide-react';
 

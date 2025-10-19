@@ -4,19 +4,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TooltipPortal from './TooltipPortal';
 
-import {
-  addDays,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-  weeksForMonth,
-  zeroMap,
-  RangeKey,
-  ActivityMap,
-} from '../../lib/activity-date';
+import { zeroMap, RangeKey, ActivityMap } from '../../lib/activity-date';
+import { computeRangeDays } from '../../lib/activity-range';
 import ActivityWeekView from './ActivityWeekView';
 import ActivityMonthPanel from './ActivityMonthPanel';
+import RangeSelector from './RangeSelector';
 import {
   readActivityOpenFromCookie,
   writeActivityOpenToCookie,
@@ -53,49 +45,7 @@ export default function ActivityHeatmap({
   });
 
   // compute date range and days depending on range selection
-  const { startDate, endDate } = useMemo(() => {
-    const today = new Date();
-    const end = new Date(today);
-    end.setHours(0, 0, 0, 0);
-
-    if (range === '1w') {
-      const start = addDays(end, -6);
-      const allDays: Date[] = [];
-      for (let cur = new Date(start); cur <= end; cur = addDays(cur, 1))
-        allDays.push(new Date(cur));
-      return { startDate: start, endDate: end, days: allDays };
-    }
-
-    if (range === '1m') {
-      const monthStart = startOfMonth(end);
-      const monthEnd = endOfMonth(end);
-      const start = startOfWeek(monthStart);
-      const finish = endOfWeek(monthEnd);
-      const allDays: Date[] = [];
-      for (let cur = new Date(start); cur <= finish; cur = addDays(cur, 1))
-        allDays.push(new Date(cur));
-      // do not include future days beyond `end`
-      const filtered = allDays.filter((d) => d <= end);
-      const clampedEnd = finish > end ? end : finish;
-      return { startDate: start, endDate: clampedEnd, days: filtered };
-    }
-
-    // 3 months view: calendar-aligned last 3 months panels
-    const months: Date[] = [];
-    for (let i = 2; i >= 0; i--) {
-      months.push(new Date(end.getFullYear(), end.getMonth() - i, 1));
-    }
-    const allDays: Date[] = [];
-    months.forEach((m) => {
-      weeksForMonth(m).forEach((w) => w.forEach((d) => allDays.push(d)));
-    });
-    const start = allDays[0];
-    const finish = allDays[allDays.length - 1];
-    // filter out any dates after today so we never roll forward
-    const filtered = allDays.filter((d) => d <= end);
-    const clampedEnd = finish > end ? end : finish;
-    return { startDate: start, endDate: clampedEnd, days: filtered };
-  }, [range]);
+  const { startDate, endDate } = useMemo(() => computeRangeDays(range), [range]);
 
   // derive a map for rendering by merging zeroed range with any incoming activity
   const map = useMemo<ActivityMap>(() => {
@@ -190,23 +140,7 @@ export default function ActivityHeatmap({
             className="overflow-hidden"
           >
             <div className="flex items-center gap-3 mt-3 mb-3">
-              <div className="flex rounded-md gap-3">
-                {[
-                  { key: '3m', label: '3 months' },
-                  { key: '1m', label: '1 month' },
-                  { key: '1w', label: '1 week' },
-                ].map((opt) => (
-                  <button
-                    key={opt.key}
-                    onClick={() => setRange(opt.key as RangeKey)}
-                    className={`btn btn-accent btn-sm border-2 border-base-content ${
-                      range === (opt.key as RangeKey) ? '' : 'opacity-50'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
+              <RangeSelector value={range} onChange={(r) => setRange(r)} />
             </div>
             <TooltipPortal tooltip={tooltip} />
             <div className="overflow-x-auto overflow-y-hidden">

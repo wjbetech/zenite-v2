@@ -10,6 +10,7 @@ import { Plus } from 'lucide-react';
 import api from '../../lib/api';
 import { toast } from 'react-toastify';
 import { createProjectAndUpdateStore } from './projectsClientActions';
+import { isDbUnavailableError, extractErrorMessage } from '../../lib/db-error';
 import ProjectsList from './ProjectsList';
 import ProjectsLoading from './ProjectsLoading';
 import ProjectsDbUnavailable from './ProjectsDbUnavailable';
@@ -64,8 +65,8 @@ export default function ProjectsClient({ initialProjects }: Props) {
         toast.dismiss();
         toast.success('Project created', { autoClose: 4000, position: 'top-center' });
       } catch (err) {
-        console.error('ProjectsClient: failed to create project', err);
-        setDbUnavailable(true);
+        console.error('ProjectsClient: failed to create project', extractErrorMessage(err));
+        if (isDbUnavailableError(err)) setDbUnavailable(true);
         if (err instanceof Error) {
           throw err;
         }
@@ -104,8 +105,8 @@ export default function ProjectsClient({ initialProjects }: Props) {
         toast.dismiss();
         toast.success('Project updated', { autoClose: 3000, position: 'top-center' });
       } catch (err) {
-        console.error('ProjectsClient: failed to update project', err);
-        setDbUnavailable(true);
+        console.error('ProjectsClient: failed to update project', extractErrorMessage(err));
+        if (isDbUnavailableError(err)) setDbUnavailable(true);
         if (err instanceof Error) throw err;
         throw new Error('Failed to update project');
       }
@@ -176,8 +177,8 @@ export default function ProjectsClient({ initialProjects }: Props) {
             toast.dismiss();
             toast.success('Project has been deleted', { autoClose: 4000, position: 'top-center' });
           } catch (err) {
-            console.error('failed to delete project', err);
-            setDbUnavailable(true);
+            console.error('failed to delete project', extractErrorMessage(err));
+            if (isDbUnavailableError(err)) setDbUnavailable(true);
             toast.error(`Failed to delete project: ${String((err as Error).message ?? err)}`);
           } finally {
             setDeleting(false);

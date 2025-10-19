@@ -4,6 +4,7 @@ import React from 'react';
 import useProjectStore, { Project } from '../../lib/projectStore';
 import useTaskStore from '../../lib/taskStore';
 import { sanitizeTitle, sanitizeDescription } from '../../lib/text-format';
+import { normalizeWhitespace } from '../../lib/text-sanitizer';
 
 import type { Task } from '../../lib/taskStore';
 
@@ -61,6 +62,7 @@ export default function CreateDailyModal({ open, onOpenChange, onCreated }: Prop
             style={{ outline: 'none', boxShadow: 'none' }}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            onBlur={() => setTitle(sanitizeTitle(title || ''))}
             aria-label="Daily task title"
             placeholder="e.g. Workout"
             required
@@ -73,7 +75,8 @@ export default function CreateDailyModal({ open, onOpenChange, onCreated }: Prop
             className="textarea textarea-bordered rounded-md w-full focus:outline-none focus-visible:outline-none focus:ring-0 active:outline-none active:ring-0 shadow-none focus:shadow-none focus-visible:shadow-none outline-none"
             style={{ outline: 'none', boxShadow: 'none' }}
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={(e) => setNotes(normalizeWhitespace(e.target.value))}
+            onBlur={() => setNotes(sanitizeDescription(notes || ''))}
             aria-label="Daily task notes"
             rows={3}
           />

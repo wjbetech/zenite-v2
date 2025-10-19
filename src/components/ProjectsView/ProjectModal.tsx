@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { sanitizeTitle, sanitizeDescription } from '../../lib/text-format';
+import { normalizeWhitespace } from '../../lib/text-sanitizer';
 
 export type ProjectModalSubmit = {
   name: string;
@@ -90,6 +91,7 @@ export default function ProjectModal({ open, onSubmit, onCancel, initial }: Proj
           className="input mt-1 w-full rounded-lg"
           value={name}
           onChange={(event) => setName(event.target.value)}
+          onBlur={() => setName(sanitizeTitle(name || ''))}
           placeholder="Project name"
           disabled={submitting}
           required
@@ -102,7 +104,8 @@ export default function ProjectModal({ open, onSubmit, onCancel, initial }: Proj
           id="project-description"
           className="textarea mt-1 w-full rounded-lg"
           value={description}
-          onChange={(event) => setDescription(event.target.value)}
+          onChange={(event) => setDescription(normalizeWhitespace(event.target.value))}
+          onBlur={() => setDescription(sanitizeDescription(description || ''))}
           placeholder="Describe the project"
           rows={4}
           disabled={submitting}

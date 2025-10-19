@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { normalizeWhitespace } from '../../lib/text-sanitizer';
 
 export default function ProjectCreationFields({
   newProjectName,
@@ -22,7 +23,7 @@ export default function ProjectCreationFields({
       <label className="block mb-2">New project</label>
       <input
         value={newProjectName}
-        onChange={(e) => setNewProjectName(e.target.value)}
+        onChange={(e) => setNewProjectName(normalizeWhitespace(e.target.value))}
         onKeyDown={onCreateProjectKeyDown}
         className="input w-full mb-2 rounded-lg"
         disabled={newProjectLoading}
@@ -33,7 +34,7 @@ export default function ProjectCreationFields({
       <textarea
         id="new-project-description"
         value={newProjectDescription}
-        onChange={(e) => setNewProjectDescription(e.target.value)}
+        onChange={(e) => setNewProjectDescription(normalizeWhitespace(e.target.value))}
         className="textarea w-full rounded-lg bg-base-100"
         rows={3}
         disabled={newProjectLoading}

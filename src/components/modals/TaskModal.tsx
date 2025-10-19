@@ -5,7 +5,7 @@ import useTaskStore, { Task } from '../../lib/taskStore';
 import useProjectStore, { RemoteProject, normalizeRemoteProject } from '../../lib/projectStore';
 import api from '../../lib/api';
 import { sanitizeTitle, sanitizeDescription } from '../../lib/text-format';
-import { normalizeWhitespace } from '../../lib/text-sanitizer';
+import { normalizeWhitespaceForTyping } from '../../lib/text-sanitizer';
 import { toast } from 'react-toastify';
 import ChevronDown from '../icons/ChevronDown';
 import TaskModalLocalToast from './TaskModalLocalToast';
@@ -267,7 +267,15 @@ export default function TaskModal({
             <label className="block mb-1">Title</label>
             <input
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                // Lightweight: capitalize first alpha character as user types
+                const firstAlphaIndex = v.search(/[A-Za-zÀ-ÖØ-öø-ÿ]/);
+                if (firstAlphaIndex === -1) return setTitle(v);
+                const char = v.charAt(firstAlphaIndex).toUpperCase();
+                setTitle(v.slice(0, firstAlphaIndex) + char + v.slice(firstAlphaIndex + 1));
+              }}
+              onBlur={() => setTitle(sanitizeTitle(title || ''))}
               required
               className="input w-full rounded-lg focus:border-content"
             />
@@ -276,9 +284,7 @@ export default function TaskModal({
             <textarea
               value={notes}
               onChange={(e) => {
-                // normalize intermediate whitespace while typing to avoid
-                // disruptive sentence normalization while the user composes.
-                setNotes(normalizeWhitespace(e.target.value));
+                setNotes(normalizeWhitespaceForTyping(e.target.value));
               }}
               onBlur={() => setNotes(sanitizeDescription(notes || ''))}
               className="w-full p-2 rounded-lg textarea bg-base-100 focus:border-content"

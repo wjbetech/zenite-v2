@@ -14,6 +14,20 @@ export function normalizeWhitespace(input: string): string {
     .trim();
 }
 
+/**
+ * Normalize whitespace for typing: collapse repeated spaces/tabs but preserve
+ * newlines and leading/trailing spaces so the user's caret and composition
+ * experience isn't disrupted.
+ */
+export function normalizeWhitespaceForTyping(input: string): string {
+  if (input == null) return '';
+  // normalize CRLF -> LF, replace uncommon spaces with regular space
+  let out = input.replace(/\r\n?/g, '\n').replace(/[\t\f\v\u00A0\u2028\u2029]+/g, ' ');
+  // collapse multiple spaces (but not newlines) into a single space
+  out = out.replace(/ {2,}/g, ' ');
+  return out;
+}
+
 /** Trim and collapse multiple spaces, preserving basic punctuation spacing. */
 export function trimAndCollapseSpaces(input: string): string {
   if (!input) return '';

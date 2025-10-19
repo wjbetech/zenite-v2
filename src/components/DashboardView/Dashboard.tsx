@@ -243,62 +243,47 @@ export default function Dashboard() {
         activityMap={activityMap}
         activityDetails={activityDetails}
       />
+      {/* When loading, show a fixed, centered spinner that doesn't affect layout height.
+          When not loading, render the task lists container. */}
+      {tasksLoading ? (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <DataLoading label="Fetching tasks…" variant="primary" compact />
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col min-h-0">
+          {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
+          <div className="flex-1 min-h-0">
+            <div
+              className="mx-auto w-full relative"
+              style={{
+                maxWidth: 'calc(100vw - var(--sidebar-width) - 3rem)',
+                boxSizing: 'border-box',
+              }}
+            >
+              {/* Tabs - horizontally scrollable using TabsBox component */}
+              <TabsBox
+                tabsRef={tabsRef}
+                onPointerDown={onPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerUp}
+                onScroll={onScroll}
+                scrollTabsBy={scrollTabsBy}
+                canScrollLeft={canScrollLeft}
+                canScrollRight={canScrollRight}
+                didDrag={didDrag}
+                tabDefs={tabDefs}
+                activeView={effectiveView}
+                setView={setEffectiveView}
+              />
 
-      <div className="flex-1 flex flex-col min-h-0">
-        {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
-        <div className="flex-1 min-h-0">
-          <div
-            className="mx-auto w-full"
-            style={{
-              maxWidth: 'calc(100vw - var(--sidebar-width) - 3rem)',
-              boxSizing: 'border-box',
-            }}
-          >
-            {/* Tabs - horizontally scrollable using TabsBox component */}
-            <TabsBox
-              tabsRef={tabsRef}
-              onPointerDown={onPointerDown}
-              onPointerMove={onPointerMove}
-              onPointerUp={onPointerUp}
-              onScroll={onScroll}
-              scrollTabsBy={scrollTabsBy}
-              canScrollLeft={canScrollLeft}
-              canScrollRight={canScrollRight}
-              didDrag={didDrag}
-              tabDefs={tabDefs}
-              activeView={effectiveView}
-              setView={setEffectiveView}
-            />
+              {/* task lists render here when not loading */}
 
-            {/* Task list content */}
-            <div className="pt-4 overflow-hidden w-full">
-              {tasksLoading ? (
-                <div className="flex flex-col items-center justify-center py-24 text-center w-full">
-                  <DataLoading label="Fetching tasks…" variant="primary" />
-                </div>
-              ) : (
-                <>
-                  {showImminent && effectiveView === 'imminent' && (
-                    <React.Suspense>
-                      <ImminentList
-                        tasks={soonest}
-                        heatmapOpen={heatmapOpen}
-                        onEdit={(t: Partial<Task>) => {
-                          setEditing(t);
-                          setModalOpen(true);
-                        }}
-                        onDeleteById={(id: string) => {
-                          const found = storeTasks.find((x) => x.id === id) ?? null;
-                          setDeleting(found);
-                        }}
-                        onStatusChange={handleStatusChange}
-                      />
-                    </React.Suspense>
-                  )}
-
-                  {showNew && effectiveView === 'new' && (
-                    <NewList
-                      tasks={newTasks}
+              {/* Task list content (render spinner OR the lists so they share space) */}
+              <div className="pt-4 overflow-hidden w-full">
+                {showImminent && effectiveView === 'imminent' && (
+                  <React.Suspense>
+                    <ImminentList
+                      tasks={soonest}
                       heatmapOpen={heatmapOpen}
                       onEdit={(t: Partial<Task>) => {
                         setEditing(t);
@@ -310,61 +295,77 @@ export default function Dashboard() {
                       }}
                       onStatusChange={handleStatusChange}
                     />
-                  )}
+                  </React.Suspense>
+                )}
 
-                  {showToday && effectiveView === 'today' && (
-                    <TodayList
-                      tasks={today}
-                      heatmapOpen={heatmapOpen}
-                      storeTasks={storeTasks}
-                      setTasks={setTasks}
-                      onEdit={(t: Partial<Task>) => {
-                        setEditing(t);
-                        setModalOpen(true);
-                      }}
-                      onDeleteById={(id: string) => deleteTask(id)}
-                      onStatusChange={handleStatusChange}
-                    />
-                  )}
+                {showNew && effectiveView === 'new' && (
+                  <NewList
+                    tasks={newTasks}
+                    heatmapOpen={heatmapOpen}
+                    onEdit={(t: Partial<Task>) => {
+                      setEditing(t);
+                      setModalOpen(true);
+                    }}
+                    onDeleteById={(id: string) => {
+                      const found = storeTasks.find((x) => x.id === id) ?? null;
+                      setDeleting(found);
+                    }}
+                    onStatusChange={handleStatusChange}
+                  />
+                )}
 
-                  {showWeek && effectiveView === 'week' && (
-                    <WeekList
-                      tasks={week}
-                      heatmapOpen={heatmapOpen}
-                      storeTasks={storeTasks}
-                      setTasks={setTasks}
-                      onEdit={(t: Partial<Task>) => {
-                        setEditing(t);
-                        setModalOpen(true);
-                      }}
-                      onDeleteById={(id: string) => {
-                        const found = storeTasks.find((x) => x.id === id) ?? null;
-                        setDeleting(found);
-                      }}
-                      onStatusChange={handleStatusChange}
-                    />
-                  )}
-                </>
-              )}
+                {showToday && effectiveView === 'today' && (
+                  <TodayList
+                    tasks={today}
+                    heatmapOpen={heatmapOpen}
+                    storeTasks={storeTasks}
+                    setTasks={setTasks}
+                    onEdit={(t: Partial<Task>) => {
+                      setEditing(t);
+                      setModalOpen(true);
+                    }}
+                    onDeleteById={(id: string) => deleteTask(id)}
+                    onStatusChange={handleStatusChange}
+                  />
+                )}
 
-              {/* If there are no tasks at all (and we're not loading), show a centered empty state
+                {showWeek && effectiveView === 'week' && (
+                  <WeekList
+                    tasks={week}
+                    heatmapOpen={heatmapOpen}
+                    storeTasks={storeTasks}
+                    setTasks={setTasks}
+                    onEdit={(t: Partial<Task>) => {
+                      setEditing(t);
+                      setModalOpen(true);
+                    }}
+                    onDeleteById={(id: string) => {
+                      const found = storeTasks.find((x) => x.id === id) ?? null;
+                      setDeleting(found);
+                    }}
+                    onStatusChange={handleStatusChange}
+                  />
+                )}
+
+                {/* If there are no tasks at all (and we're not loading), show a centered empty state
                   inside the task-list area so it appears where the lists normally render. If
                   tasksError is present we hint that the DB may be down. */}
-              {all.length === 0 && !tasksLoading && (
-                <div className="flex items-center justify-center py-24 w-full">
-                  <div className="text-center text-base-content/50">
-                    <p>
-                      {tasksError
-                        ? 'Unable to load tasks — the database may be unavailable. Check your local DB and try again, or contact the administrator (wjbetech@gmail.com)'
-                        : 'No tasks found — try creating one or contact the administrator (wjbetech@gmail.com)'}
-                    </p>
+                {all.length === 0 && !tasksLoading && (
+                  <div className="flex items-center justify-center py-24 w-full">
+                    <div className="text-center text-base-content/50">
+                      <p>
+                        {tasksError
+                          ? 'Unable to load tasks — the database may be unavailable. Check your local DB and try again, or contact the administrator (wjbetech@gmail.com)'
+                          : 'No tasks found — try creating one or contact the administrator (wjbetech@gmail.com)'}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       <TaskModal
         open={modalOpen}

@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import TaskSection from '../TaskSection';
 import type { Task } from '../TaskCard';
 import api from '../../lib/api';
+import { isDbUnavailableError, extractErrorMessage } from '../../lib/db-error';
 import DataLoading from '../ui/DataLoading';
 
 // local task store is no longer used here; always prefer server
@@ -34,10 +35,13 @@ export default function ProjectTasksClient({ projectId }: Props) {
       try {
         const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/tasks`);
         if (!response.ok) {
-          // non-OK response, treat as DB unavailable
-          setDbUnavailable(true);
-          if (mounted) setTasks([]);
-          return;
+          // non-OK response, treat as DB unavailable for 5xx or db-specific errors
+          if (isDbUnavailableError(null, response)) {
+            setDbUnavailable(true);
+            if (mounted) setTasks([]);
+            return;
+          }
+          // otherwise fallthrough and try to parse body as empty
         }
         const res = await response.json().catch(() => []);
         const arr = Array.isArray(res) ? (res as ApiTask[]) : ([] as ApiTask[]);
@@ -54,8 +58,8 @@ export default function ProjectTasksClient({ projectId }: Props) {
           setDbUnavailable(false);
         }
       } catch (e) {
-        console.warn('ProjectTasksClient: failed to fetch tasks', e);
-        if (mounted) setDbUnavailable(true);
+        console.warn('ProjectTasksClient: failed to fetch tasks', extractErrorMessage(e));
+        if (mounted && isDbUnavailableError(e)) setDbUnavailable(true);
       } finally {
         if (mounted) setLoading(false);
       }

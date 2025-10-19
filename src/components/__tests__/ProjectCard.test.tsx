@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import ProjectCard from '../ProjectCard';
+import ProjectCard from '../ProjectsView/ProjectCard';
 
 describe('ProjectCard (smoke)', () => {
   it('renders without crashing and shows name', () => {

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import DashboardTaskCard from './DashboardTaskCard';
+import DashboardTaskCard from './DashboardView/DashboardTaskCard';
 import type { Task } from './TaskCard';
 
 type TaskSectionProps = {

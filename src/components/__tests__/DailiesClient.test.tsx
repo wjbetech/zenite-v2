@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
-import DailiesClient from '../DailiesClient';
+import DailiesClient from '../DailiesView/DailiesClient';
 import useTaskStore, { type Task } from '../../lib/taskStore';
 import useProjectStore from '../../lib/projectStore';
 import api from '../../lib/api';
@@ -155,8 +155,13 @@ describe('DailiesClient integration', () => {
 
     render(<DailiesClient />);
 
-    // Should show 'Workout - (Health and Lifestyle)'
-    const labeled = await screen.findByText('Workout - (Health and Lifestyle)');
-    expect(labeled).toBeInTheDocument();
+    // Should show the task title and the connected project name
+    // Scope assertions to the task card to avoid matching the project select option
+    const card = await screen.findByLabelText('Task Workout');
+    const withinCard = within(card);
+    const title = withinCard.getByText('Workout');
+    expect(title).toBeInTheDocument();
+    const proj = withinCard.getByText('Health and Lifestyle');
+    expect(proj).toBeInTheDocument();
   });
 });

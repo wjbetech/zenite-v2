@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Dashboard from '../Dashboard';
+import Dashboard from '../DashboardView/Dashboard';
 
 jest.mock('../../lib/taskStore', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports

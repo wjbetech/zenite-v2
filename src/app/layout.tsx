@@ -4,8 +4,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import './globals.css';
 import Script from 'next/script';
 import { Navbar, Sidebar } from '../components';
+import { currentUser } from '@clerk/nextjs/server';
 import Providers from '../components/Providers';
 import { cookies } from 'next/headers';
+import { toInitialUser } from '../lib/auth-utils';
 
 export const metadata: Metadata = {
   title: 'Zenite',
@@ -17,8 +19,11 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // TODO: replace with real auth logic
-  const isLoggedIn = false;
+  // derive auth state server-side so client components can hydrate without layout shift
+  const clerkUser = await currentUser();
+  const isLoggedIn = !!clerkUser;
+
+  const initialUser = toInitialUser(clerkUser);
 
   // read cookies at request-time
   const cookieStore = await cookies();
@@ -116,7 +121,7 @@ export default async function RootLayout({
 
       <body className={`font-vend text-base-content`}>
         <Providers>
-          <Navbar />
+          <Navbar initialIsSignedIn={isLoggedIn} initialUser={initialUser} />
           {/* Navbar now overlays content. Do not apply top padding so pages sit underneath the absolute navbar. */}
           <div className="flex h-screen">
             <Sidebar isLoggedIn={isLoggedIn} />

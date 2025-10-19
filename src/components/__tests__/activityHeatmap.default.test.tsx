@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
-import Dashboard from '../../components/Dashboard';
+import Dashboard from '../DashboardView/Dashboard';
 
 function clearCookies() {
   if (typeof document !== 'undefined') {

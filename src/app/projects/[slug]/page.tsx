@@ -1,5 +1,5 @@
 import prisma from '../../../lib/prisma';
-import ProjectTasksClient from '../../../components/ProjectTasksClient';
+import ProjectTasksClient from '../../../components/ProjectsView/ProjectTasksClient';
 import { projectSlug } from '../../../lib/utils';
 import { requireAuth } from '../../../lib/auth-helpers';
 import { redirect } from 'next/navigation';

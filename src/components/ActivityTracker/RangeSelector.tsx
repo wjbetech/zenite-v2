@@ -10,9 +10,9 @@ export default function RangeSelector({
   onChange: (r: RangeKey) => void;
 }) {
   const opts: { key: RangeKey; label: string }[] = [
-    { key: '3m', label: '3 months' },
-    { key: '1m', label: '1 month' },
-    { key: '1w', label: '1 week' },
+    { key: '3m', label: '3 Months' },
+    { key: '1m', label: '1 Month' },
+    { key: '1w', label: '1 Week' },
   ];
 
   return (

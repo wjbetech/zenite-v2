@@ -4,7 +4,7 @@ import React from 'react';
 import useTaskStore, { Task } from '../../lib/taskStore';
 import useProjectStore from '../../lib/projectStore';
 import TimerWidget from '../TimerWidget';
-import DailyTaskCard from './DailyTaskCard';
+import TaskCard, { type Task as CardTask } from '../TaskCard';
 import NativeSortableDaily from '../NativeSortableDaily';
 import EditTaskModal from '../modals/EditTaskModal';
 import ConfirmDeleteModal from '../modals/ConfirmDeleteModal';
@@ -42,19 +42,7 @@ export default function DailiesClient() {
   // Extracted to a hook for testability and separation of concerns
   useDailyResetScheduler({ loadTasks, resetIfNeeded, resetNow });
 
-  const toggle = (id: string) => {
-    const t = tasks.find((x) => x.id === id);
-    if (!t) return;
-    if (t.completed) {
-      updateTask(id, { completed: false, started: false, completedAt: null });
-      return;
-    }
-    if (t.started) {
-      updateTask(id, { started: false, completed: true, completedAt: new Date().toISOString() });
-      return;
-    }
-    updateTask(id, { started: true, completed: false, completedAt: null });
-  };
+  // status changes are handled via TaskCard onStatusChange
 
   const handleSave = (id: string, patch: Partial<Task>) => {
     updateTask(id, patch);
@@ -139,14 +127,33 @@ export default function DailiesClient() {
                       useTaskStore.getState().setTasks(reordered);
                     }}
                     renderItem={(t) => (
-                      <DailyTaskCard
+                      <TaskCard
                         key={t.id}
-                        task={t}
-                        onToggle={toggle}
-                        onEdit={edit}
+                        task={t as unknown as CardTask}
+                        right={t.projectName}
+                        href={t.href}
+                        onEdit={(task) => {
+                          // accept either id or object in edit helper
+                          edit(task.id || task);
+                        }}
                         onDelete={(id: string) => {
                           const found = tasks.find((x) => x.id === id) ?? null;
                           setDeleting(found);
+                        }}
+                        onStatusChange={(id: string, status: 'none' | 'done' | 'tilde') => {
+                          if (status === 'tilde') {
+                            updateTask(id, { started: true, completed: false, completedAt: null });
+                            return;
+                          }
+                          if (status === 'done') {
+                            updateTask(id, {
+                              started: false,
+                              completed: true,
+                              completedAt: new Date().toISOString(),
+                            });
+                            return;
+                          }
+                          updateTask(id, { started: false, completed: false, completedAt: null });
                         }}
                       />
                     )}

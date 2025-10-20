@@ -66,7 +66,7 @@ export default function DailyTaskCard({ task, onToggle, onEdit, onDelete }: Prop
           e.stopPropagation();
           onToggle?.(task.id);
         }}
-        className={`flex items-center justify-center h-9 w-9 rounded-lg shrink-0 transition-colors cursor-pointer ${
+        className={`flex items-center justify-center h-8 w-8 rounded-lg shrink-0 transition-colors cursor-pointer ${
           task.completed
             ? 'bg-success text-success-content'
             : task.started
@@ -75,9 +75,9 @@ export default function DailyTaskCard({ task, onToggle, onEdit, onDelete }: Prop
         }`}
       >
         {task.completed ? (
-          <Check className="h-5 w-5" />
+          <Check className="h-4 w-4" />
         ) : task.started ? (
-          <Play className="h-5 w-5" />
+          <Play className="h-4 w-4" />
         ) : (
           <span className="h-2 w-2 rounded-full bg-neutral" />
         )}

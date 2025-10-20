@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import DailyTaskCard, { DailyTask } from '../DailiesView/DailyTaskCard';
+import TaskCard, { type Task as CardTask } from '../TaskCard';
 import type { Task } from '../../lib/taskStore';
 import useProjectStore from '../../lib/projectStore';
 
@@ -30,39 +30,47 @@ export default function DashboardTaskCard({
   const linkedProject = useProjectStore((s) =>
     task.projectId ? s.projects.find((p) => p.id === task.projectId) : undefined,
   );
-  const dt: DailyTask = {
-    id: (task.id as string) || 'unknown',
-    title: (task.title as string) || 'Untitled',
+  // Safely map optional fields from the potentially-slim dashboard task shape
+  const maybeDue =
+    typeof (task as Partial<DashboardTaskLike>).dueDate === 'string'
+      ? (task as Partial<DashboardTaskLike>).dueDate
+      : null;
+  const maybeCreated: string =
+    typeof (task as Partial<DashboardTaskLike>).createdAt === 'string'
+      ? (task as Partial<DashboardTaskLike>).createdAt!
+      : new Date().toISOString();
+  const maybeEstimatedRaw = task as Partial<DashboardTaskLike> as unknown as {
+    estimatedDuration?: unknown;
+  };
+  const maybeEstimated =
+    typeof maybeEstimatedRaw.estimatedDuration === 'number'
+      ? (maybeEstimatedRaw.estimatedDuration as number)
+      : undefined;
+
+  const mapped: CardTask = {
+    id: String(task.id ?? 'unknown'),
+    title: String(task.title ?? 'Untitled'),
     notes: task.notes as string | undefined,
     completed: !!task.completed,
     started: !!task.started,
-    href: undefined,
-    // forward projectName prop from parent if provided; otherwise resolve via projectId
-    projectName:
-      incomingProjectName ?? task.projectName ?? (linkedProject ? linkedProject.name : undefined),
-  };
-
-  const handleToggle = (id: string) => {
-    // cycle same as TaskCard/Other handlers: none -> started -> done -> none
-    if (!task.started && !task.completed) {
-      onStatusChange?.(id, 'tilde');
-      return;
-    }
-    if (task.started && !task.completed) {
-      onStatusChange?.(id, 'done');
-      return;
-    }
-    onStatusChange?.(id, 'none');
+    createdAt: maybeCreated,
+    dueDate: maybeDue,
+    estimatedDuration: maybeEstimated ?? undefined,
   };
 
   return (
     <div className="flex items-start justify-between">
       <div className="flex-1">
-        <DailyTaskCard
-          task={dt}
-          onToggle={handleToggle}
+        <TaskCard
+          task={mapped}
+          right={
+            incomingProjectName ??
+            task.projectName ??
+            (linkedProject ? linkedProject.name : undefined)
+          }
           onEdit={() => onEdit?.(task)}
           onDelete={(id) => onDelete?.(id)}
+          onStatusChange={(id: string, status) => onStatusChange?.(id, status)}
         />
       </div>
     </div>

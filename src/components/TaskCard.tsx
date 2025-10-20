@@ -17,14 +17,33 @@ export type Task = {
   completedAt?: string | null;
 };
 
+export type TaskLike = Partial<Task> & { id: string };
+
 type Props = {
-  task: Task;
+  task: TaskLike;
   right?: React.ReactNode;
   href?: string;
   onEdit?: (task: Task) => void;
   onDelete?: (id: string) => void;
   onStatusChange?: (id: string, status: 'none' | 'done' | 'tilde') => void;
 };
+
+// Normalize flexible shapes (Dashboard/Dailies may pass slimmer objects) into a full Task
+export function normalizeTaskLike(input: TaskLike): Task {
+  return {
+    id: input.id,
+    title: (input.title as string) || 'Untitled',
+    notes: input.notes as string | undefined,
+    estimatedDuration:
+      typeof input.estimatedDuration === 'number' ? input.estimatedDuration : undefined,
+    dueDate: (input.dueDate as string | null | undefined) ?? null,
+    createdAt: (input.createdAt as string) || new Date().toISOString(),
+    completed: !!input.completed,
+    started: !!input.started,
+    recurrence: (input.recurrence as string | null | undefined) ?? null,
+    completedAt: (input.completedAt as string | null | undefined) ?? null,
+  };
+}
 
 // Small helper to compute classes per status so intent is clear
 function getStatusClasses(isStarted: boolean, isDone: boolean) {
@@ -76,8 +95,9 @@ function formatDuration(minutes?: number) {
 }
 
 export default function TaskCard({ task, right, href, onEdit, onDelete, onStatusChange }: Props) {
-  const isDone = !!task.completed;
-  const isStarted = !!task.started && !isDone;
+  const t = normalizeTaskLike(task);
+  const isDone = !!t.completed;
+  const isStarted = !!t.started && !isDone;
 
   const {
     wrapper: bgClass,
@@ -110,25 +130,56 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
 
   const cycleStatus = () => {
     // debug/logging to verify handler is called in the browser
-    console.log('TaskCard: cycleStatus', { id: task.id, isStarted, isDone });
+    console.log('TaskCard: cycleStatus', { id: t.id, isStarted, isDone });
     if (!isStarted && !isDone) {
-      console.debug('TaskCard -> set started', task.id);
-      onStatusChange?.(task.id, 'tilde');
+      console.debug('TaskCard -> set started', t.id);
+      onStatusChange?.(t.id, 'tilde');
       return;
     }
     if (isStarted && !isDone) {
-      console.debug('TaskCard -> set done', task.id);
-      onStatusChange?.(task.id, 'done');
+      console.debug('TaskCard -> set done', t.id);
+      onStatusChange?.(t.id, 'done');
       return;
     }
-    console.debug('TaskCard -> clear status', task.id);
-    onStatusChange?.(task.id, 'none');
+    console.debug('TaskCard -> clear status', t.id);
+    onStatusChange?.(t.id, 'none');
   };
 
   const cardInner = (
     <div
       className={`${finalWrapper} relative z-10 rounded-md shadow-sm border ${borderClass} p-2 xl:p-4 transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
     >
+      {/* Status toggle button positioned top-left (keeps card padding intact) */}
+      <div className="absolute left-2 top-2 xl:left-4 xl:top-4 z-20">
+        <button
+          type="button"
+          aria-label="Toggle task status"
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            cycleStatus();
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.stopPropagation();
+              e.preventDefault();
+              cycleStatus();
+            }
+          }}
+          className={`${buttonClass}`}
+          title={isDone ? 'Clear status' : isStarted ? 'Mark done' : 'Mark in progress'}
+        >
+          {isDone ? (
+            <Check className={`h-4 w-4 ${iconClass}`} strokeWidth={2} />
+          ) : isStarted ? (
+            <span className={`text-sm font-bold ${iconClass}`}>∼</span>
+          ) : null}
+        </button>
+      </div>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center justify-between w-full">
@@ -138,48 +189,13 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
                   isDone ? 'line-through' : ''
                 }`}
               >
-                {task.title}
+                {t.title}
               </div>
-              {typeof task.estimatedDuration === 'number' && task.estimatedDuration > 0 && (
+              {typeof t.estimatedDuration === 'number' && t.estimatedDuration > 0 && (
                 <span className="text-sm text-base-content bg-base-200 px-2 py-0.5 rounded-full truncate ml-2">
-                  {formatDuration(task.estimatedDuration)}
+                  {formatDuration(t.estimatedDuration)}
                 </span>
               )}
-
-              <button
-                type="button"
-                aria-label="Toggle task status"
-                // handle pointerdown to prevent Link navigation handlers and respond immediately on tap
-                onPointerDown={(e) => {
-                  // stop propagation so the Link wrapper doesn't receive the pointer event
-                  e.stopPropagation();
-                  // prevent default on pointerdown so Link/anchor doesn't navigate or steal the click
-                  // we then call cycleStatus here so touch/mouse interactions are handled immediately
-                  e.preventDefault();
-                  cycleStatus();
-                }}
-                // keep click handler to swallow any remaining events
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                }}
-                onKeyDown={(e) => {
-                  // support keyboard activation (Enter / Space)
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    cycleStatus();
-                  }
-                }}
-                className={buttonClass}
-                title={isDone ? 'Clear status' : isStarted ? 'Mark done' : 'Mark in progress'}
-              >
-                {isDone ? (
-                  <Check className={`h-4 w-4 ${iconClass}`} strokeWidth={2} />
-                ) : isStarted ? (
-                  <span className={`text-sm font-bold ${iconClass}`}>∼</span>
-                ) : null}
-              </button>
             </div>
 
             <div className="flex items-center gap-3">
@@ -189,7 +205,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    onEdit(task);
+                    onEdit?.(t);
                   }}
                   className="cursor-pointer text-emerald-600 hover:text-emerald-600/80 btn-icon"
                   title="Edit"
@@ -204,7 +220,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    onDelete(task.id);
+                    onDelete?.(t.id);
                   }}
                   className="cursor-pointer text-red-600 hover:text-red-600/80 btn-icon"
                   title="Delete"
@@ -220,7 +236,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
           </div>
 
           {/* Show description/notes at xl+ */}
-          {task.notes && <div className="hidden xl:block text-sm  mt-3">{task.notes}</div>}
+          {t.notes && <div className="hidden xl:block text-sm  mt-3">{t.notes}</div>}
         </div>
       </div>
     </div>

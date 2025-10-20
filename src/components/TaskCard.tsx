@@ -8,6 +8,7 @@ export type Task = {
   id: string;
   title: string;
   notes?: string;
+  estimatedDuration?: number;
   dueDate?: string | null;
   createdAt: string;
   completed?: boolean;
@@ -63,6 +64,15 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
       'h-5 w-5 flex items-center justify-center rounded-md border-2 border-neutral-content/80 bg-neutral/80 text-neutral-content/80 text-sm cursor-pointer transition-colors duration-200',
     icon: 'text-neutral-content',
   };
+}
+
+function formatDuration(minutes?: number) {
+  if (!minutes || minutes <= 0) return '';
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
 }
 
 export default function TaskCard({ task, right, href, onEdit, onDelete, onStatusChange }: Props) {
@@ -130,6 +140,11 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
               >
                 {task.title}
               </div>
+              {typeof task.estimatedDuration === 'number' && task.estimatedDuration > 0 && (
+                <span className="text-sm text-base-content bg-base-200 px-2 py-0.5 rounded-full truncate ml-2">
+                  {formatDuration(task.estimatedDuration)}
+                </span>
+              )}
 
               <button
                 type="button"

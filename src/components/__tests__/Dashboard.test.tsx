@@ -56,10 +56,13 @@ describe('Dashboard modals', () => {
     fireEvent.click(newTaskBtn);
 
     // Modal should show 'Add New Task' header (allowCreateProject=false => Add New Task)
-    expect(screen.getByText(/add new task/i)).toBeTruthy();
+    const header = screen.getByRole('heading', { name: /add new task/i });
+    expect(header).toBeTruthy();
 
-    // Modal should show the Title label (inputs are not associated via for/id so check the label text)
-    expect(screen.getByText(/title/i)).toBeTruthy();
+    // Modal should show the Title label inside the modal form (scope search to avoid duplicate labels elsewhere)
+    const form = header.closest('form') ?? document.body;
+    const modal = within(form as HTMLElement);
+    expect(modal.getByText(/title/i)).toBeTruthy();
   });
 
   it('opens Add New Project modal when New Project clicked and shows new project input and Create task toggle', () => {

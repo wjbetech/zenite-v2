@@ -34,6 +34,9 @@ export default function DashboardTaskCard({
     id: (task.id as string) || 'unknown',
     title: (task.title as string) || 'Untitled',
     notes: task.notes as string | undefined,
+    // forward estimatedDuration when present so the DailyTaskCard can render it
+    estimatedDuration:
+      typeof task.estimatedDuration === 'number' ? task.estimatedDuration : undefined,
     completed: !!task.completed,
     started: !!task.started,
     href: undefined,

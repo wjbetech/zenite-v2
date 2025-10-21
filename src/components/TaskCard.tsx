@@ -74,7 +74,6 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
 
   const {
     wrapper: bgClass,
-    border: borderClass,
     buttonBase,
     buttonState,
     dot: dotClass,
@@ -120,11 +119,11 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
       role="article"
       aria-label={`Task ${task.title}`}
       tabIndex={0}
-      className={`${finalWrapper} relative z-10 rounded-md shadow-sm border ${borderClass} p-2 xl:p-4 transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
+      className={`${finalWrapper} relative z-10 rounded-lg shadow-sm border-2 border-base-content p-2 xl:p-4 transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
     >
       {/* Header: status left, actions right - align center for title/project/actions */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex items-baseline justify-between">
+        <div className="flex items-baseline gap-3">
           {/* Status button at top-left inside header */}
           <button
             type="button"
@@ -157,12 +156,12 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
             )}
           </button>
 
-          <div className="flex items-center">
+          <div className="flex items-baseline">
             <div className={`text-base md:text-md lg:text-lg font-medium ${textClass ?? ''}`}>
               <span className={`${textClass ?? ''}`}>{task.title}</span>
             </div>
             {/* show project or right content inline after title when provided */}
-            {right && <div className="ml-3 text-sm align-middle">{right}</div>}
+            {right && <div className="ml-3 text-sm align-baseline">{right}</div>}
           </div>
         </div>
 
@@ -200,17 +199,19 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
       </div>
 
       {/* Divider */}
-      <div className="my-3 border-t border-gray-200/40" />
+      <div className="my-3 -mx-2 xl:-mx-4 border-t border-gray-200/40" />
 
       {/* Description / notes */}
       {task.notes ? (
-        <div className={`text-sm mb-3 ${textClass ?? ''}`}>{task.notes}</div>
+        <div className={`text-sm mb-3 py-2 xl:py-4 ${textClass ?? ''}`}>{task.notes}</div>
       ) : (
-        <div className={`text-sm text-gray-400 mb-3 ${textClass ? '' : ''}`}>No description</div>
+        <div className={`text-sm text-gray-400 mb-3 py-2 xl:py-4 ${textClass ? '' : ''}`}>
+          No description
+        </div>
       )}
 
       {/* Divider */}
-      <div className="my-3 border-t border-gray-200/40" />
+      <div className="my-3 -mx-2 xl:-mx-4 border-t border-gray-200/40" />
 
       {/* Footer: due left, duration right */}
       <div className="flex items-center justify-between text-sm">

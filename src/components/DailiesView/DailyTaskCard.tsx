@@ -54,7 +54,7 @@ export default function DailyTaskCard({ task, onToggle, onEdit, onDelete }: Prop
       role="article"
       aria-label={`Task ${task.title}`}
       tabIndex={0}
-      className={`group flex items-center gap-4 p-3 rounded-lg shadow-sm transition-transform duration-150 ${classes.bg} ${classes.ring} hover:scale-[1.01] focus:scale-[1.01] focus:outline-none`}
+      className={`group flex items-center gap-4 p-3 rounded-xl shadow-sm border-2 border-base-content transition-transform duration-150 ${classes.bg} ${classes.ring} hover:scale-[1.01] focus:scale-[1.01] focus:outline-none`}
       style={{ boxSizing: 'border-box' }}
     >
       <button
@@ -84,8 +84,8 @@ export default function DailyTaskCard({ task, onToggle, onEdit, onDelete }: Prop
       </button>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between gap-3">
-          <div className={`flex items-center gap-2 min-w-0`}>
+        <div className="flex items-baseline justify-between gap-3">
+          <div className={`flex items-baseline gap-2 min-w-0`}>
             {/* Title and project pill are inline so the pill sits immediately after the title text */}
             <div className={`font-medium ${classes.text} break-words min-w-0`}>
               <span className="align-middle">{task.title}</span>
@@ -96,7 +96,7 @@ export default function DailyTaskCard({ task, onToggle, onEdit, onDelete }: Prop
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-baseline gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             {onEdit && (
               <button
                 aria-label="Edit task"
@@ -125,7 +125,9 @@ export default function DailyTaskCard({ task, onToggle, onEdit, onDelete }: Prop
         </div>
 
         {task.notes && (
-          <div className="text-sm text-muted-foreground break-words mt-1 pr-4">{task.notes}</div>
+          <div className="text-sm text-muted-foreground break-words mt-1 py-2 xl:py-4">
+            {task.notes}
+          </div>
         )}
       </div>
     </div>

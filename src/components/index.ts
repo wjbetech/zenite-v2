@@ -4,3 +4,4 @@ export { default as DiamondLogo } from './DiamondLogo';
 export { default as Sidebar } from './Sidebar';
 export { default as TaskCard } from './TaskCard';
 export { default as DailyTaskCard } from './DailiesView/DailyTaskCard';
+export { default as DashboardTaskCard } from './DashboardView/DashboardTaskCard';

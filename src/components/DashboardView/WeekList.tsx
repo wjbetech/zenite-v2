@@ -37,6 +37,7 @@ export default function WeekList({
   onDeleteById,
   onStatusChange,
 }: Props) {
+  const projects = useProjectStore((s) => s.projects);
   if (tasks.length === 0) {
     return (
       <TaskSection
@@ -65,6 +66,7 @@ export default function WeekList({
           notes: t.notes,
           started: !!t.started,
           completed: !!t.completed,
+          projectName: projects.find((p) => p.id === t.projectId)?.name,
         }))}
         onReorder={(next: Item[]) => {
           const idOrder = next.map((n) => n.id);
@@ -80,7 +82,6 @@ export default function WeekList({
               }
               onEdit={(task) => onEdit(task)}
               onDelete={(id: string) => onDeleteById(id)}
-              right={useProjectStore.getState().projects.find((p) => p.id === t.projectId)?.name}
             />
           </div>
         )}

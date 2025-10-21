@@ -1,7 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import TaskCard, { type Task } from './TaskCard';
+import useProjectStore from '../lib/projectStore';
+import TaskViewToggle from './TaskViewToggle';
 
 type TaskSectionProps = {
   title?: string;
@@ -28,6 +30,9 @@ export default function TaskSection({
   expanded = false,
   noInnerScroll = false,
 }: TaskSectionProps) {
+  const projects = useProjectStore((s) => s.projects);
+  const [view, setView] = useState<'full' | 'mini'>('full');
+
   return (
     <section className="">
       {title && (
@@ -35,6 +40,8 @@ export default function TaskSection({
           <span className={`inline-block border-b-4 ${accentClass} pb-0.5`}>{title}</span>
         </h2>
       )}
+      {/* Global view toggle shown above the first task */}
+      <TaskViewToggle value={view} onChange={(v) => setView(v)} />
       <div
         className={`transition-all duration-300 ease-in-out pt-2 pb-4 ${
           noInnerScroll ? 'overflow-visible' : 'overflow-x-visible'
@@ -45,18 +52,26 @@ export default function TaskSection({
       >
         <ul className="list-none space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6 max-w-full">
           {tasks.length === 0 && null}
-          {tasks.map((t) => (
-            <li key={t.id} className="px-1.5 sm:px-2">
-              <TaskCard
-                task={t as unknown as Task}
-                href={`/tasks/${t.id}`}
-                right={renderRight ? renderRight(t) : undefined}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onStatusChange={onStatusChange}
-              />
-            </li>
-          ))}
+          {tasks.map((t) => {
+            const projectName = projects.find((p) => p.id === t.projectId)?.name;
+            const taskWithProject = {
+              ...(t as Record<string, unknown>),
+              projectName,
+            } as unknown as Task;
+            return (
+              <li key={t.id} className="px-1.5 sm:px-2">
+                <TaskCard
+                  task={taskWithProject as unknown as Task}
+                  href={`/tasks/${t.id}`}
+                  right={renderRight ? renderRight(t) : undefined}
+                  view={view}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onStatusChange={onStatusChange}
+                />
+              </li>
+            );
+          })}
         </ul>
       </div>
     </section>

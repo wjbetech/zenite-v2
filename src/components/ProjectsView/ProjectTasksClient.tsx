@@ -55,6 +55,8 @@ export default function ProjectTasksClient({ projectId }: Props) {
           dueDate: t.dueDate ?? null,
           createdAt: t.createdAt,
           completed: !!t.completedAt,
+          // Bind the projectId so TaskSection / TaskCard can render the project badge
+          projectId,
         }));
         if (mounted) {
           setTasks(mapped);
@@ -74,33 +76,41 @@ export default function ProjectTasksClient({ projectId }: Props) {
     };
   }, [projectId]);
 
-  const handleStatusChange = useCallback(async (id: string, status: 'none' | 'done' | 'tilde') => {
-    const nowIso = new Date().toISOString();
-    const patch =
-      status === 'tilde'
-        ? { started: true, completed: false, completedAt: null }
-        : status === 'done'
-        ? { started: false, completed: true, completedAt: nowIso }
-        : { started: false, completed: false, completedAt: null };
+  const handleStatusChange = useCallback(
+    async (id: string, status: 'none' | 'done' | 'tilde') => {
+      const nowIso = new Date().toISOString();
+      const patch =
+        status === 'tilde'
+          ? { started: true, completed: false, completedAt: null }
+          : status === 'done'
+          ? { started: false, completed: true, completedAt: nowIso }
+          : { started: false, completed: false, completedAt: null };
 
-    try {
-      const updated = await api.updateTask({ id, ...patch });
-      const payload = updated as Partial<ApiTask> & { completed?: boolean; notes?: string | null };
-      const updatedTask: Task = {
-        id: payload.id ?? '',
-        title: payload.title ?? 'Untitled',
-        notes: payload.notes ?? undefined,
-        dueDate: payload.dueDate ?? null,
-        createdAt: payload.createdAt ?? new Date().toISOString(),
-        completed: !!payload.completed,
-        // ensure we also reflect the started flag returned by the API
-        started: !!(payload as unknown as { started?: boolean }).started,
-      };
-      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updatedTask } : t)));
-    } catch (err) {
-      console.error('ProjectTasksClient: failed to update task status', err);
-    }
-  }, []);
+      try {
+        const updated = await api.updateTask({ id, ...patch });
+        const payload = updated as Partial<ApiTask> & {
+          completed?: boolean;
+          notes?: string | null;
+        };
+        const updatedTask: Task = {
+          id: payload.id ?? '',
+          title: payload.title ?? 'Untitled',
+          notes: payload.notes ?? undefined,
+          dueDate: payload.dueDate ?? null,
+          createdAt: payload.createdAt ?? new Date().toISOString(),
+          completed: !!payload.completed,
+          // ensure we also reflect the started flag returned by the API
+          started: !!(payload as unknown as { started?: boolean }).started,
+          // preserve project context so TaskCard shows the connected project
+          projectId,
+        };
+        setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updatedTask } : t)));
+      } catch (err) {
+        console.error('ProjectTasksClient: failed to update task status', err);
+      }
+    },
+    [projectId],
+  );
 
   const handleDelete = useCallback(async (id: string) => {
     try {
@@ -122,26 +132,34 @@ export default function ProjectTasksClient({ projectId }: Props) {
     [tasks],
   );
 
-  const handleSave = useCallback(async (id: string, patch: Partial<Task>) => {
-    try {
-      const updated = await api.updateTask({ id, ...patch });
-      const payload = updated as Partial<ApiTask> & { notes?: string | null; completed?: boolean };
-      const updatedTask: Task = {
-        id: payload.id ?? id,
-        title: payload.title ?? 'Untitled',
-        notes: payload.notes ?? undefined,
-        dueDate: payload.dueDate ?? null,
-        createdAt: payload.createdAt ?? new Date().toISOString(),
-        completed: !!payload.completed,
-      };
-      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updatedTask } : t)));
-    } catch (err) {
-      console.error('ProjectTasksClient: failed to save edited task', err);
-    } finally {
-      setEditOpen(false);
-      setEditingTask(null);
-    }
-  }, []);
+  const handleSave = useCallback(
+    async (id: string, patch: Partial<Task>) => {
+      try {
+        const updated = await api.updateTask({ id, ...patch });
+        const payload = updated as Partial<ApiTask> & {
+          notes?: string | null;
+          completed?: boolean;
+        };
+        const updatedTask: Task = {
+          id: payload.id ?? id,
+          title: payload.title ?? 'Untitled',
+          notes: payload.notes ?? undefined,
+          dueDate: payload.dueDate ?? null,
+          createdAt: payload.createdAt ?? new Date().toISOString(),
+          completed: !!payload.completed,
+          // ensure project association remains for rendering
+          projectId,
+        };
+        setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updatedTask } : t)));
+      } catch (err) {
+        console.error('ProjectTasksClient: failed to save edited task', err);
+      } finally {
+        setEditOpen(false);
+        setEditingTask(null);
+      }
+    },
+    [projectId],
+  );
 
   if (loading) return <DataLoading label="Loading tasks…" variant="accent" />;
 

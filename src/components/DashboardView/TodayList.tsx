@@ -6,6 +6,7 @@ import NativeSortableDaily from '../NativeSortableDaily';
 import TaskCard from '../TaskCard';
 import type { Task } from '../../lib/taskStore';
 import useProjectStore from '../../lib/projectStore';
+
 import mergeReorderedSubset from '../../lib/task-reorder';
 
 type Item = {
@@ -36,6 +37,7 @@ export default function TodayList({
   onDeleteById,
   onStatusChange,
 }: Props) {
+  const projects = useProjectStore((s) => s.projects);
   if (tasks.length === 0) {
     return (
       <TaskSection
@@ -60,6 +62,7 @@ export default function TodayList({
           notes: t.notes,
           started: !!t.started,
           completed: !!t.completed,
+          projectName: projects.find((p) => p.id === t.projectId)?.name,
         }))}
         onReorder={(next: Item[]) => {
           const idOrder = next.map((n) => n.id);
@@ -75,7 +78,6 @@ export default function TodayList({
               }
               onEdit={(task) => onEdit(task)}
               onDelete={(id: string) => onDeleteById(id)}
-              right={useProjectStore.getState().projects.find((p) => p.id === t.projectId)?.name}
             />
           </div>
         )}

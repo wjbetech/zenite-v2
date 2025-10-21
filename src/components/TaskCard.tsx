@@ -3,19 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { Edit, Trash, Check, Play } from 'lucide-react';
-
-export type Task = {
-  id: string;
-  title: string;
-  notes?: string;
-  estimatedDuration?: number | null;
-  dueDate?: string | null;
-  createdAt: string;
-  completed?: boolean;
-  started?: boolean;
-  recurrence?: string | null;
-  completedAt?: string | null;
-};
+import type { Task } from '../lib/taskStore';
+export type { Task } from '../lib/taskStore';
 
 export type TaskLike = Partial<Task> & { id: string };
 
@@ -30,18 +19,19 @@ type Props = {
 
 // Normalize flexible shapes (Dashboard/Dailies may pass slimmer objects) into a full Task
 export function normalizeTaskLike(input: TaskLike | Task): Task {
+  const raw = input as Partial<Record<string, unknown>>;
+  const estimatedRaw = raw.estimatedDuration;
   return {
     id: input.id,
     title: (input.title as string) || 'Untitled',
-    notes: (input as any).notes as string | undefined,
-    estimatedDuration:
-      typeof (input as any).estimatedDuration === 'number' ? (input as any).estimatedDuration : undefined,
-    dueDate: (input as any).dueDate ?? null,
-    createdAt: (input as any).createdAt || new Date().toISOString(),
-    completed: !!(input as any).completed,
-    started: !!(input as any).started,
-    recurrence: (input as any).recurrence ?? null,
-    completedAt: (input as any).completedAt ?? null,
+    notes: (raw.notes as string | undefined) ?? undefined,
+    estimatedDuration: typeof estimatedRaw === 'number' ? (estimatedRaw as number) : undefined,
+    dueDate: (raw.dueDate as string | null | undefined) ?? null,
+    createdAt: (raw.createdAt as string) || new Date().toISOString(),
+    completed: raw.completed === true,
+    started: raw.started === true,
+    recurrence: (raw.recurrence as string | null | undefined) ?? null,
+    completedAt: (raw.completedAt as string | null | undefined) ?? null,
   };
 }
 

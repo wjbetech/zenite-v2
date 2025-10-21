@@ -80,9 +80,7 @@ export default function WeekList({
               }
               onEdit={(task) => onEdit(task)}
               onDelete={(id: string) => onDeleteById(id)}
-              right={
-                useProjectStore.getState().projects.find((p) => p.id === t.projectId)?.name
-              }
+              right={useProjectStore.getState().projects.find((p) => p.id === t.projectId)?.name}
             />
           </div>
         )}

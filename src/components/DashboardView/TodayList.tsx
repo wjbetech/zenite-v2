@@ -67,7 +67,7 @@ export default function TodayList({
           setTasks(merged);
         }}
         renderItem={(t: Item) => (
-            <div className="px-1.5 sm:px-2" key={t.id}>
+          <div className="px-1.5 sm:px-2" key={t.id}>
             <TaskCard
               task={t as unknown as { id: string } & Partial<Task>}
               onStatusChange={(id: string, status: 'none' | 'done' | 'tilde') =>
@@ -75,9 +75,7 @@ export default function TodayList({
               }
               onEdit={(task) => onEdit(task)}
               onDelete={(id: string) => onDeleteById(id)}
-              right={
-                useProjectStore.getState().projects.find((p) => p.id === t.projectId)?.name
-              }
+              right={useProjectStore.getState().projects.find((p) => p.id === t.projectId)?.name}
             />
           </div>
         )}

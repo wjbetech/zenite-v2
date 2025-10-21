@@ -50,22 +50,22 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
 
   if (isStarted && !isDone) {
     return {
-      wrapper: 'bg-accent/10 text-accent-content',
+      wrapper: 'bg-accent/10 border-accent',
       buttonBase:
         'flex items-center justify-center h-9 w-9 rounded-lg shrink-0 transition-colors cursor-pointer',
       buttonState: 'bg-accent text-accent-content',
       dot: 'bg-accent-content',
-      text: 'text-accent-content dark:text-accent',
+      text: '',
     };
   }
 
   return {
-    wrapper: 'bg-success/10 text-success-content',
+    wrapper: 'bg-success/10 border-success',
     buttonBase:
       'flex items-center justify-center h-9 w-9 rounded-lg shrink-0 transition-colors cursor-pointer',
     buttonState: 'bg-success text-success-content',
     dot: 'bg-success-content',
-    text: 'text-success-content dark:text-success',
+    text: '',
   };
 }
 
@@ -130,7 +130,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
       role="article"
       aria-label={`Task ${t.title}`}
       tabIndex={0}
-      className={`${finalWrapper} relative z-10 rounded-lg shadow-sm border-2 border-base-content p-2 xl:p-4 transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
+      className={`${finalWrapper} relative z-10 rounded-lg shadow-sm border-2  p-2 xl:p-4 transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
     >
       {/* Header: status left, title + duration + project, actions right (baseline aligned) */}
       <div className="flex items-baseline justify-between">
@@ -173,6 +173,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
 
             {typeof t.estimatedDuration === 'number' && t.estimatedDuration > 0 && (
               <span className="text-sm text-base-content bg-base-200 px-2 py-0.5 rounded-full truncate ml-2">
+                Duration:
                 {formatDuration(t.estimatedDuration)}
               </span>
             )}

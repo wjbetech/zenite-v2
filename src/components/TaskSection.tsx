@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import DashboardTaskCard from './DashboardView/DashboardTaskCard';
-import type { Task } from './TaskCard';
+import TaskCard, { type Task } from './TaskCard';
 
 type TaskSectionProps = {
   title?: string;
@@ -48,7 +47,7 @@ export default function TaskSection({
           {tasks.length === 0 && null}
           {tasks.map((t) => (
             <li key={t.id} className="px-1.5 sm:px-2">
-              <DashboardTaskCard
+              <TaskCard
                 task={t as unknown as Task}
                 href={`/tasks/${t.id}`}
                 right={renderRight ? renderRight(t) : undefined}

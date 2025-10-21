@@ -3,7 +3,7 @@
 import React from 'react';
 import TaskSection from '../TaskSection';
 import NativeSortableDaily from '../NativeSortableDaily';
-import DashboardTaskCard from './DashboardTaskCard';
+import TaskCard from '../TaskCard';
 import type { Task } from '../../lib/taskStore';
 import useProjectStore from '../../lib/projectStore';
 import mergeReorderedSubset from '../../lib/task-reorder';
@@ -67,15 +67,15 @@ export default function TodayList({
           setTasks(merged);
         }}
         renderItem={(t: Item) => (
-          <div className="px-1.5 sm:px-2" key={t.id}>
-            <DashboardTaskCard
-              task={t as unknown as Partial<Task>}
+            <div className="px-1.5 sm:px-2" key={t.id}>
+            <TaskCard
+              task={t as unknown as { id: string } & Partial<Task>}
               onStatusChange={(id: string, status: 'none' | 'done' | 'tilde') =>
                 onStatusChange(id, status)
               }
               onEdit={(task) => onEdit(task)}
               onDelete={(id: string) => onDeleteById(id)}
-              projectName={
+              right={
                 useProjectStore.getState().projects.find((p) => p.id === t.projectId)?.name
               }
             />

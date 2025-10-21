@@ -40,7 +40,8 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   if (!isStarted && !isDone) {
     return {
       wrapper: 'bg-base-200 text-base-content',
-      buttonBase: 'flex items-center justify-center h-9 w-9 rounded-lg shrink-0 transition-colors cursor-pointer',
+      buttonBase:
+        'flex items-center justify-center h-9 w-9 rounded-lg shrink-0 transition-colors cursor-pointer',
       buttonState: 'bg-white border',
       dot: 'bg-neutral',
       text: 'text-base-content',
@@ -50,7 +51,8 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   if (isStarted && !isDone) {
     return {
       wrapper: 'bg-accent/10 text-accent-content',
-      buttonBase: 'flex items-center justify-center h-9 w-9 rounded-lg shrink-0 transition-colors cursor-pointer',
+      buttonBase:
+        'flex items-center justify-center h-9 w-9 rounded-lg shrink-0 transition-colors cursor-pointer',
       buttonState: 'bg-accent text-accent-content',
       dot: 'bg-accent-content',
       text: 'text-accent-content dark:text-accent',
@@ -59,7 +61,8 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
 
   return {
     wrapper: 'bg-success/10 text-success-content',
-    buttonBase: 'flex items-center justify-center h-9 w-9 rounded-lg shrink-0 transition-colors cursor-pointer',
+    buttonBase:
+      'flex items-center justify-center h-9 w-9 rounded-lg shrink-0 transition-colors cursor-pointer',
     buttonState: 'bg-success text-success-content',
     dot: 'bg-success-content',
     text: 'text-success-content dark:text-success',
@@ -80,8 +83,13 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
   const isDone = !!t.completed;
   const isStarted = !!t.started && !isDone;
 
-  const { wrapper: bgClass, buttonBase, buttonState, dot: dotClass, text: textClass } =
-    getStatusClasses(isStarted, isDone);
+  const {
+    wrapper: bgClass,
+    buttonBase,
+    buttonState,
+    dot: dotClass,
+    text: textClass,
+  } = getStatusClasses(isStarted, isDone);
 
   // Detect stale completed one-off tasks
   let isStaleCompleted = false;
@@ -255,4 +263,3 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
     </div>
   );
 }
-

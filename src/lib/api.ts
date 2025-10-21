@@ -66,6 +66,7 @@ export type CreateTaskPayload = {
   description?: string;
   dueDate?: string | null;
   projectId?: string | null;
+  estimatedDuration?: number;
   recurrence?: string | null;
   started?: boolean;
   completed?: boolean;
@@ -86,6 +87,7 @@ export type UpdateTaskPayload = {
   notes?: string | null;
   description?: string | null;
   dueDate?: string | null;
+  estimatedDuration?: number | null;
   recurrence?: string | null;
   projectId?: string | null;
   ownerId?: string;

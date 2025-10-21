@@ -8,17 +8,19 @@ export type Task = {
   id: string;
   title: string;
   notes?: string;
+  estimatedDuration?: number | null;
   dueDate?: string | null;
   createdAt: string;
   completed?: boolean;
   started?: boolean;
   recurrence?: string | null;
   completedAt?: string | null;
-  estimatedDuration?: number | null;
 };
 
+export type TaskLike = Partial<Task> & { id: string };
+
 type Props = {
-  task: Task;
+  task: TaskLike | Task;
   right?: React.ReactNode;
   href?: string;
   onEdit?: (task: Task) => void;
@@ -26,18 +28,29 @@ type Props = {
   onStatusChange?: (id: string, status: 'none' | 'done' | 'tilde') => void;
 };
 
-// Small helper to compute classes per status so intent is clear
+// Normalize flexible shapes (Dashboard/Dailies may pass slimmer objects) into a full Task
+export function normalizeTaskLike(input: TaskLike | Task): Task {
+  return {
+    id: input.id,
+    title: (input.title as string) || 'Untitled',
+    notes: (input as any).notes as string | undefined,
+    estimatedDuration:
+      typeof (input as any).estimatedDuration === 'number' ? (input as any).estimatedDuration : undefined,
+    dueDate: (input as any).dueDate ?? null,
+    createdAt: (input as any).createdAt || new Date().toISOString(),
+    completed: !!(input as any).completed,
+    started: !!(input as any).started,
+    recurrence: (input as any).recurrence ?? null,
+    completedAt: (input as any).completedAt ?? null,
+  };
+}
+
+// Small helper to compute classes per status
 function getStatusClasses(isStarted: boolean, isDone: boolean) {
-  // Keep the token choices and sizing consistent with DailyTaskCard so
-  // the status control looks identical (button carries the color tokens
-  // and icons inherit color from the button).
   if (!isStarted && !isDone) {
     return {
       wrapper: 'bg-base-200 text-base-content',
-      border: 'border-transparent',
-      // base button shape (colors applied separately so icons inherit)
-      buttonBase:
-        'flex items-center justify-center h-9 w-9 rounded-lg shrink-0 transition-colors cursor-pointer',
+      buttonBase: 'flex items-center justify-center h-9 w-9 rounded-lg shrink-0 transition-colors cursor-pointer',
       buttonState: 'bg-white border',
       dot: 'bg-neutral',
       text: 'text-base-content',
@@ -47,45 +60,45 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   if (isStarted && !isDone) {
     return {
       wrapper: 'bg-accent/10 text-accent-content',
-      border: 'border-transparent',
-      buttonBase:
-        'flex items-center justify-center h-9 w-9 rounded-lg shrink-0 transition-colors cursor-pointer',
+      buttonBase: 'flex items-center justify-center h-9 w-9 rounded-lg shrink-0 transition-colors cursor-pointer',
       buttonState: 'bg-accent text-accent-content',
       dot: 'bg-accent-content',
       text: 'text-accent-content dark:text-accent',
     };
   }
 
-  // done (completed)
   return {
     wrapper: 'bg-success/10 text-success-content',
-    border: 'border-transparent',
-    buttonBase:
-      'flex items-center justify-center h-9 w-9 rounded-lg shrink-0 transition-colors cursor-pointer',
+    buttonBase: 'flex items-center justify-center h-9 w-9 rounded-lg shrink-0 transition-colors cursor-pointer',
     buttonState: 'bg-success text-success-content',
     dot: 'bg-success-content',
     text: 'text-success-content dark:text-success',
   };
 }
 
+function formatDuration(minutes?: number | null) {
+  if (!minutes || minutes <= 0) return '';
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+}
+
 export default function TaskCard({ task, right, href, onEdit, onDelete, onStatusChange }: Props) {
-  const isDone = !!task.completed;
-  const isStarted = !!task.started && !isDone;
+  const t = normalizeTaskLike(task as TaskLike);
+  const isDone = !!t.completed;
+  const isStarted = !!t.started && !isDone;
 
-  const {
-    wrapper: bgClass,
-    buttonBase,
-    buttonState,
-    dot: dotClass,
-    text: textClass,
-  } = getStatusClasses(isStarted, isDone);
+  const { wrapper: bgClass, buttonBase, buttonState, dot: dotClass, text: textClass } =
+    getStatusClasses(isStarted, isDone);
 
-  // Determine if this is a one-off completed task completed on a previous day
+  // Detect stale completed one-off tasks
   let isStaleCompleted = false;
   try {
-    if (task.completed && !(task.recurrence === 'daily' || task.recurrence === 'weekly')) {
-      if (task.completedAt) {
-        const comp = new Date(task.completedAt);
+    if (t.completed && !(t.recurrence === 'daily' || t.recurrence === 'weekly')) {
+      if (t.completedAt) {
+        const comp = new Date(t.completedAt);
         const now = new Date();
         if (
           comp.getFullYear() !== now.getFullYear() ||
@@ -104,27 +117,26 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
 
   const cycleStatus = () => {
     if (!isStarted && !isDone) {
-      onStatusChange?.(task.id, 'tilde');
+      onStatusChange?.(t.id, 'tilde');
       return;
     }
     if (isStarted && !isDone) {
-      onStatusChange?.(task.id, 'done');
+      onStatusChange?.(t.id, 'done');
       return;
     }
-    onStatusChange?.(task.id, 'none');
+    onStatusChange?.(t.id, 'none');
   };
 
   const cardInner = (
     <div
       role="article"
-      aria-label={`Task ${task.title}`}
+      aria-label={`Task ${t.title}`}
       tabIndex={0}
       className={`${finalWrapper} relative z-10 rounded-lg shadow-sm border-2 border-base-content p-2 xl:p-4 transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
     >
-      {/* Header: status left, actions right - align center for title/project/actions */}
+      {/* Header: status left, title + duration + project, actions right (baseline aligned) */}
       <div className="flex items-baseline justify-between">
         <div className="flex items-baseline gap-3">
-          {/* Status button at top-left inside header */}
           <button
             type="button"
             aria-label="Toggle task status"
@@ -158,9 +170,15 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
 
           <div className="flex items-baseline">
             <div className={`text-base md:text-md lg:text-lg font-medium ${textClass ?? ''}`}>
-              <span className={`${textClass ?? ''}`}>{task.title}</span>
+              <span className={`${textClass ?? ''}`}>{t.title}</span>
             </div>
-            {/* show project or right content inline after title when provided */}
+
+            {typeof t.estimatedDuration === 'number' && t.estimatedDuration > 0 && (
+              <span className="text-sm text-base-content bg-base-200 px-2 py-0.5 rounded-full truncate ml-2">
+                {formatDuration(t.estimatedDuration)}
+              </span>
+            )}
+
             {right && <div className="ml-3 text-sm align-baseline">{right}</div>}
           </div>
         </div>
@@ -172,7 +190,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                onEdit(task);
+                onEdit?.(t as Task);
               }}
               className="cursor-pointer text-emerald-600 hover:text-emerald-600/80 btn-icon"
               title="Edit"
@@ -187,7 +205,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                onDelete(task.id);
+                onDelete?.(t.id);
               }}
               className="cursor-pointer text-red-600 hover:text-red-600/80 btn-icon"
               title="Delete"
@@ -202,8 +220,8 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
       <div className="my-3 -mx-2 xl:-mx-4 border-t border-gray-200/40" />
 
       {/* Description / notes */}
-      {task.notes ? (
-        <div className={`text-sm mb-3 py-2 xl:py-4 ${textClass ?? ''}`}>{task.notes}</div>
+      {t.notes ? (
+        <div className={`text-sm mb-3 py-2 xl:py-4 ${textClass ?? ''}`}>{t.notes}</div>
       ) : (
         <div className={`text-sm text-gray-400 mb-3 py-2 xl:py-4 ${textClass ? '' : ''}`}>
           No description
@@ -216,11 +234,11 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
       {/* Footer: due left, duration right */}
       <div className="flex items-center justify-between text-sm">
         <div className={`text-left text-sm ${textClass ?? ''}`}>
-          {task.dueDate ? new Date(task.dueDate).toLocaleString() : 'No due date'}
+          {t.dueDate ? new Date(t.dueDate).toLocaleString() : 'No due date'}
         </div>
         <div className={`text-right text-sm ${textClass ?? ''}`}>
           {(() => {
-            const estimated: number | undefined = task.estimatedDuration ?? undefined;
+            const estimated: number | undefined = t.estimatedDuration ?? undefined;
             if (typeof estimated === 'number' && estimated > 0) {
               const h = Math.floor(estimated / 60);
               const m = estimated % 60;
@@ -247,3 +265,4 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
     </div>
   );
 }
+

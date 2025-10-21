@@ -12,6 +12,7 @@ export type DailyTask = {
   started?: boolean;
   href?: string;
   projectName?: string;
+  estimatedDuration?: number;
 };
 
 type Props = {
@@ -48,6 +49,20 @@ function statusClasses(task: DailyTask) {
 
 export default function DailyTaskCard({ task, onToggle, onEdit, onDelete }: Props) {
   const classes = statusClasses(task);
+
+  // DEV: log incoming task to help diagnose missing estimatedDuration in UI
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug('DailyTaskCard task prop', task);
+  }
+
+  function formatDuration(minutes?: number) {
+    if (!minutes || minutes <= 0) return '';
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    if (h > 0 && m > 0) return `${h}h ${m}m`;
+    if (h > 0) return `${h}h`;
+    return `${m}m`;
+  }
 
   const card = (
     <div
@@ -94,6 +109,12 @@ export default function DailyTaskCard({ task, onToggle, onEdit, onDelete }: Prop
                   {task.projectName}
                 </span>
               )}
+              {/* If parent passed an estimatedDuration prop (not common for daily card), show it */}
+              {typeof task.estimatedDuration === 'number' && task.estimatedDuration > 0 && (
+                <span className="text-sm text-base-content bg-base-200 px-2 py-0.5 rounded-full truncate ml-2 align-middle">
+                  {formatDuration(task.estimatedDuration)}
+                </span>
+              )}
             </div>
           </div>
           <div className="flex items-baseline gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -129,6 +150,9 @@ export default function DailyTaskCard({ task, onToggle, onEdit, onDelete }: Prop
             {task.notes}
           </div>
         )}
+        <div className="mt-4 font-sm">
+          <p>Duration: {task.estimatedDuration}</p>
+        </div>
       </div>
     </div>
   );

@@ -45,31 +45,36 @@ model User {
 }
 
 model Task {
-  id            String       @id @default(uuid())
-  title         String
-  description   String?
-  status        TaskStatus   @default(TODO)
-  priority      Priority     @default(MEDIUM)
-  dueDate       DateTime?
-  startsAt      DateTime?
-  completedAt   DateTime?
-  estimateMins  Int?
-  timeSpentMins Int?
-  recurrence    String?
-  ownerId       String
-  owner         User         @relation("TaskOwner", fields: [ownerId], references: [id])
-  tags          Tag[]
-  comments      Comment[]
-  attachments   Attachment[]
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  deletedAt     DateTime?
-  projectId     String?
-  project       Project?     @relation("ProjectTasks", fields: [projectId], references: [id])
+  id                String       @id @default(uuid())
+  title             String
+  description       String?
+  status            TaskStatus   @default(TODO)
+  priority          Priority     @default(MEDIUM)
+  dueDate           DateTime?
+  startsAt          DateTime?
+  completedAt       DateTime?
+  // estimated duration in minutes (optional)
+  estimatedDuration Int?
+  // optional time by which the task should be completed (date + time)
+  dueTime           DateTime?
+  estimateMins      Int?
+  timeSpentMins     Int?
+  recurrence        String?
+  ownerId           String
+  owner             User         @relation("TaskOwner", fields: [ownerId], references: [id])
+  tags              Tag[]
+  comments          Comment[]
+  attachments       Attachment[]
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  deletedAt         DateTime?
+  projectId         String?
+  project           Project?     @relation("ProjectTasks", fields: [projectId], references: [id])
 
   @@index([ownerId])
   @@index([status])
   @@index([dueDate])
+  @@index([dueTime])
 }
 
 model Tag {

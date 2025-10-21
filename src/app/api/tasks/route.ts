@@ -10,6 +10,7 @@ type SerializableTask = {
   id: string;
   title: string;
   notes?: string;
+  estimatedDuration?: number;
   dueDate?: string | null;
   recurrence?: string | null;
   createdAt: string;
@@ -39,6 +40,8 @@ function serializeTask(task: PrismaTask): SerializableTask {
     id: task.id,
     title: task.title,
     notes: task.description ?? undefined,
+    estimatedDuration:
+      typeof task.estimatedDuration === 'number' ? task.estimatedDuration : undefined,
     dueDate: task.dueDate ? new Date(task.dueDate).toISOString() : null,
     recurrence: task.recurrence ?? null,
     createdAt: new Date(task.createdAt).toISOString(),
@@ -116,6 +119,9 @@ export async function POST(request: Request) {
         title,
         description: notes,
         ownerId,
+        estimatedDuration: Number.isFinite(Number(body.estimatedDuration))
+          ? Number(body.estimatedDuration)
+          : undefined,
         recurrence,
         dueDate: dueDate ?? null,
         status: statusFromFlags({ started, completed }),
@@ -252,6 +258,17 @@ export async function PATCH(request: Request) {
   if ('completedAt' in body) {
     const completedAt = parseDate(body.completedAt);
     data.completedAt = completedAt === undefined ? null : completedAt;
+  }
+
+  if ('estimatedDuration' in body) {
+    // allow null to explicitly clear the duration
+    if (body.estimatedDuration === null) {
+      data.estimatedDuration = null;
+    } else if (Number.isFinite(Number(body.estimatedDuration))) {
+      data.estimatedDuration = Number(body.estimatedDuration);
+    } else {
+      // ignore invalid values
+    }
   }
 
   if (shouldUpdateStatus) {

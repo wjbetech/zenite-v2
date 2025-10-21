@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import DailyTaskCard, { DailyTask } from '../DailiesView/DailyTaskCard';
+import TaskCard, { type Task as CanonicalTask } from '../TaskCard';
 import type { Task } from '../../lib/taskStore';
 import useProjectStore from '../../lib/projectStore';
 
@@ -18,7 +18,6 @@ type Props = {
   projectName?: string;
 };
 
-// Small adapter that maps the Task shape used by Dashboard -> DailyTaskCard
 export default function DashboardTaskCard({
   task,
   onEdit,
@@ -26,43 +25,33 @@ export default function DashboardTaskCard({
   onStatusChange,
   projectName: incomingProjectName,
 }: Props) {
-  // derive linked project (subscribe to store so name updates are reflected)
   const linkedProject = useProjectStore((s) =>
     task.projectId ? s.projects.find((p) => p.id === task.projectId) : undefined,
   );
-  const dt: DailyTask = {
-    id: (task.id as string) || 'unknown',
-    title: (task.title as string) || 'Untitled',
+
+  const raw = task as Partial<Record<string, unknown>>;
+  const mapped: CanonicalTask = {
+    id: String(task.id ?? 'unknown'),
+    title: String(task.title ?? 'Untitled'),
     notes: task.notes as string | undefined,
+    createdAt: typeof task.createdAt === 'string' ? task.createdAt : new Date().toISOString(),
     completed: !!task.completed,
     started: !!task.started,
-    href: undefined,
-    // forward projectName prop from parent if provided; otherwise resolve via projectId
-    projectName:
-      incomingProjectName ?? task.projectName ?? (linkedProject ? linkedProject.name : undefined),
-  };
-
-  const handleToggle = (id: string) => {
-    // cycle same as TaskCard/Other handlers: none -> started -> done -> none
-    if (!task.started && !task.completed) {
-      onStatusChange?.(id, 'tilde');
-      return;
-    }
-    if (task.started && !task.completed) {
-      onStatusChange?.(id, 'done');
-      return;
-    }
-    onStatusChange?.(id, 'none');
+    dueDate: typeof task.dueDate === 'string' ? (task.dueDate as string) : null,
+    recurrence: typeof task.recurrence === 'string' ? (task.recurrence as string) : null,
+    completedAt: null,
+    estimatedDuration: typeof raw.estimatedDuration === 'number' ? (raw.estimatedDuration as number) : undefined,
   };
 
   return (
     <div className="flex items-start justify-between">
       <div className="flex-1">
-        <DailyTaskCard
-          task={dt}
-          onToggle={handleToggle}
+        <TaskCard
+          task={mapped}
+          right={incomingProjectName ?? task.projectName ?? (linkedProject ? linkedProject.name : undefined)}
           onEdit={() => onEdit?.(task)}
           onDelete={(id) => onDelete?.(id)}
+          onStatusChange={(id: string, status) => onStatusChange?.(id, status)}
         />
       </div>
     </div>

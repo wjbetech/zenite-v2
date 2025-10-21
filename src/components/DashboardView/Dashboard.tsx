@@ -14,6 +14,7 @@ import useTaskStore from '../../lib/taskStore';
 import { buildActivityFrom, TaskLike } from '../../lib/activityUtils';
 import ConfirmDeleteModal from '../modals/ConfirmDeleteModal';
 import TaskModal from '../modals/TaskModal';
+import EditTaskModal from '../modals/EditTaskModal';
 import { useState, useEffect, useRef } from 'react';
 import useScrollableTabs from '../../hooks/useScrollableTabs';
 import { daysUntil } from '../../lib/date-utils';
@@ -72,6 +73,8 @@ export default function Dashboard() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Task> | undefined>(undefined);
+  // editTask holds a full Task when an existing task is being edited via EditTaskModal
+  const [editTask, setEditTask] = useState<Task | null>(null);
   const [deleting, setDeleting] = useState<Task | null>(null);
   const [modalMode, setModalMode] = useState<'task' | 'project'>('task');
   // view state moved into useDashboardTabs hook
@@ -92,8 +95,6 @@ export default function Dashboard() {
   // derive `all` directly from the store to preserve the global ordering
   // (storeTasks is the canonical ordered list; use it as the source of truth)
   const all = [...storeTasks].slice(0, 50);
-  // heatmap controls layout; we no longer vary the item cap per-section
-
   const newTasks = [...all].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
@@ -101,15 +102,12 @@ export default function Dashboard() {
     .filter((t) => t.dueDate)
     .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
   // Include daily recurrence tasks in Today and This Week views.
-  // Use the canonical `all` ordering and filter so we don't introduce duplicates
-  // or change the store ordering.
   const today = [...all].filter((t) => {
     const isDaily = (t.recurrence ?? 'once') === 'daily';
     if (isDaily) return true;
     if (!t.dueDate) return false;
     return daysUntil(t.dueDate) === 0;
   });
-
   const week = [...all].filter((t) => {
     const isDaily = (t.recurrence ?? 'once') === 'daily';
     if (isDaily) return true;
@@ -117,6 +115,11 @@ export default function Dashboard() {
     const days = daysUntil(t.dueDate);
     return days >= 0 && days <= 6; // this week including today
   });
+
+  const handleEditSave = (id: string, patch: Partial<Task>) => {
+    void updateTask(id, patch);
+    setEditTask(null);
+  };
 
   // Dev-only diagnostics: guard logs out during tests to keep test output clean
   useEffect(() => {
@@ -286,8 +289,10 @@ export default function Dashboard() {
                       tasks={soonest}
                       heatmapOpen={heatmapOpen}
                       onEdit={(t: Partial<Task>) => {
-                        setEditing(t);
-                        setModalOpen(true);
+                        const id = t?.id;
+                        if (!id) return;
+                        const found = storeTasks.find((x) => x.id === id) ?? null;
+                        if (found) setEditTask(found);
                       }}
                       onDeleteById={(id: string) => {
                         const found = storeTasks.find((x) => x.id === id) ?? null;
@@ -303,8 +308,10 @@ export default function Dashboard() {
                     tasks={newTasks}
                     heatmapOpen={heatmapOpen}
                     onEdit={(t: Partial<Task>) => {
-                      setEditing(t);
-                      setModalOpen(true);
+                      const id = t?.id;
+                      if (!id) return;
+                      const found = storeTasks.find((x) => x.id === id) ?? null;
+                      if (found) setEditTask(found);
                     }}
                     onDeleteById={(id: string) => {
                       const found = storeTasks.find((x) => x.id === id) ?? null;
@@ -321,8 +328,10 @@ export default function Dashboard() {
                     storeTasks={storeTasks}
                     setTasks={setTasks}
                     onEdit={(t: Partial<Task>) => {
-                      setEditing(t);
-                      setModalOpen(true);
+                      const id = t?.id;
+                      if (!id) return;
+                      const found = storeTasks.find((x) => x.id === id) ?? null;
+                      if (found) setEditTask(found);
                     }}
                     onDeleteById={(id: string) => deleteTask(id)}
                     onStatusChange={handleStatusChange}
@@ -336,8 +345,10 @@ export default function Dashboard() {
                     storeTasks={storeTasks}
                     setTasks={setTasks}
                     onEdit={(t: Partial<Task>) => {
-                      setEditing(t);
-                      setModalOpen(true);
+                      const id = t?.id;
+                      if (!id) return;
+                      const found = storeTasks.find((x) => x.id === id) ?? null;
+                      if (found) setEditTask(found);
                     }}
                     onDeleteById={(id: string) => {
                       const found = storeTasks.find((x) => x.id === id) ?? null;
@@ -375,6 +386,14 @@ export default function Dashboard() {
         }}
         initial={editing}
         allowCreateProject={modalMode === 'project'}
+      />
+      <EditTaskModal
+        open={!!editTask}
+        onOpenChange={(v) => !v && setEditTask(null)}
+        task={editTask}
+        onSave={(id, patch) => {
+          handleEditSave(id, patch);
+        }}
       />
       <ConfirmDeleteModal
         open={!!deleting}

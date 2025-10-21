@@ -8,6 +8,7 @@ export type Task = {
   id: string;
   title: string;
   notes?: string;
+  estimatedDuration?: number;
   dueDate?: string | null;
   recurrence?: string | null;
   createdAt: string;
@@ -21,6 +22,7 @@ export type Task = {
 export type CreateTaskInput = {
   title: string;
   notes?: string;
+  estimatedDuration?: number;
   dueDate?: string | null;
   recurrence?: string | null;
   projectId?: string | null;
@@ -50,6 +52,12 @@ const mapRemoteTask = (remote: Record<string, unknown>): Task => ({
   id: (remote.id as string) ?? '',
   title: (remote.title as string) ?? 'Untitled',
   notes: (remote.notes as string) ?? undefined,
+  estimatedDuration: (() => {
+    const v = remote.estimatedDuration;
+    if (typeof v === 'number') return v as number;
+    if (typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v))) return Number(v);
+    return undefined;
+  })(),
   dueDate: (remote.dueDate as string | null | undefined) ?? null,
   recurrence: (remote.recurrence as string | null | undefined) ?? null,
   createdAt: (remote.createdAt as string) ?? new Date().toISOString(),
@@ -89,6 +97,7 @@ const useTaskStore = create<State>((set, get) => ({
     const requestPayload = {
       title: sanitizeTitle(payload.title),
       description: sanitizeDescription(payload.notes || ''),
+      estimatedDuration: payload.estimatedDuration,
       dueDate: payload.dueDate ?? null,
       recurrence: payload.recurrence ?? null,
       projectId: payload.projectId ?? null,
@@ -115,6 +124,9 @@ const useTaskStore = create<State>((set, get) => ({
     if (patch.notes !== undefined) {
       payload.notes = sanitizeDescription(patch.notes as string);
       payload.description = sanitizeDescription(patch.notes as string);
+    }
+    if (patch.estimatedDuration !== undefined) {
+      payload.estimatedDuration = patch.estimatedDuration ?? null;
     }
     if (patch.dueDate !== undefined) {
       payload.dueDate = patch.dueDate;

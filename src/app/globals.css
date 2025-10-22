@@ -99,8 +99,8 @@ a {
 
 body {
   min-height: 100vh;
-  /* Allow scrollbars to appear only when necessary while keeping layout width stable. */
-  overflow-y: auto;
+  /* Always reserve vertical scrollbar space to avoid layout shifts when modals open. */
+  overflow-y: scroll;
 }
 
 /* Glassmorphism utilities for navbar and small cards. */

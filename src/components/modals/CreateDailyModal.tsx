@@ -21,12 +21,16 @@ export default function CreateDailyModal({ open, onOpenChange, onCreated }: Prop
   const [title, setTitle] = React.useState('');
   const [notes, setNotes] = React.useState('');
   const [projectId, setProjectId] = React.useState<string | 'none'>('none');
+  const [durationHours, setDurationHours] = React.useState<string>('');
+  const [durationMinutes, setDurationMinutes] = React.useState<string>('');
 
   React.useEffect(() => {
     if (!open) {
       setTitle('');
       setNotes('');
       setProjectId('none');
+      setDurationHours('');
+      setDurationMinutes('');
     }
   }, [open]);
 
@@ -35,6 +39,15 @@ export default function CreateDailyModal({ open, onOpenChange, onCreated }: Prop
     const payload = {
       title: sanitizeTitle(title || 'Untitled Daily'),
       notes: sanitizeDescription(notes || '') || undefined,
+      // parse duration fields into minutes if provided
+      estimatedDuration: (() => {
+        const hh = durationHours === '' ? 0 : Number(durationHours);
+        const mm = durationMinutes === '' ? 0 : Number(durationMinutes);
+        if (!Number.isFinite(hh) || !Number.isFinite(mm)) return undefined;
+        if (hh < 0 || mm < 0 || mm >= 60) return undefined;
+        const total = hh * 60 + mm;
+        return total > 0 ? total : undefined;
+      })(),
       recurrence: 'daily',
       projectId: projectId === 'none' ? null : projectId,
     };
@@ -46,12 +59,38 @@ export default function CreateDailyModal({ open, onOpenChange, onCreated }: Prop
       console.error('CreateDailyModal: failed to create daily task', err);
     }
   };
+  const boxRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onOpenChange(false);
+    };
+    const onDocMouse = (e: MouseEvent) => {
+      if (!open) return;
+      const el = boxRef.current;
+      const target = e.target as Node | null;
+      if (el && target && !el.contains(target)) {
+        onOpenChange(false);
+      }
+    };
+
+    window.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onDocMouse);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onDocMouse);
+    };
+  }, [open, onOpenChange]);
 
   if (!open) return null;
 
   return (
     <div className="modal modal-open" aria-hidden={!open} role="dialog" aria-modal="true">
-      <div className="modal-box w-11/12 max-w-md">
+      <div
+        ref={boxRef}
+        className="modal-box w-11/12 max-w-md"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <h3 className="font-bold text-lg">Create Daily Task</h3>
         <form onSubmit={submit} className="mt-4">
           <label className="label">
@@ -104,6 +143,35 @@ export default function CreateDailyModal({ open, onOpenChange, onCreated }: Prop
               </option>
             ))}
           </select>
+
+          <div className="flex flex-row align-middle py-4 gap-2 items-center">
+            <label className="label">
+              <span className="label-text align-middle">Estimated duration (hours / minutes)</span>
+            </label>
+            <div className="flex flex-row gap-2 w-full items-center">
+              <input
+                type="number"
+                min={0}
+                step={1}
+                className="input input-bordered rounded-md w-full items-center text-right"
+                value={durationHours}
+                onChange={(e) => setDurationHours(e.target.value)}
+                aria-label="Estimated duration hours"
+                placeholder="0"
+              />
+              <input
+                type="number"
+                min={0}
+                max={59}
+                step={1}
+                className="input input-bordered rounded-md w-full items-center text-right"
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(e.target.value)}
+                aria-label="Estimated duration minutes"
+                placeholder="0"
+              />
+            </div>
+          </div>
 
           <div className="modal-action mt-4">
             <button

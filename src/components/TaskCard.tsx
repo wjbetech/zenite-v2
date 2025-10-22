@@ -2,86 +2,163 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Edit, Trash, Check } from 'lucide-react';
+import { Edit, Trash, Check, Play, Circle, ChevronDown, ChevronUp } from 'lucide-react';
+import type { Task } from '../lib/taskStore';
+export type { Task } from '../lib/taskStore';
 
-export type Task = {
-  id: string;
-  title: string;
-  notes?: string;
-  dueDate?: string | null;
-  createdAt: string;
-  completed?: boolean;
-  started?: boolean;
-  recurrence?: string | null;
-  completedAt?: string | null;
-};
+export type TaskLike = Partial<Task> & { id: string };
 
 type Props = {
-  task: Task;
+  task: TaskLike | Task;
   right?: React.ReactNode;
   href?: string;
   onEdit?: (task: Task) => void;
   onDelete?: (id: string) => void;
   onStatusChange?: (id: string, status: 'none' | 'done' | 'tilde') => void;
+  view?: 'full' | 'mini';
 };
 
-// Small helper to compute classes per status so intent is clear
+// Normalize flexible shapes (Dashboard/Dailies may pass slimmer objects) into a full Task
+export function normalizeTaskLike(input: TaskLike | Task): Task {
+  const raw = input as Partial<Record<string, unknown>>;
+  const estimatedRaw = raw.estimatedDuration;
+  return {
+    id: input.id,
+    title: (input.title as string) || 'Untitled',
+    notes: (raw.notes as string | undefined) ?? undefined,
+    estimatedDuration: typeof estimatedRaw === 'number' ? (estimatedRaw as number) : undefined,
+    dueDate: (raw.dueDate as string | null | undefined) ?? null,
+    createdAt: (raw.createdAt as string) || new Date().toISOString(),
+    completed: raw.completed === true,
+    started: raw.started === true,
+    recurrence: (raw.recurrence as string | null | undefined) ?? null,
+    completedAt: (raw.completedAt as string | null | undefined) ?? null,
+  };
+}
+
+// Small helper to compute classes per status
 function getStatusClasses(isStarted: boolean, isDone: boolean) {
-  // detect stale completed one-off tasks (completed on a previous day and not recurring)
-  // the caller may set isStarted/isDone; we'll also inspect the task passed in outer scope
-  // default: base (not started)
   if (!isStarted && !isDone) {
     return {
-      // subtle neutral card for unstarted tasks
-      wrapper: 'bg-gray-300 text-neutral',
-      border: 'border-neutral-content',
-      // status box: transparent background with soft border
-      button:
-        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-neutral text-neutral text-sm cursor-pointer transition-colors duration-200',
-      icon: 'text-neutral',
+      wrapper: 'bg-base-200 text-base-content',
+      buttonBase:
+        'flex items-center justify-center h-7 w-7 rounded-lg shrink-0 transition-colors cursor-pointer',
+      buttonState: 'bg-white border',
+      dot: 'bg-neutral',
+      text: 'text-base-content',
     };
   }
 
   if (isStarted && !isDone) {
     return {
-      // stronger primary tint to indicate in-progress
-      wrapper: 'bg-accent text-accent-content',
-      border: 'border-neutral-content',
-      // status box: filled primary color for clear affordance
-      button:
-        'h-5 w-5 flex items-center justify-center rounded-md border-2 border-accent-content bg-transparent text-info text-sm cursor-pointer transition-colors duration-200',
-      icon: 'text-accent-content',
+      wrapper: 'bg-accent/40',
+      buttonBase:
+        'flex items-center justify-center h-7 w-7 rounded-lg shrink-0 transition-colors cursor-pointer',
+      // solid accent background for started state
+      buttonState: 'bg-accent text-accent-content border-0',
+      dot: 'bg-accent-content',
+      text: '',
     };
   }
 
-  // done
   return {
-    // completed tasks get a darker muted background with inverted icon
-    wrapper: 'bg-gray-500/70 text-gray-500',
-    border: 'border-neutral-content',
-    button:
-      'h-5 w-5 flex items-center justify-center rounded-md border-2 border-neutral-content/80 bg-neutral/80 text-neutral-content/80 text-sm cursor-pointer transition-colors duration-200',
-    icon: 'text-neutral-content',
+    wrapper: 'bg-success/40',
+    buttonBase:
+      'flex items-center justify-center h-7 w-7 rounded-lg shrink-0 transition-colors cursor-pointer',
+    buttonState: 'bg-success text-success-content',
+    dot: 'bg-success-content',
+    text: '',
   };
 }
 
-export default function TaskCard({ task, right, href, onEdit, onDelete, onStatusChange }: Props) {
-  const isDone = !!task.completed;
-  const isStarted = !!task.started && !isDone;
+function formatDuration(minutes?: number | null) {
+  if (!minutes || minutes <= 0) return '';
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+}
+
+export default function TaskCard({
+  task,
+  right,
+  href,
+  onEdit,
+  onDelete,
+  onStatusChange,
+  view = 'full',
+}: Props) {
+  const t = normalizeTaskLike(task as TaskLike);
+
+  // Local expand state allows a single task to open its full view when the
+  // global view toggle is set to 'mini'. We show the chevron when the card
+  // can be expanded (global mini) or when it is currently expanded.
+  const [localExpanded, setLocalExpanded] = React.useState(false);
+  const effectiveFull = view === 'full' || localExpanded;
+  // If the task becomes started (in-progress) from external updates, auto-expand
+  React.useEffect(() => {
+    if (t.started) setLocalExpanded(true);
+  }, [t.started]);
+  // Try to derive a connected project's display name from flexible shapes that
+  // might include projectName or a nested project object. Fall back to
+  // projectId when nothing else is available.
+  const rawUnknown = task as unknown;
+  const asRecord =
+    typeof rawUnknown === 'object' && rawUnknown !== null
+      ? (rawUnknown as Record<string, unknown>)
+      : {};
+  const projectIdOrNull = t.projectId as string | null | undefined;
+  let projectName: string | undefined = undefined;
+  if (typeof asRecord.projectName === 'string') {
+    projectName = asRecord.projectName;
+  } else if (
+    asRecord.project &&
+    typeof (asRecord.project as Record<string, unknown>).name === 'string'
+  ) {
+    projectName = (asRecord.project as Record<string, unknown>).name as string;
+  } else if (typeof projectIdOrNull === 'string') {
+    projectName = projectIdOrNull;
+  }
+
+  // Fallback: if caller passed the project name via the `right` prop (legacy
+  // callers sometimes used `right` for this), prefer that as the display name
+  // so Dashboard consumers who still supply `right` will render correctly.
+  if (!projectName && typeof right === 'string' && right.trim().length > 0) {
+    projectName = right;
+  }
+
+  // (previously rendered initials) we now render the full project name pill below
+  const isDone = !!t.completed;
+  const isStarted = !!t.started && !isDone;
 
   const {
     wrapper: bgClass,
-    border: borderClass,
-    button: buttonClass,
-    icon: iconClass,
+    buttonBase,
+    buttonState,
+    dot: dotClass,
+    text: textClass,
   } = getStatusClasses(isStarted, isDone);
 
-  // Determine if this is a one-off completed task completed on a previous day
+  // Map the small-dot background class (e.g. 'bg-neutral') to a text color
+  // class for the icon (e.g. 'text-neutral'). For the unstarted state
+  // (bg-neutral -> white button) we prefer a higher-contrast 'text-base-content'.
+  let iconColorClass = 'text-base-content';
+  if (typeof dotClass === 'string') {
+    if (dotClass === 'bg-neutral') {
+      // Use pure black for maximum contrast on white buttons
+      iconColorClass = 'text-black';
+    } else {
+      iconColorClass = dotClass.replace(/^bg-/, 'text-');
+    }
+  }
+
+  // Detect stale completed one-off tasks
   let isStaleCompleted = false;
   try {
-    if (task.completed && !(task.recurrence === 'daily' || task.recurrence === 'weekly')) {
-      if (task.completedAt) {
-        const comp = new Date(task.completedAt);
+    if (t.completed && !(t.recurrence === 'daily' || t.recurrence === 'weekly')) {
+      if (t.completedAt) {
+        const comp = new Date(t.completedAt);
         const now = new Date();
         if (
           comp.getFullYear() !== now.getFullYear() ||
@@ -99,113 +176,179 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
   const finalWrapper = isStaleCompleted ? 'bg-red-500/20 text-red-700' : bgClass;
 
   const cycleStatus = () => {
-    // debug/logging to verify handler is called in the browser
-    console.log('TaskCard: cycleStatus', { id: task.id, isStarted, isDone });
     if (!isStarted && !isDone) {
-      console.debug('TaskCard -> set started', task.id);
-      onStatusChange?.(task.id, 'tilde');
+      onStatusChange?.(t.id, 'tilde');
+      // optimistically expand the card when the user marks it in-progress
+      setLocalExpanded(true);
       return;
     }
     if (isStarted && !isDone) {
-      console.debug('TaskCard -> set done', task.id);
-      onStatusChange?.(task.id, 'done');
+      onStatusChange?.(t.id, 'done');
       return;
     }
-    console.debug('TaskCard -> clear status', task.id);
-    onStatusChange?.(task.id, 'none');
+    onStatusChange?.(t.id, 'none');
   };
 
   const cardInner = (
     <div
-      className={`${finalWrapper} relative z-10 rounded-md shadow-sm border ${borderClass} p-2 xl:p-4 transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
+      role="article"
+      aria-label={`Task ${t.title}`}
+      tabIndex={0}
+      className={`${finalWrapper} relative z-10 rounded-lg shadow-sm p-2 xl:p-4 transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-3">
-              <div
-                className={`text-base md:text-md lg:text-lg font-medium ${
-                  isDone ? 'line-through' : ''
-                }`}
-              >
-                {task.title}
-              </div>
+      {/* Header: status left, title + duration + project, actions right (center aligned) */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3 flex-1">
+          <button
+            type="button"
+            aria-label="Toggle task status"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              cycleStatus();
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.stopPropagation();
+                e.preventDefault();
+                cycleStatus();
+              }
+            }}
+            className={`${buttonBase} ${buttonState}`}
+            title={isDone ? 'Clear status' : isStarted ? 'Mark done' : 'Mark in progress'}
+          >
+            {isDone ? (
+              <Check className="h-5 w-5" strokeWidth={2} />
+            ) : isStarted ? (
+              <Play className="h-5 w-5" />
+            ) : (
+              <Circle className={`h-4 w-4 ${iconColorClass}`} />
+            )}
+          </button>
 
-              <button
-                type="button"
-                aria-label="Toggle task status"
-                // handle pointerdown to prevent Link navigation handlers and respond immediately on tap
-                onPointerDown={(e) => {
-                  // stop propagation so the Link wrapper doesn't receive the pointer event
-                  e.stopPropagation();
-                  // prevent default on pointerdown so Link/anchor doesn't navigate or steal the click
-                  // we then call cycleStatus here so touch/mouse interactions are handled immediately
-                  e.preventDefault();
-                  cycleStatus();
-                }}
-                // keep click handler to swallow any remaining events
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                }}
-                onKeyDown={(e) => {
-                  // support keyboard activation (Enter / Space)
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    cycleStatus();
-                  }
-                }}
-                className={buttonClass}
-                title={isDone ? 'Clear status' : isStarted ? 'Mark done' : 'Mark in progress'}
-              >
-                {isDone ? (
-                  <Check className={`h-4 w-4 ${iconClass}`} strokeWidth={2} />
-                ) : isStarted ? (
-                  <span className={`text-sm font-bold ${iconClass}`}>∼</span>
-                ) : null}
-              </button>
+          <div className="flex items-center">
+            <div className={`text-base md:text-md lg:text-lg font-medium ${textClass ?? ''}`}>
+              <span className={`${textClass ?? ''}`}>{t.title}</span>
             </div>
 
-            <div className="flex items-center gap-3">
-              {onEdit && (
-                <button
-                  aria-label="Edit task"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    onEdit(task);
-                  }}
-                  className="cursor-pointer text-emerald-600 hover:text-emerald-600/80 btn-icon"
-                  title="Edit"
-                >
-                  <Edit className="h-5 w-5" />
-                </button>
+            {projectName ? (
+              <span
+                className="ml-2 inline-block max-w-[12rem] truncate bg-neutral text-white text-sm font-medium px-2 py-0.5 rounded-full"
+                title={projectName}
+                aria-label={`Project ${projectName}`}
+              >
+                {projectName}
+              </span>
+            ) : typeof t.estimatedDuration === 'number' && t.estimatedDuration > 0 ? (
+              <span className="text-sm text-base-content bg-base-200 px-2 py-0.5 rounded-full truncate ml-2">
+                {formatDuration(t.estimatedDuration)}
+              </span>
+            ) : null}
+
+            {right &&
+              // If we already have a derived projectName, avoid duplicating it from `right` when
+              // `right` is a plain string equal to the project name. Otherwise render `right`.
+              (projectName == null ||
+                (typeof right !== 'string' ? true : String(right).trim() !== projectName)) && (
+                <div className="ml-3 text-sm">{right}</div>
               )}
+          </div>
+        </div>
 
-              {onDelete && (
-                <button
-                  aria-label="Delete task"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    onDelete(task.id);
-                  }}
-                  className="cursor-pointer text-red-600 hover:text-red-600/80 btn-icon"
-                  title="Delete"
-                >
-                  <Trash className="h-5 w-5" />
-                </button>
+        <div className="flex items-center gap-3">
+          {onEdit && (
+            <button
+              aria-label="Edit task"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onEdit?.(t as Task);
+              }}
+              className="cursor-pointer text-emerald-600 hover:text-emerald-600/80 btn-icon"
+              title="Edit"
+            >
+              <Edit className="h-5 w-5" />
+            </button>
+          )}
+
+          {onDelete && (
+            <button
+              aria-label="Delete task"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onDelete?.(t.id);
+              }}
+              className="cursor-pointer text-red-600 hover:text-red-600/80 btn-icon"
+              title="Delete"
+            >
+              <Trash className="h-5 w-5" />
+            </button>
+          )}
+          {/* Per-card expand/collapse (shows in mini mode). Render to the right of edit/delete */}
+          {(view === 'mini' || localExpanded) && (
+            <button
+              aria-label={localExpanded ? 'Collapse task' : 'Expand task'}
+              title={localExpanded ? 'Collapse' : 'Expand'}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setLocalExpanded((v) => !v);
+              }}
+              className="btn btn-ghost btn-sm btn-circle"
+            >
+              {localExpanded ? (
+                <ChevronUp className="h-5 w-5" />
+              ) : (
+                <ChevronDown className="h-5 w-5" />
               )}
-            </div>
-          </div>
+            </button>
+          )}
+        </div>
+      </div>
 
-          <div className="flex items-start mt-1 ">
-            {right && <div className="text-sm">{right}</div>}
-          </div>
+      {/* Animated full-content container: always mounted, toggles max-height and opacity for smooth expand/collapse */}
+      <div
+        aria-hidden={!effectiveFull}
+        className={`overflow-hidden transition-all duration-200 ease-in-out ${
+          effectiveFull ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        {/* Divider */}
+        <div className="my-3 -mx-2 xl:-mx-4 border-t border-base-content/20" />
 
-          {/* Show description/notes at xl+ */}
-          {task.notes && <div className="hidden xl:block text-sm  mt-3">{task.notes}</div>}
+        {/* Description / notes */}
+        {t.notes ? (
+          <div className={`text-sm mb-3 py-2 xl:py-4 ${textClass ?? ''}`}>{t.notes}</div>
+        ) : (
+          <div className={`text-sm text-gray-400 mb-3 py-2 xl:py-4 ${textClass ? '' : ''}`}>
+            No description
+          </div>
+        )}
+
+        {/* Divider */}
+        <div className="my-2 -mx-2 xl:-mx-4 border-t border-base-content/20" />
+
+        {/* Footer: due left, duration right */}
+        <div className="flex items-center justify-between text-sm">
+          <div className={`text-left text-sm ${textClass ?? ''}`}>
+            {t.dueDate ? new Date(t.dueDate).toLocaleString() : 'No due date'}
+          </div>
+          <div className={`text-right text-sm ${textClass ?? ''}`}>
+            {(() => {
+              const estimated: number | undefined = t.estimatedDuration ?? undefined;
+              if (typeof estimated === 'number' && estimated > 0) {
+                const h = Math.floor(estimated / 60);
+                const m = estimated % 60;
+                return `${h}h ${m}m`;
+              }
+              return '—';
+            })()}
+          </div>
         </div>
       </div>
     </div>
@@ -213,8 +356,7 @@ export default function TaskCard({ task, right, href, onEdit, onDelete, onStatus
 
   return (
     <div className="relative">
-      {/* Single slab (chunky 3D base / shadow) */}
-      <div className="absolute inset-0 translate-x-2 translate-y-2 rounded-md bg-base-200 border border-gray-200/20 z-0" />
+      {/* Background slab removed to render a single flat card */}
 
       {href ? (
         <Link href={href} className="block">

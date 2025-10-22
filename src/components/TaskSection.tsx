@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import DashboardTaskCard from './DashboardView/DashboardTaskCard';
-import type { Task } from './TaskCard';
+import TaskCard, { type Task } from './TaskCard';
+import useProjectStore from '../lib/projectStore';
+import useSettingsStore from '../lib/settingsStore';
 
 type TaskSectionProps = {
   title?: string;
@@ -29,6 +30,10 @@ export default function TaskSection({
   expanded = false,
   noInnerScroll = false,
 }: TaskSectionProps) {
+  const projects = useProjectStore((s) => s.projects);
+  const density = useSettingsStore((s) => s.density);
+  const view: 'full' | 'mini' = density === 'compact' ? 'mini' : 'full';
+
   return (
     <section className="">
       {title && (
@@ -38,26 +43,31 @@ export default function TaskSection({
       )}
       <div
         className={`transition-all duration-300 ease-in-out pt-2 pb-4 ${
-          noInnerScroll ? 'overflow-visible' : 'overflow-x-visible'
-        }`}
-        style={
-          noInnerScroll ? undefined : { maxHeight: expanded ? 'calc(100vh - 10rem)' : undefined }
-        }
+          expanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+        } ${noInnerScroll ? 'overflow-visible' : 'overflow-hidden'}`}
       >
         <ul className="list-none space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6 max-w-full">
           {tasks.length === 0 && null}
-          {tasks.map((t) => (
-            <li key={t.id} className="px-1.5 sm:px-2">
-              <DashboardTaskCard
-                task={t as unknown as Task}
-                href={`/tasks/${t.id}`}
-                right={renderRight ? renderRight(t) : undefined}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onStatusChange={onStatusChange}
-              />
-            </li>
-          ))}
+          {tasks.map((t) => {
+            const projectName = projects.find((p) => p.id === t.projectId)?.name;
+            const taskWithProject = {
+              ...(t as Record<string, unknown>),
+              projectName,
+            } as unknown as Task;
+            return (
+              <li key={t.id} className="px-1.5 sm:px-2">
+                <TaskCard
+                  task={taskWithProject as unknown as Task}
+                  href={`/tasks/${t.id}`}
+                  right={renderRight ? renderRight(t) : undefined}
+                  view={view}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onStatusChange={onStatusChange}
+                />
+              </li>
+            );
+          })}
         </ul>
       </div>
     </section>

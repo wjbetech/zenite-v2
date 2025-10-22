@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import useProjectStore, { Project } from '../lib/projectStore';
+import { projectSlug } from '../lib/utils';
 import { useUser } from '@clerk/nextjs';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -11,47 +13,30 @@ import {
   ChevronRight,
   ChevronDown,
   LayoutDashboard,
-  Folder,
-  FolderOpen,
-  Settings,
   Repeat2,
+  Folder,
+  Settings,
+  FolderOpen,
+  Star,
 } from 'lucide-react';
-import useProjectStore from '../lib/projectStore';
-import { Star } from 'lucide-react';
-import { useEffect } from 'react';
-import { projectSlug } from '../lib/utils';
 
-// ...existing code...
-
-const SIDEBAR_KEY = 'zenite.sidebarCollapsed';
-
-type SidebarProps = {
-  isLoggedIn?: boolean;
-};
-
-export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
-  const pathname = usePathname();
-  const allowedPrefixes = ['/dashboard', '/dailies', '/projects', '/settings', '/profile'];
-  const showSidebar = Boolean(
-    pathname &&
-      allowedPrefixes.some(
-        (p) => pathname === p || pathname.startsWith(p + '/') || pathname.startsWith(p),
-      ),
-  );
+export default function Sidebar({ isLoggedIn }: { isLoggedIn?: boolean }) {
+  const SIDEBAR_KEY = 'zenite.sidebarCollapsed';
 
   const [collapsed, setCollapsed] = React.useState<boolean>(false);
-  const [projectsOpen, setProjectsOpen] = React.useState<boolean>(
-    Boolean(pathname && pathname.startsWith('/projects')),
-  );
-
-  // prefer Clerk user state when available (client-side). This lets the
-  // sidebar enable items immediately after Clerk hydration without relying
-  // on a server-provided boolean prop.
-  const { user } = useUser();
-  const effectiveLoggedIn = isLoggedIn || Boolean(user?.id);
+  const [mounted, setMounted] = React.useState<boolean>(false);
+  const pathname = usePathname();
 
   const projects = useProjectStore((s) => s.projects);
   const updateProject = useProjectStore((s) => s.updateProject);
+
+  const [projectsOpen, setProjectsOpen] = React.useState<boolean>(
+    !!pathname && pathname.startsWith('/projects'),
+  );
+
+  const { user } = useUser() as { user?: { id?: string } };
+  const effectiveLoggedIn = isLoggedIn ?? !!user;
+  const showSidebar = true;
 
   React.useEffect(() => {
     try {
@@ -60,6 +45,11 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
     } catch {
       // ignore
     }
+  }, []);
+
+  React.useEffect(() => {
+    // mark mounted on the client to allow client-only content to render
+    setMounted(true);
   }, []);
 
   React.useEffect(() => {
@@ -119,67 +109,76 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                 const Icon = item.icon;
                 const isActive =
                   !!pathname && (pathname === item.href || pathname.startsWith(item.href + '/'));
-                if (effectiveLoggedIn) {
-                  return (
-                    <div key={item.href} className="w-full">
-                      <div
-                        className={`flex items-center gap-3 rounded ${
-                          item.href === '/projects' ? 'px-2 py-1.5' : 'px-2 py-2'
-                        } ${isActive ? 'bg-success-content/20' : 'hover:bg-base-300'} ${
-                          collapsed ? 'justify-center w-full' : 'justify-between w-full'
-                        }`}
+                // Render a consistent DOM shape regardless of auth state to avoid hydration mismatches.
+                // Use visual/interactive attributes to reflect logged-in state.
+                const disabled = !effectiveLoggedIn;
+                return (
+                  <div key={item.href} className="w-full">
+                    <div
+                      className={`flex items-center gap-3 rounded ${
+                        item.href === '/projects' ? 'px-2 py-1.5' : 'px-2 py-2'
+                      } ${isActive ? 'bg-success-content/20' : 'hover:bg-base-300'} ${
+                        collapsed ? 'justify-center w-full' : 'justify-between w-full'
+                      }`}
+                    >
+                      <Link
+                        href={item.href}
+                        className={`flex items-center gap-3 ${
+                          collapsed ? 'justify-center w-full' : 'flex-1 min-w-0'
+                        } ${disabled ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
+                        aria-disabled={disabled}
                       >
-                        <Link
-                          href={item.href}
-                          className={`flex items-center gap-3 ${
-                            collapsed ? 'justify-center w-full' : 'flex-1 min-w-0'
-                          }`}
-                        >
-                          <div className="w-6 h-6 flex items-center justify-center text-neutral">
-                            <Icon className="w-5 h-5" />
-                          </div>
-                          {!collapsed && <span>{item.label}</span>}
-                        </Link>
+                        <div className="w-6 h-6 flex items-center justify-center text-neutral">
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        {!collapsed && <span>{item.label}</span>}
+                      </Link>
 
-                        {/* Projects toggle chevron */}
-                        {item.href === '/projects' && !collapsed && (
-                          <button
-                            aria-expanded={projectsOpen}
-                            aria-controls="sidebar-projects"
-                            onClick={() => setProjectsOpen((s) => !s)}
-                            className="btn btn-ghost btn-square btn-xs btn-icon"
-                            title={projectsOpen ? 'Collapse projects' : 'Expand projects'}
-                          >
-                            <ChevronDown
-                              className={`w-4 h-4 transition-transform ${
-                                projectsOpen ? 'rotate-180' : ''
-                              }`}
-                            />
-                          </button>
-                        )}
-                      </div>
-
-                      {/* If this is the Projects nav item, render the nested project links */}
+                      {/* Projects toggle chevron (still only shown when not collapsed) */}
                       {item.href === '/projects' && !collapsed && (
-                        <div
-                          id="sidebar-projects"
-                          className={`ml-3 mt-1 w-full pr-3 overflow-hidden origin-top transition-[max-height,opacity,transform] duration-200 ease-out ${
-                            projectsOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0'
-                          }`}
-                          style={{ maxHeight: projectsOpen ? '20rem' : 0 }}
-                          aria-hidden={!projectsOpen}
+                        <button
+                          aria-expanded={projectsOpen}
+                          aria-controls="sidebar-projects"
+                          onClick={() => setProjectsOpen((s) => !s)}
+                          className="btn btn-ghost btn-square btn-xs btn-icon"
+                          title={projectsOpen ? 'Collapse projects' : 'Expand projects'}
                         >
-                          <div
-                            className="flex flex-col gap-1 overflow-auto w-full"
-                            style={{ maxHeight: '20rem' }}
-                          >
-                            {projects.length === 0 && (
-                              <div className="text-xs text-gray-500">No projects yet</div>
-                            )}
-                            {projects
+                          <ChevronDown
+                            className={`w-4 h-4 transition-transform ${
+                              projectsOpen ? 'rotate-180' : ''
+                            }`}
+                          />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* If this is the Projects nav item, render the nested project links */}
+                    {item.href === '/projects' && !collapsed && (
+                      <div
+                        id="sidebar-projects"
+                        className={`ml-3 mt-1 w-full pr-3 overflow-hidden origin-top transition-[max-height,opacity,transform] duration-200 ease-out ${
+                          projectsOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0'
+                        }`}
+                        style={{ maxHeight: projectsOpen ? '20rem' : 0 }}
+                        aria-hidden={!projectsOpen}
+                      >
+                        <div
+                          className="flex flex-col gap-1 overflow-auto w-full"
+                          style={{ maxHeight: '20rem' }}
+                        >
+                          {!mounted ? (
+                            // Render a stable placeholder on the server and until hydration completes.
+                            <div className="text-xs text-gray-500">No projects yet</div>
+                          ) : projects.length === 0 ? (
+                            <div className="text-xs text-gray-500">No projects yet</div>
+                          ) : (
+                            projects
                               .slice()
-                              .sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0))
-                              .map((p) => {
+                              .sort(
+                                (a: Project, b: Project) =>
+                                  (b.starred ? 1 : 0) - (a.starred ? 1 : 0),
+                              )
+                              .map((p: Project) => {
                                 const slug = projectSlug(p.name ?? '');
                                 const projectPath = `/projects/${slug}`;
                                 const isActiveProject = pathname === projectPath;
@@ -217,29 +216,11 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
                                     </button>
                                   </div>
                                 );
-                              })}
-                          </div>
+                              })
+                          )}
                         </div>
-                      )}
-                    </div>
-                  );
-                }
-
-                // not logged in: show disabled/greyed item
-                return (
-                  <div
-                    key={item.href}
-                    role="link"
-                    aria-disabled="true"
-                    tabIndex={-1}
-                    className={`flex items-center gap-3 rounded px-2 py-2 text-neutral cursor-not-allowed ${
-                      collapsed ? 'justify-center w-full' : 'w-full'
-                    }`}
-                  >
-                    <div className="w-6 h-6 flex items-center justify-center text-neutral">
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    {!collapsed && <span>{item.label}</span>}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -254,7 +235,7 @@ export default function Sidebar({ isLoggedIn = false }: SidebarProps) {
 }
 
 function SyncSidebarWidth({ width }: { width: string }) {
-  useEffect(() => {
+  React.useEffect(() => {
     try {
       document.documentElement.style.setProperty('--sidebar-width', width);
       return () => {

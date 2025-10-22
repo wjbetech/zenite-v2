@@ -3,7 +3,8 @@ import type { Metadata } from 'next';
 import 'react-toastify/dist/ReactToastify.css';
 import './globals.css';
 import Script from 'next/script';
-import { Navbar, Sidebar } from '../components';
+import { Navbar } from '../components';
+import ConditionalSidebar from '../components/ConditionalSidebar';
 import { currentUser } from '@clerk/nextjs/server';
 import Providers from '../components/Providers';
 import { cookies } from 'next/headers';
@@ -124,7 +125,7 @@ export default async function RootLayout({
           <Navbar initialIsSignedIn={isLoggedIn} initialUser={initialUser} />
           {/* Navbar now overlays content. Do not apply top padding so pages sit underneath the absolute navbar. */}
           <div className="flex h-screen">
-            <Sidebar isLoggedIn={isLoggedIn} />
+            <ConditionalSidebar isLoggedIn={isLoggedIn} />
             <main className="flex-1 h-full flex flex-col min-h-0">{children}</main>
           </div>
         </Providers>

@@ -4,6 +4,7 @@ import React from 'react';
 import DataLoading from '../ui/DataLoading';
 // ...existing code...
 import TabsBox from './TabsBox';
+import TaskViewToggle from '../TaskViewToggle';
 import DashboardHeader from './DashboardHeader';
 import ImminentList from './ImminentList';
 import NewList from './NewList';
@@ -264,22 +265,27 @@ export default function Dashboard() {
               }}
             >
               {/* Tabs - horizontally scrollable using TabsBox component */}
-              <TabsBox
-                tabsRef={tabsRef}
-                onPointerDown={onPointerDown}
-                onPointerMove={onPointerMove}
-                onPointerUp={onPointerUp}
-                onScroll={onScroll}
-                scrollTabsBy={scrollTabsBy}
-                canScrollLeft={canScrollLeft}
-                canScrollRight={canScrollRight}
-                didDrag={didDrag}
-                tabDefs={tabDefs}
-                activeView={effectiveView}
-                setView={setEffectiveView}
-              />
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <TabsBox
+                    tabsRef={tabsRef}
+                    onPointerDown={onPointerDown}
+                    onPointerMove={onPointerMove}
+                    onPointerUp={onPointerUp}
+                    onScroll={onScroll}
+                    scrollTabsBy={scrollTabsBy}
+                    canScrollLeft={canScrollLeft}
+                    canScrollRight={canScrollRight}
+                    didDrag={didDrag}
+                    tabDefs={tabDefs}
+                    activeView={effectiveView}
+                    setView={setEffectiveView}
+                  />
+                </div>
+              </div>
 
               {/* task lists render here when not loading */}
+              <TaskViewToggle />
 
               {/* Task list content (render spinner OR the lists so they share space) */}
               <div className="pt-4 overflow-hidden w-full">

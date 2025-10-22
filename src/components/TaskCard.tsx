@@ -95,8 +95,11 @@ export default function TaskCard({
   // global view toggle is set to 'mini'. We show the chevron when the card
   // can be expanded (global mini) or when it is currently expanded.
   const [localExpanded, setLocalExpanded] = React.useState(false);
-  const showExpandButton = view === 'mini' || localExpanded;
   const effectiveFull = view === 'full' || localExpanded;
+  // If the task becomes started (in-progress) from external updates, auto-expand
+  React.useEffect(() => {
+    if (t.started) setLocalExpanded(true);
+  }, [t.started]);
   // Try to derive a connected project's display name from flexible shapes that
   // might include projectName or a nested project object. Fall back to
   // projectId when nothing else is available.
@@ -175,6 +178,8 @@ export default function TaskCard({
   const cycleStatus = () => {
     if (!isStarted && !isDone) {
       onStatusChange?.(t.id, 'tilde');
+      // optimistically expand the card when the user marks it in-progress
+      setLocalExpanded(true);
       return;
     }
     if (isStarted && !isDone) {
@@ -255,25 +260,6 @@ export default function TaskCard({
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Per-card expand/collapse (shows in mini mode). */}
-          {(view === 'mini' || localExpanded) && (
-            <button
-              aria-label={localExpanded ? 'Collapse task' : 'Expand task'}
-              title={localExpanded ? 'Collapse' : 'Expand'}
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                setLocalExpanded((v) => !v);
-              }}
-              className="btn btn-ghost btn-sm btn-circle"
-            >
-              {localExpanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </button>
-          )}
           {onEdit && (
             <button
               aria-label="Edit task"
@@ -301,6 +287,25 @@ export default function TaskCard({
               title="Delete"
             >
               <Trash className="h-5 w-5" />
+            </button>
+          )}
+          {/* Per-card expand/collapse (shows in mini mode). Render to the right of edit/delete */}
+          {(view === 'mini' || localExpanded) && (
+            <button
+              aria-label={localExpanded ? 'Collapse task' : 'Expand task'}
+              title={localExpanded ? 'Collapse' : 'Expand'}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setLocalExpanded((v) => !v);
+              }}
+              className="btn btn-ghost btn-sm btn-circle"
+            >
+              {localExpanded ? (
+                <ChevronUp className="h-5 w-5" />
+              ) : (
+                <ChevronDown className="h-5 w-5" />
+              )}
             </button>
           )}
         </div>

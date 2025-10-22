@@ -1,13 +1,16 @@
 'use client';
 
 import React from 'react';
+import useSettingsStore from '../lib/settingsStore';
 
-type Props = {
-  value?: 'full' | 'mini';
-  onChange?: (v: 'full' | 'mini') => void;
-};
+// Map internal terminology: settings.density uses 'full' | 'compact'
+// UI presents 'Full' and 'Mini' (mini -> compact)
+export default function TaskViewToggle() {
+  const density = useSettingsStore((s) => s.density);
+  const setDensity = useSettingsStore((s) => s.setDensity);
 
-export default function TaskViewToggle({ value = 'full', onChange }: Props) {
+  const value: 'full' | 'mini' = density === 'compact' ? 'mini' : 'full';
+
   return (
     <div className="mb-4 flex items-center gap-3 px-3 py-2 rounded-md bg-base-100">
       <label className="text-sm text-gray-600">View:</label>
@@ -16,7 +19,7 @@ export default function TaskViewToggle({ value = 'full', onChange }: Props) {
           type="button"
           aria-pressed={value === 'full'}
           className={`btn btn-sm min-w-[72px] px-3 ${value === 'full' ? 'btn-active' : ''}`}
-          onClick={() => onChange?.('full')}
+          onClick={() => setDensity('full')}
         >
           Full
         </button>
@@ -24,7 +27,7 @@ export default function TaskViewToggle({ value = 'full', onChange }: Props) {
           type="button"
           aria-pressed={value === 'mini'}
           className={`btn btn-sm min-w-[72px] px-3 ${value === 'mini' ? 'btn-active' : ''}`}
-          onClick={() => onChange?.('mini')}
+          onClick={() => setDensity('compact')}
         >
           Mini
         </button>

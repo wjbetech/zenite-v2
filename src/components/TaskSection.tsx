@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import TaskCard, { type Task } from './TaskCard';
 import useProjectStore from '../lib/projectStore';
-import TaskViewToggle from './TaskViewToggle';
+import useSettingsStore from '../lib/settingsStore';
 
 type TaskSectionProps = {
   title?: string;
@@ -31,7 +31,8 @@ export default function TaskSection({
   noInnerScroll = false,
 }: TaskSectionProps) {
   const projects = useProjectStore((s) => s.projects);
-  const [view, setView] = useState<'full' | 'mini'>('full');
+  const density = useSettingsStore((s) => s.density);
+  const view: 'full' | 'mini' = density === 'compact' ? 'mini' : 'full';
 
   return (
     <section className="">
@@ -40,15 +41,10 @@ export default function TaskSection({
           <span className={`inline-block border-b-4 ${accentClass} pb-0.5`}>{title}</span>
         </h2>
       )}
-      {/* Global view toggle shown above the first task */}
-      <TaskViewToggle value={view} onChange={(v) => setView(v)} />
       <div
         className={`transition-all duration-300 ease-in-out pt-2 pb-4 ${
-          noInnerScroll ? 'overflow-visible' : 'overflow-x-visible'
-        }`}
-        style={
-          noInnerScroll ? undefined : { maxHeight: expanded ? 'calc(100vh - 10rem)' : undefined }
-        }
+          expanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+        } ${noInnerScroll ? 'overflow-visible' : 'overflow-hidden'}`}
       >
         <ul className="list-none space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6 max-w-full">
           {tasks.length === 0 && null}

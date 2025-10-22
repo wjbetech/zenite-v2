@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Edit, Trash, Check, Play, Circle } from 'lucide-react';
+import { Edit, Trash, Check, Play, Circle, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Task } from '../lib/taskStore';
 export type { Task } from '../lib/taskStore';
 
@@ -90,6 +90,13 @@ export default function TaskCard({
   view = 'full',
 }: Props) {
   const t = normalizeTaskLike(task as TaskLike);
+
+  // Local expand state allows a single task to open its full view when the
+  // global view toggle is set to 'mini'. We show the chevron when the card
+  // can be expanded (global mini) or when it is currently expanded.
+  const [localExpanded, setLocalExpanded] = React.useState(false);
+  const showExpandButton = view === 'mini' || localExpanded;
+  const effectiveFull = view === 'full' || localExpanded;
   // Try to derive a connected project's display name from flexible shapes that
   // might include projectName or a nested project object. Fall back to
   // projectId when nothing else is available.
@@ -248,6 +255,25 @@ export default function TaskCard({
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Per-card expand/collapse (shows in mini mode). */}
+          {(view === 'mini' || localExpanded) && (
+            <button
+              aria-label={localExpanded ? 'Collapse task' : 'Expand task'}
+              title={localExpanded ? 'Collapse' : 'Expand'}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setLocalExpanded((v) => !v);
+              }}
+              className="btn btn-ghost btn-sm btn-circle"
+            >
+              {localExpanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </button>
+          )}
           {onEdit && (
             <button
               aria-label="Edit task"
@@ -280,42 +306,46 @@ export default function TaskCard({
         </div>
       </div>
 
-      {view === 'full' && (
-        <>
-          {/* Divider */}
-          <div className="my-3 -mx-2 xl:-mx-4 border-t border-base-content/20" />
+      {/* Animated full-content container: always mounted, toggles max-height and opacity for smooth expand/collapse */}
+      <div
+        aria-hidden={!effectiveFull}
+        className={`overflow-hidden transition-all duration-200 ease-in-out ${
+          effectiveFull ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        {/* Divider */}
+        <div className="my-3 -mx-2 xl:-mx-4 border-t border-base-content/20" />
 
-          {/* Description / notes */}
-          {t.notes ? (
-            <div className={`text-sm mb-3 py-2 xl:py-4 ${textClass ?? ''}`}>{t.notes}</div>
-          ) : (
-            <div className={`text-sm text-gray-400 mb-3 py-2 xl:py-4 ${textClass ? '' : ''}`}>
-              No description
-            </div>
-          )}
-
-          {/* Divider */}
-          <div className="my-3 -mx-2 xl:-mx-4 border-t border-base-content/20" />
-
-          {/* Footer: due left, duration right */}
-          <div className="flex items-center justify-between text-sm">
-            <div className={`text-left text-sm ${textClass ?? ''}`}>
-              {t.dueDate ? new Date(t.dueDate).toLocaleString() : 'No due date'}
-            </div>
-            <div className={`text-right text-sm ${textClass ?? ''}`}>
-              {(() => {
-                const estimated: number | undefined = t.estimatedDuration ?? undefined;
-                if (typeof estimated === 'number' && estimated > 0) {
-                  const h = Math.floor(estimated / 60);
-                  const m = estimated % 60;
-                  return `${h}h ${m}m`;
-                }
-                return '—';
-              })()}
-            </div>
+        {/* Description / notes */}
+        {t.notes ? (
+          <div className={`text-sm mb-3 py-2 xl:py-4 ${textClass ?? ''}`}>{t.notes}</div>
+        ) : (
+          <div className={`text-sm text-gray-400 mb-3 py-2 xl:py-4 ${textClass ? '' : ''}`}>
+            No description
           </div>
-        </>
-      )}
+        )}
+
+        {/* Divider */}
+        <div className="my-2 -mx-2 xl:-mx-4 border-t border-base-content/20" />
+
+        {/* Footer: due left, duration right */}
+        <div className="flex items-center justify-between text-sm">
+          <div className={`text-left text-sm ${textClass ?? ''}`}>
+            {t.dueDate ? new Date(t.dueDate).toLocaleString() : 'No due date'}
+          </div>
+          <div className={`text-right text-sm ${textClass ?? ''}`}>
+            {(() => {
+              const estimated: number | undefined = t.estimatedDuration ?? undefined;
+              if (typeof estimated === 'number' && estimated > 0) {
+                const h = Math.floor(estimated / 60);
+                const m = estimated % 60;
+                return `${h}h ${m}m`;
+              }
+              return '—';
+            })()}
+          </div>
+        </div>
+      </div>
     </div>
   );
 

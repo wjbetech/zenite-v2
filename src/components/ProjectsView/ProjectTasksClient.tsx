@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import TaskSection from '../TaskSection';
+import EditTaskModal from '../modals/EditTaskModal';
 import type { Task } from '../TaskCard';
 import api from '../../lib/api';
 import { isDbUnavailableError, extractErrorMessage } from '../../lib/db-error';
@@ -26,6 +27,8 @@ export default function ProjectTasksClient({ projectId }: Props) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [dbUnavailable, setDbUnavailable] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -52,6 +55,8 @@ export default function ProjectTasksClient({ projectId }: Props) {
           dueDate: t.dueDate ?? null,
           createdAt: t.createdAt,
           completed: !!t.completedAt,
+          // Bind the projectId so TaskSection / TaskCard can render the project badge
+          projectId,
         }));
         if (mounted) {
           setTasks(mapped);
@@ -71,33 +76,41 @@ export default function ProjectTasksClient({ projectId }: Props) {
     };
   }, [projectId]);
 
-  const handleStatusChange = useCallback(async (id: string, status: 'none' | 'done' | 'tilde') => {
-    const nowIso = new Date().toISOString();
-    const patch =
-      status === 'tilde'
-        ? { started: true, completed: false, completedAt: null }
-        : status === 'done'
-        ? { started: false, completed: true, completedAt: nowIso }
-        : { started: false, completed: false, completedAt: null };
+  const handleStatusChange = useCallback(
+    async (id: string, status: 'none' | 'done' | 'tilde') => {
+      const nowIso = new Date().toISOString();
+      const patch =
+        status === 'tilde'
+          ? { started: true, completed: false, completedAt: null }
+          : status === 'done'
+          ? { started: false, completed: true, completedAt: nowIso }
+          : { started: false, completed: false, completedAt: null };
 
-    try {
-      const updated = await api.updateTask({ id, ...patch });
-      const payload = updated as Partial<ApiTask> & { completed?: boolean; notes?: string | null };
-      const updatedTask: Task = {
-        id: payload.id ?? '',
-        title: payload.title ?? 'Untitled',
-        notes: payload.notes ?? undefined,
-        dueDate: payload.dueDate ?? null,
-        createdAt: payload.createdAt ?? new Date().toISOString(),
-        completed: !!payload.completed,
-        // ensure we also reflect the started flag returned by the API
-        started: !!(payload as unknown as { started?: boolean }).started,
-      };
-      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updatedTask } : t)));
-    } catch (err) {
-      console.error('ProjectTasksClient: failed to update task status', err);
-    }
-  }, []);
+      try {
+        const updated = await api.updateTask({ id, ...patch });
+        const payload = updated as Partial<ApiTask> & {
+          completed?: boolean;
+          notes?: string | null;
+        };
+        const updatedTask: Task = {
+          id: payload.id ?? '',
+          title: payload.title ?? 'Untitled',
+          notes: payload.notes ?? undefined,
+          dueDate: payload.dueDate ?? null,
+          createdAt: payload.createdAt ?? new Date().toISOString(),
+          completed: !!payload.completed,
+          // ensure we also reflect the started flag returned by the API
+          started: !!(payload as unknown as { started?: boolean }).started,
+          // preserve project context so TaskCard shows the connected project
+          projectId,
+        };
+        setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updatedTask } : t)));
+      } catch (err) {
+        console.error('ProjectTasksClient: failed to update task status', err);
+      }
+    },
+    [projectId],
+  );
 
   const handleDelete = useCallback(async (id: string) => {
     try {
@@ -107,6 +120,46 @@ export default function ProjectTasksClient({ projectId }: Props) {
       console.error('ProjectTasksClient: failed to delete task', err);
     }
   }, []);
+
+  const handleEdit = useCallback(
+    (t: Partial<Task> | undefined) => {
+      if (!t) return;
+      // t may be a partial object; find full task from local list when possible
+      const full = tasks.find((x) => x.id === (t as Task).id) ?? (t as Task);
+      setEditingTask(full ?? null);
+      setEditOpen(true);
+    },
+    [tasks],
+  );
+
+  const handleSave = useCallback(
+    async (id: string, patch: Partial<Task>) => {
+      try {
+        const updated = await api.updateTask({ id, ...patch });
+        const payload = updated as Partial<ApiTask> & {
+          notes?: string | null;
+          completed?: boolean;
+        };
+        const updatedTask: Task = {
+          id: payload.id ?? id,
+          title: payload.title ?? 'Untitled',
+          notes: payload.notes ?? undefined,
+          dueDate: payload.dueDate ?? null,
+          createdAt: payload.createdAt ?? new Date().toISOString(),
+          completed: !!payload.completed,
+          // ensure project association remains for rendering
+          projectId,
+        };
+        setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updatedTask } : t)));
+      } catch (err) {
+        console.error('ProjectTasksClient: failed to save edited task', err);
+      } finally {
+        setEditOpen(false);
+        setEditingTask(null);
+      }
+    },
+    [projectId],
+  );
 
   if (loading) return <DataLoading label="Loading tasks…" variant="accent" />;
 
@@ -127,10 +180,23 @@ export default function ProjectTasksClient({ projectId }: Props) {
     return <div className="text-sm text-gray-500">No tasks for this project.</div>;
 
   return (
-    <TaskSection
-      tasks={tasks}
-      onDelete={(id) => handleDelete(id)}
-      onStatusChange={(id, status) => void handleStatusChange(id, status)}
-    />
+    <>
+      <TaskSection
+        tasks={tasks}
+        onEdit={(t) => handleEdit(t)}
+        onDelete={(id) => handleDelete(id)}
+        onStatusChange={(id, status) => void handleStatusChange(id, status)}
+      />
+
+      <EditTaskModal
+        open={editOpen}
+        onOpenChange={(v) => {
+          setEditOpen(v);
+          if (!v) setEditingTask(null);
+        }}
+        task={editingTask}
+        onSave={(id, patch) => void handleSave(id, patch)}
+      />
+    </>
   );
 }

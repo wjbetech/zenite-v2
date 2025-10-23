@@ -78,9 +78,36 @@ export default function EditTaskModal({ open, onOpenChange, task, onSave }: Prop
     onOpenChange(false);
   };
 
+  const boxRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onOpenChange(false);
+    };
+    const onDocMouse = (e: MouseEvent) => {
+      if (!open) return;
+      const el = boxRef.current;
+      const target = e.target as Node | null;
+      if (el && target && !el.contains(target)) {
+        onOpenChange(false);
+      }
+    };
+
+    window.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onDocMouse);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onDocMouse);
+    };
+  }, [open, onOpenChange]);
+
   return (
     <div className={open ? 'modal modal-open' : 'modal'} aria-hidden={!open}>
-      <div className="modal-box w-11/12 max-w-xl">
+      <div
+        ref={boxRef}
+        className="modal-box w-11/12 max-w-xl"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <h3 className="font-bold text-lg">Edit Task</h3>
         <form onSubmit={submit} className="mt-4">
           <label className="label">

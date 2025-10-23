@@ -258,6 +258,18 @@ html[data-theme='nord'] .nav-glass::before {
 }
 
 /* Remove the scrollbar corner background so corner doesn't show a block */
+
+/* DaisyUI tooltip tweaks: limit width and allow wrapping so tooltips don't overflow the page */
+.tooltip[data-tip] {
+  max-width: 28rem; /* ~448px */
+  white-space: normal; /* allow wrapping */
+  overflow-wrap: anywhere;
+}
+
+.tooltip.tooltip-left {
+  /* ensure tooltip aligns to the left of the reference and doesn't exceed viewport */
+  transform-origin: right center;
+}
 ::-webkit-scrollbar-corner {
   background: transparent;
 }

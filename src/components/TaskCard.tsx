@@ -51,7 +51,7 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
 
   if (isStarted && !isDone) {
     return {
-      wrapper: 'bg-accent/40',
+      wrapper: 'bg-accent/20',
       buttonBase:
         'flex items-center justify-center h-7 w-7 rounded-lg shrink-0 transition-colors cursor-pointer',
       // solid accent background for started state
@@ -62,7 +62,7 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   }
 
   return {
-    wrapper: 'bg-success/40',
+    wrapper: 'bg-success/20',
     buttonBase:
       'flex items-center justify-center h-7 w-7 rounded-lg shrink-0 transition-colors cursor-pointer',
     buttonState: 'bg-success text-success-content',

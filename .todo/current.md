@@ -1,0 +1,3 @@
+- [x] Adjust global scrollbar handling (remove forced scroll, add scrollbar-gutter, keep min-height)
+- [x] Harden scroll-lock script when modals toggle
+- [x] Verify layout (lint/tests)

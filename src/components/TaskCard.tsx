@@ -71,15 +71,6 @@ function getStatusClasses(isStarted: boolean, isDone: boolean) {
   };
 }
 
-function formatDuration(minutes?: number | null) {
-  if (!minutes || minutes <= 0) return '';
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h > 0 && m > 0) return `${h}h ${m}m`;
-  if (h > 0) return `${h}h`;
-  return `${m}m`;
-}
-
 export default function TaskCard({
   task,
   right,
@@ -194,11 +185,12 @@ export default function TaskCard({
       role="article"
       aria-label={`Task ${t.title}`}
       tabIndex={0}
-      className={`${finalWrapper} relative z-10 rounded-lg shadow-sm p-2 xl:p-4 transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
+      className={`${finalWrapper} relative z-10 rounded-lg shadow-sm transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
     >
-      {/* Header: status left, title + duration + project, actions right (center aligned) */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 flex-1">
+      {/* Header: three genuine sections so each can be styled independently */}
+      <div className="rounded-t-lg flex items-center justify-between px-2 xl:px-4 py-2">
+        {/* Left: status button (fixed-size) */}
+        <div className="flex items-center gap-3 shrink-0">
           <button
             type="button"
             aria-label="Toggle task status"
@@ -229,37 +221,35 @@ export default function TaskCard({
               <Circle className={`h-4 w-4 ${iconColorClass}`} />
             )}
           </button>
-
-          <div className="flex items-center">
-            <div className={`text-base md:text-md lg:text-lg font-medium ${textClass ?? ''}`}>
-              <span className={`${textClass ?? ''}`}>{t.title}</span>
-            </div>
-
-            {projectName ? (
-              <span
-                className="ml-2 inline-block max-w-[12rem] truncate bg-neutral text-white text-sm font-medium px-2 py-0.5 rounded-full"
-                title={projectName}
-                aria-label={`Project ${projectName}`}
-              >
-                {projectName}
-              </span>
-            ) : typeof t.estimatedDuration === 'number' && t.estimatedDuration > 0 ? (
-              <span className="text-sm text-base-content bg-base-200 px-2 py-0.5 rounded-full truncate ml-2">
-                {formatDuration(t.estimatedDuration)}
-              </span>
-            ) : null}
-
-            {right &&
-              // If we already have a derived projectName, avoid duplicating it from `right` when
-              // `right` is a plain string equal to the project name. Otherwise render `right`.
-              (projectName == null ||
-                (typeof right !== 'string' ? true : String(right).trim() !== projectName)) && (
-                <div className="ml-3 text-sm">{right}</div>
-              )}
-          </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* Center: title + project/duration + optional `right` content (flexible) */}
+        <div className="flex items-center gap-3 flex-1 px-3">
+          <div className={`text-base md:text-md lg:text-lg font-medium ${textClass ?? ''}`}>
+            <span className={`${textClass ?? ''}`}>{t.title}</span>
+          </div>
+
+          {projectName ? (
+            <span
+              className="ml-2 inline-block max-w-[12rem] truncate bg-neutral text-white text-sm font-medium px-2 py-0.5 rounded-full"
+              title={projectName}
+              aria-label={`Project ${projectName}`}
+            >
+              {projectName}
+            </span>
+          ) : null}
+
+          {right &&
+            // If we already have a derived projectName, avoid duplicating it from `right` when
+            // `right` is a plain string equal to the project name. Otherwise render `right`.
+            (projectName == null ||
+              (typeof right !== 'string' ? true : String(right).trim() !== projectName)) && (
+              <div className="ml-3 text-sm">{right}</div>
+            )}
+        </div>
+
+        {/* Right: action buttons (fixed, aligned) */}
+        <div className="flex items-center gap-3 shrink-0">
           {onEdit && (
             <button
               aria-label="Edit task"
@@ -311,43 +301,47 @@ export default function TaskCard({
         </div>
       </div>
 
-      {/* Animated full-content container: always mounted, toggles max-height and opacity for smooth expand/collapse */}
       <div
         aria-hidden={!effectiveFull}
         className={`overflow-hidden transition-all duration-200 ease-in-out ${
           effectiveFull ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
-        {/* Divider */}
-        <div className="my-3 -mx-2 xl:-mx-4 border-t border-base-content/20" />
+        <div className="rounded-b-lg">
+          {/* Divider */}
+          <div className="border-t border-base-content/20" />
 
-        {/* Description / notes */}
-        {t.notes ? (
-          <div className={`text-sm mb-3 py-2 xl:py-4 ${textClass ?? ''}`}>{t.notes}</div>
-        ) : (
-          <div className={`text-sm text-gray-400 mb-3 py-2 xl:py-4 ${textClass ? '' : ''}`}>
-            No description
-          </div>
-        )}
+          {/* Description / notes */}
+          {t.notes ? (
+            <div className={`text-sm mb-3 px-2 py-4 xl:py-4 ${textClass ?? ''}`}>{t.notes}</div>
+          ) : (
+            <div className={`text-sm text-gray-400 mb-3 py-2 xl:py-4 ${textClass ? '' : ''}`}>
+              No description
+            </div>
+          )}
 
-        {/* Divider */}
-        <div className="my-2 -mx-2 xl:-mx-4 border-t border-base-content/20" />
+          {/* Divider */}
+          <div className="border-t border-base-content/20" />
 
-        {/* Footer: due left, duration right */}
-        <div className="flex items-center justify-between text-sm">
-          <div className={`text-left text-sm ${textClass ?? ''}`}>
-            {t.dueDate ? new Date(t.dueDate).toLocaleString() : 'No due date'}
-          </div>
-          <div className={`text-right text-sm ${textClass ?? ''}`}>
-            {(() => {
-              const estimated: number | undefined = t.estimatedDuration ?? undefined;
-              if (typeof estimated === 'number' && estimated > 0) {
-                const h = Math.floor(estimated / 60);
-                const m = estimated % 60;
-                return `${h}h ${m}m`;
-              }
-              return '—';
-            })()}
+          {/* Footer: due left, duration right */}
+          <div
+            className="flex items-center justify-between text-sm p-2
+          "
+          >
+            <div className={`text-left text-sm ${textClass ?? ''}`}>
+              {t.dueDate ? new Date(t.dueDate).toLocaleString() : 'No due date'}
+            </div>
+            <div className={`text-right text-sm ${textClass ?? ''}`}>
+              {(() => {
+                const estimated: number | undefined = t.estimatedDuration ?? undefined;
+                if (typeof estimated === 'number' && estimated > 0) {
+                  const h = Math.floor(estimated / 60);
+                  const m = estimated % 60;
+                  return `${h}h ${m}m`;
+                }
+                return '—';
+              })()}
+            </div>
           </div>
         </div>
       </div>

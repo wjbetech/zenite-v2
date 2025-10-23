@@ -36,38 +36,80 @@ export function normalizeTaskLike(input: TaskLike | Task): Task {
   };
 }
 
-// Small helper to compute classes per status
-function getStatusClasses(isStarted: boolean, isDone: boolean) {
-  if (!isStarted && !isDone) {
+type StatusStyles = {
+  accentBar: string;
+  cardBorder: string;
+  cardShadow: string;
+  focusRing: string;
+  cardBackground?: string;
+  statusButton: string;
+  statusIcon: string;
+  badge: string;
+  supportingText: string;
+};
+
+// Map task state to DaisyUI-inspired styling tokens
+function getStatusStyles(isStarted: boolean, isDone: boolean, isStale: boolean): StatusStyles {
+  if (isStale) {
     return {
-      wrapper: 'bg-base-200 text-base-content',
-      buttonBase:
-        'flex items-center justify-center h-7 w-7 rounded-lg shrink-0 transition-colors cursor-pointer',
-      buttonState: 'bg-white border',
-      dot: 'bg-neutral',
-      text: 'text-base-content',
+      accentBar: 'bg-error',
+      cardBorder: 'border-error/50',
+      cardBackground: 'bg-error/5',
+      cardShadow:
+        'rounded-2xl shadow-lg shadow-base-content/20 hover:rounded-2xl hover:shadow-error/30 hover:-translate-y-1 hover:-translate-x-1',
+      focusRing: 'focus-visible:ring-error/50',
+      statusButton:
+        'btn btn-circle btn-sm btn-error text-error-content shadow-sm shadow-error/30 hover:shadow-error/40',
+      statusIcon: 'text-error-content',
+      badge: 'badge badge-sm border border-error/40 bg-error/10 text-error-content/90',
+      supportingText: 'text-error-content/80',
     };
   }
 
-  if (isStarted && !isDone) {
+  if (isDone) {
     return {
-      wrapper: 'bg-accent/20',
-      buttonBase:
-        'flex items-center justify-center h-7 w-7 rounded-lg shrink-0 transition-colors cursor-pointer',
-      // solid accent background for started state
-      buttonState: 'bg-accent text-accent-content border-0',
-      dot: 'bg-accent-content',
-      text: '',
+      accentBar: 'bg-success',
+      cardBorder: 'border-success/40',
+      cardBackground: 'bg-success/20',
+      cardShadow:
+        'rounded-2xl shadow-lg shadow-success/20 hover:rounded-2xl hover:shadow-success/30 hover:-translate-y-1 hover:-translate-x-1',
+      focusRing: 'focus-visible:ring-success/50',
+      statusButton:
+        'btn btn-circle btn-sm btn-success text-success-content shadow-sm shadow-success/40 hover:shadow-success/50',
+      statusIcon: 'text-success-content',
+      badge: 'badge badge-sm border border-success/40 bg-success/10 text-success-content/90',
+      supportingText: 'text-success-content',
+    };
+  }
+
+  if (isStarted) {
+    return {
+      accentBar: 'bg-secondary',
+      cardBorder: 'border-secondary/40',
+      cardBackground: 'bg-secondary/20',
+      cardShadow:
+        'rounded-2xl shadow-lg shadow-secondary/20 hover:rounded-2xl  hover:shadow-secondary/30 hover:-translate-y-1 hover:-translate-x-1',
+      focusRing: 'focus-visible:ring-secondary/50',
+      statusButton:
+        'btn btn-circle btn-sm btn-secondary text-secondary-content shadow-sm shadow-secondary/40 hover:shadow-secondary/50',
+      statusIcon: 'text-secondary-content',
+      badge: 'badge badge-sm border border-secondary/40 bg-secondary/10 text-secondary-content/90',
+      supportingText: 'text-secondary-content',
     };
   }
 
   return {
-    wrapper: 'bg-success/20',
-    buttonBase:
-      'flex items-center justify-center h-7 w-7 rounded-lg shrink-0 transition-colors cursor-pointer',
-    buttonState: 'bg-success text-success-content',
-    dot: 'bg-success-content',
-    text: '',
+    accentBar: 'bg-base-300',
+    cardBorder: 'border-base-200/80',
+    cardBackground: 'bg-base-100',
+    cardShadow:
+      'rounded-2xl shadow-lg shadow-base-200/50 hover:rounded-2xl hover:shadow-lg hover:shadow-base-content/20 hover:-translate-y-1 hover:-translate-x-1',
+    focusRing: 'focus-visible:ring-primary/40',
+    statusButton:
+      'btn btn-circle btn-sm btn-ghost border-2 border-base-300 text-base-content hover:border-primary hover:bg-primary/10 hover:text-primary',
+    statusIcon: 'text-base-content',
+    badge: 'badge badge-sm border border-base-300 bg-base-200 text-base-content/70',
+    supportingText: 'text-base-content',
   };
 }
 
@@ -123,27 +165,6 @@ export default function TaskCard({
   const isDone = !!t.completed;
   const isStarted = !!t.started && !isDone;
 
-  const {
-    wrapper: bgClass,
-    buttonBase,
-    buttonState,
-    dot: dotClass,
-    text: textClass,
-  } = getStatusClasses(isStarted, isDone);
-
-  // Map the small-dot background class (e.g. 'bg-neutral') to a text color
-  // class for the icon (e.g. 'text-neutral'). For the unstarted state
-  // (bg-neutral -> white button) we prefer a higher-contrast 'text-base-content'.
-  let iconColorClass = 'text-base-content';
-  if (typeof dotClass === 'string') {
-    if (dotClass === 'bg-neutral') {
-      // Use pure black for maximum contrast on white buttons
-      iconColorClass = 'text-black';
-    } else {
-      iconColorClass = dotClass.replace(/^bg-/, 'text-');
-    }
-  }
-
   // Detect stale completed one-off tasks
   let isStaleCompleted = false;
   try {
@@ -164,7 +185,38 @@ export default function TaskCard({
     // ignore
   }
 
-  const finalWrapper = isStaleCompleted ? 'bg-red-500/20 text-red-700' : bgClass;
+  const statusStyles = getStatusStyles(isStarted, isDone, isStaleCompleted);
+
+  const dueLabel = t.dueDate ? new Date(t.dueDate).toLocaleString() : 'No due date';
+  const estimatedLabel = (() => {
+    const estimated: number | undefined = t.estimatedDuration ?? undefined;
+    if (typeof estimated === 'number' && estimated > 0) {
+      const h = Math.floor(estimated / 60);
+      const m = estimated % 60;
+      if (h > 0) {
+        return m > 0 ? `${h}h ${m}m` : `${h}h`;
+      }
+      return `${m}m`;
+    }
+    return '—';
+  })();
+
+  const shouldRenderRight =
+    right &&
+    (projectName == null ||
+      (typeof right !== 'string' ? true : String(right).trim() !== projectName));
+
+  const renderedRight = !shouldRenderRight ? null : typeof right === 'string' ? (
+    <span className={`${statusStyles.badge} whitespace-nowrap`} title={right} aria-label={right}>
+      {right}
+    </span>
+  ) : (
+    <div className="flex-none">{right}</div>
+  );
+
+  const metaBadgeClass = `${statusStyles.badge} whitespace-nowrap`;
+  const cardBg = statusStyles.cardBackground ?? 'bg-base-100/95';
+  const cardBaseClasses = `group/card relative z-10 overflow-hidden rounded-2xl border border-base-300/90 ${cardBg} backdrop-blur-sm transition-all duration-300 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 shadow-[0_1px_0_0_rgba(255,255,255,0.4)] ${statusStyles.cardBorder} ${statusStyles.cardShadow} ${statusStyles.focusRing} focus-visible:ring-offset-base-100`;
 
   const cycleStatus = () => {
     if (!isStarted && !isDone) {
@@ -181,16 +233,14 @@ export default function TaskCard({
   };
 
   const cardInner = (
-    <div
-      role="article"
-      aria-label={`Task ${t.title}`}
-      tabIndex={0}
-      className={`${finalWrapper} relative z-10 rounded-lg shadow-sm transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
-    >
-      {/* Header: three genuine sections so each can be styled independently */}
-      <div className="rounded-t-lg flex items-center justify-between px-2 xl:px-4 py-2">
-        {/* Left: status button (fixed-size) */}
-        <div className="flex items-center gap-3 shrink-0">
+    <div role="article" aria-label={`Task ${t.title}`} tabIndex={0} className={cardBaseClasses}>
+      <span
+        className={`absolute inset-x-0 top-0 h-1 ${statusStyles.accentBar}`}
+        aria-hidden="true"
+      />
+
+      <div className="card-body gap-5 p-5">
+        <div className="flex flex-wrap items-start gap-4">
           <button
             type="button"
             aria-label="Toggle task status"
@@ -210,137 +260,119 @@ export default function TaskCard({
                 cycleStatus();
               }
             }}
-            className={`${buttonBase} ${buttonState}`}
+            className={`${statusStyles.statusButton} transition-transform duration-200 group-hover/card:scale-105 focus-visible:outline-none focus-visible:ring-0`}
             title={isDone ? 'Clear status' : isStarted ? 'Mark done' : 'Mark in progress'}
           >
             {isDone ? (
-              <Check className="h-5 w-5" strokeWidth={2} />
+              <Check className={`h-5 w-5 ${statusStyles.statusIcon}`} strokeWidth={2} />
             ) : isStarted ? (
-              <Play className="h-5 w-5" />
+              <Play className={`h-4 w-4 ${statusStyles.statusIcon}`} />
             ) : (
-              <Circle className={`h-4 w-4 ${iconColorClass}`} />
+              <Circle className={`h-4 w-4 ${statusStyles.statusIcon}`} strokeWidth={2} />
             )}
           </button>
-        </div>
 
-        {/* Center: title + project/duration + optional `right` content (flexible) */}
-        <div className="flex items-center gap-3 flex-1 px-3">
-          <div className={`text-base md:text-md lg:text-lg font-medium ${textClass ?? ''}`}>
-            <span className={`${textClass ?? ''}`}>{t.title}</span>
+          <div className="flex-1 min-w-0 space-y-3">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                <h3 className="card-title text-lg font-semibold leading-snug text-base-content">
+                  {t.title}
+                </h3>
+
+                {projectName ? (
+                  <span
+                    className={`${statusStyles.badge} whitespace-nowrap ml-3`}
+                    title={projectName}
+                    aria-label={`Project ${projectName}`}
+                  >
+                    {projectName}
+                  </span>
+                ) : null}
+
+                {renderedRight}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {onEdit && (
+                  <button
+                    aria-label="Edit task"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      onEdit?.(t as Task);
+                    }}
+                    className="btn btn-ghost btn-sm btn-circle text-base-content/70 hover:text-primary"
+                    title="Edit"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </button>
+                )}
+
+                {onDelete && (
+                  <button
+                    aria-label="Delete task"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      onDelete?.(t.id);
+                    }}
+                    className="btn btn-ghost btn-sm btn-circle text-error/80 hover:text-error"
+                    title="Delete"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </button>
+                )}
+
+                {(view === 'mini' || localExpanded) && (
+                  <button
+                    aria-label={localExpanded ? 'Collapse task' : 'Expand task'}
+                    title={localExpanded ? 'Collapse' : 'Expand'}
+                    aria-expanded={localExpanded}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setLocalExpanded((v) => !v);
+                    }}
+                    className="btn btn-ghost btn-sm btn-circle text-base-content/60 hover:text-base-content"
+                  >
+                    {localExpanded ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {t.notes && !effectiveFull ? (
+              <p className={`line-clamp-2 text-sm leading-relaxed ${statusStyles.supportingText}`}>
+                {t.notes}
+              </p>
+            ) : null}
           </div>
-
-          {projectName ? (
-            <span
-              className="ml-2 inline-block max-w-[12rem] truncate bg-neutral text-white text-sm font-medium px-2 py-0.5 rounded-full"
-              title={projectName}
-              aria-label={`Project ${projectName}`}
-            >
-              {projectName}
-            </span>
-          ) : null}
-
-          {right &&
-            // If we already have a derived projectName, avoid duplicating it from `right` when
-            // `right` is a plain string equal to the project name. Otherwise render `right`.
-            (projectName == null ||
-              (typeof right !== 'string' ? true : String(right).trim() !== projectName)) && (
-              <div className="ml-3 text-sm">{right}</div>
-            )}
         </div>
 
-        {/* Right: action buttons (fixed, aligned) */}
-        <div className="flex items-center gap-3 shrink-0">
-          {onEdit && (
-            <button
-              aria-label="Edit task"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                onEdit?.(t as Task);
-              }}
-              className="cursor-pointer text-emerald-600 hover:text-emerald-600/80 btn-icon"
-              title="Edit"
+        <div
+          aria-hidden={!effectiveFull}
+          className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out ${
+            effectiveFull ? 'max-h-[480px] opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="pt-2 space-y-4">
+            <div
+              className={`rounded-xl border border-dashed border-base-300/60 bg-base-200/40 p-4 text-sm leading-relaxed ${statusStyles.supportingText}`}
             >
-              <Edit className="h-5 w-5" />
-            </button>
-          )}
-
-          {onDelete && (
-            <button
-              aria-label="Delete task"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                onDelete?.(t.id);
-              }}
-              className="cursor-pointer text-red-600 hover:text-red-600/80 btn-icon"
-              title="Delete"
-            >
-              <Trash className="h-5 w-5" />
-            </button>
-          )}
-          {/* Per-card expand/collapse (shows in mini mode). Render to the right of edit/delete */}
-          {(view === 'mini' || localExpanded) && (
-            <button
-              aria-label={localExpanded ? 'Collapse task' : 'Expand task'}
-              title={localExpanded ? 'Collapse' : 'Expand'}
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                setLocalExpanded((v) => !v);
-              }}
-              className="btn btn-ghost btn-sm btn-circle"
-            >
-              {localExpanded ? (
-                <ChevronUp className="h-5 w-5" />
-              ) : (
-                <ChevronDown className="h-5 w-5" />
-              )}
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div
-        aria-hidden={!effectiveFull}
-        className={`overflow-hidden transition-all duration-200 ease-in-out ${
-          effectiveFull ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
-        }`}
-      >
-        <div className="rounded-b-lg">
-          {/* Divider */}
-          <div className="border-t border-base-content/20" />
-
-          {/* Description / notes */}
-          {t.notes ? (
-            <div className={`text-sm mb-3 px-2 py-4 xl:py-4 ${textClass ?? ''}`}>{t.notes}</div>
-          ) : (
-            <div className={`text-sm text-gray-400 mb-3 py-2 xl:py-4 ${textClass ? '' : ''}`}>
-              No description
+              {t.notes ? t.notes : <span className="italic opacity-60">No description</span>}
             </div>
-          )}
 
-          {/* Divider */}
-          <div className="border-t border-base-content/20" />
-
-          {/* Footer: due left, duration right */}
-          <div
-            className="flex items-center justify-between text-sm p-2
-          "
-          >
-            <div className={`text-left text-sm ${textClass ?? ''}`}>
-              {t.dueDate ? new Date(t.dueDate).toLocaleString() : 'No due date'}
-            </div>
-            <div className={`text-right text-sm ${textClass ?? ''}`}>
-              {(() => {
-                const estimated: number | undefined = t.estimatedDuration ?? undefined;
-                if (typeof estimated === 'number' && estimated > 0) {
-                  const h = Math.floor(estimated / 60);
-                  const m = estimated % 60;
-                  return `${h}h ${m}m`;
-                }
-                return '—';
-              })()}
+            <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
+              <span className={metaBadgeClass} title={dueLabel}>
+                Due · {dueLabel}
+              </span>
+              <span className={metaBadgeClass} title={estimatedLabel}>
+                Est · {estimatedLabel}
+              </span>
             </div>
           </div>
         </div>

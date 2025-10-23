@@ -35,6 +35,11 @@ This file contains a prioritized, actionable set of next tasks based on the curr
 
 These are the immediate actionable items. Completed items were moved to `implementation.md` under "Completed tasks".
 
+- [ ] TaskCard redesign with DaisyUI styling
+
+  - Scope: Overhaul `src/components/TaskCard.tsx` layout to use modern DaisyUI-inspired sections while preserving all current behaviors (status cycling, edit/delete, expand, keyboard support).
+  - Acceptance criteria: (1) Card adopts cohesive DaisyUI color palette and spacing without regressions to interactions; (2) All controls remain accessible with focus states and tooltips intact; (3) Existing tests continue to pass; (4) Visual polish documented with before/after notes in `implementation.md`.
+
 - [ ] Fix the dailies view to reset daily
 
   - Ensure the Dailies view resets correctly once per day for users. Files to check: `src/app/dailies/page.tsx`, `src/components/DailiesClient.tsx`, `src/lib/utils.ts` (or where date logic lives), and `src/lib/taskStore.ts` / `src/lib/projectStore.ts` if dailies are persisted in state or DB. Acceptance criteria: (1) Dailies reset at local midnight (or configurable timezone) and UI reflects the reset without requiring a full page reload; (2) Completed/checked dailies are archived or cleared per current product spec; (3) Unit/integration tests cover reset logic and edge cases (timezone differences, daylight savings, offline/online reconnection). Implementation notes: compute next reset timestamp and schedule a client-side timer or revalidate on focus; if using server-side persisted streaks, add a last-seen date check and reset on fetch. Include test helpers to mock Date/time and tests for reset behavior.

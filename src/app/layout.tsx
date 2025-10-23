@@ -120,7 +120,7 @@ export default async function RootLayout({
         </Script>
       </head>
 
-      <body className={`font-vend text-base-content`}>
+      <body className={`font-vend w-full text-base-content`}>
         <Providers>
           <Navbar initialIsSignedIn={isLoggedIn} initialUser={initialUser} />
           {/* Navbar now overlays content. Do not apply top padding so pages sit underneath the absolute navbar. */}

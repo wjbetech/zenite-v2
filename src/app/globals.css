@@ -99,8 +99,33 @@ a {
 
 body {
   min-height: 100vh;
-  /* Always reserve vertical scrollbar space to avoid layout shifts when modals open. */
-  overflow-y: scroll;
+}
+
+/* Prevent layout shifts / right-side gap when third-party scroll-lock logic sets
+   inline widths or hides scrollbars. We prefer a stable scrollbar gutter and
+   ensure the app container keeps the full viewport width while a scroll-lock
+   attribute is present (used by some UI libraries). This is a low-risk
+   override that avoids visual shifting when modals open. */
+:root {
+  /* Always reserve space for the scrollbar to avoid layout shifts */
+  scrollbar-gutter: stable;
+}
+
+:root[data-base-ui-scroll-locked] body {
+  /* Prevent scroll when modal is open */
+  overflow: hidden !important;
+}
+
+/* When a scroll-lock attribute is present, some libs set inline styles that
+   reduce the width of the app container (causing a right gap). Force the
+   main app containers to stay full-width to avoid the gap. */
+:root[data-base-ui-scroll-locked] #__next,
+:root[data-base-ui-scroll-locked] main,
+:root[data-base-ui-scroll-locked] .__next,
+:root[data-base-ui-scroll-locked] .app-root {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  box-sizing: border-box;
 }
 
 /* Glassmorphism utilities for navbar and small cards. */

@@ -66,6 +66,99 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       return;
     }
   }, []);
+
+  // Keep the layout stable when third-party scroll-lock code sets inline widths.
+  // Some UI code sets `data-base-ui-scroll-locked` on <html> and writes inline
+  // `width: calc(100vw - ...)` on containers. We clear those inline width constraints
+  // so the stable scrollbar-gutter approach in globals.css can work without gaps.
+  useEffect(() => {
+    const ATTR = 'data-base-ui-scroll-locked';
+    const selectors = [
+      'html',
+      'body',
+      '#__next',
+      'main',
+      '.__next',
+      '.app-root',
+      '.modal.modal-open',
+    ];
+    const docEl = typeof document !== 'undefined' ? document.documentElement : null;
+    if (!docEl) return;
+
+    const stored = new Map<
+      HTMLElement,
+      {
+        width: string;
+        maxWidth: string;
+        height: string;
+      }
+    >();
+
+    function applyLock() {
+      for (const sel of selectors) {
+        try {
+          const el = document.querySelector(sel) as HTMLElement | null;
+          if (!el) continue;
+          if (!stored.has(el)) {
+            stored.set(el, {
+              width: el.style.width || '',
+              maxWidth: el.style.maxWidth || '',
+              height: el.style.height || '',
+            });
+          }
+          // Clear inline width/height constraints. Leave overflow alone so
+          // scroll-lock can prevent scrolling. The stable scrollbar-gutter
+          // in globals.css prevents the gap.
+          el.style.width = '';
+          el.style.maxWidth = '';
+          el.style.height = '';
+        } catch {
+          // ignore individual failures
+        }
+      }
+    }
+
+    function restoreAll() {
+      for (const [el, vals] of stored.entries()) {
+        try {
+          el.style.width = vals.width;
+          el.style.maxWidth = vals.maxWidth;
+          el.style.height = vals.height;
+        } catch {}
+      }
+      stored.clear();
+    }
+
+    const mo = new MutationObserver((muts) => {
+      for (const m of muts) {
+        if (m.type === 'attributes' && (m as MutationRecord).attributeName === ATTR) {
+          if (docEl.hasAttribute(ATTR)) {
+            applyLock();
+          } else {
+            restoreAll();
+          }
+          break;
+        }
+      }
+    });
+
+    try {
+      mo.observe(docEl, { attributes: true, attributeFilter: [ATTR] });
+      // handle case where attribute is already present at mount
+      if (docEl.hasAttribute(ATTR)) applyLock();
+    } catch {
+      // observation may fail in some environments; noop
+    }
+
+    return () => {
+      try {
+        mo.disconnect();
+      } catch {}
+      try {
+        restoreAll();
+      } catch {}
+    };
+  }, []);
   return (
     <ClerkProvider>
       <ThemeProvider>

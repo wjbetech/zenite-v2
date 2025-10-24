@@ -2,9 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Edit, Trash, Check, Play, Circle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Edit, Trash, Check, Play, Circle, ChevronDown } from 'lucide-react';
 import type { Task } from '../lib/taskStore';
-import { motion, AnimatePresence } from 'framer-motion';
 export type { Task } from '../lib/taskStore';
 
 export type TaskLike = Partial<Task> & { id: string };
@@ -116,15 +115,17 @@ export default function TaskCard({
 }: Props) {
   const t = normalizeTaskLike(task as TaskLike);
 
-  // Local expand state allows a single task to open its full view when the
-  // global view toggle is set to 'mini'. We show the chevron when the card
-  // can be expanded (global mini) or when it is currently expanded.
-  const [localExpanded, setLocalExpanded] = React.useState(false);
-  const effectiveFull = view === 'full' || localExpanded;
-  // If the task becomes started (in-progress) from external updates, auto-expand
+  // Control expansion state - mini view starts collapsed, full view starts expanded
+  const [localExpanded, setLocalExpanded] = React.useState(view === 'full');
+
+  const isCollapsedMini = view === 'mini' && !localExpanded;
+
+  // Keep localExpanded in sync with the global `view` prop: when the user toggles
+  // Full/Mini globally, cards should reflect that default state immediately.
   React.useEffect(() => {
-    if (t.started) setLocalExpanded(true);
-  }, [t.started]);
+    setLocalExpanded(view === 'full');
+  }, [view]);
+
   // Try to derive a connected project's display name from flexible shapes that
   // might include projectName or a nested project object. Fall back to
   // projectId when nothing else is available.
@@ -193,6 +194,18 @@ export default function TaskCard({
     return '—';
   })();
 
+  // Measure expanded content height so we can animate `max-height` smoothly.
+  // We need dueLabel/estimatedLabel in scope so measure here.
+  const expandedRef = React.useRef<HTMLDivElement | null>(null);
+  const [expandedHeight, setExpandedHeight] = React.useState<number>(0);
+  React.useLayoutEffect(() => {
+    const el = expandedRef.current;
+    if (!el) return;
+    // read scrollHeight to use as target for max-height animation
+    const h = el.scrollHeight;
+    setExpandedHeight(h);
+  }, [t.notes, dueLabel, estimatedLabel, view, localExpanded]);
+
   const shouldRenderRight =
     right &&
     (projectName == null ||
@@ -206,15 +219,12 @@ export default function TaskCard({
     <div className="flex-none">{right}</div>
   );
 
-  const metaBadgeClass = `${statusStyles.badge} whitespace-nowrap`;
-  const cardBg = statusStyles.cardBackground ?? 'bg-base-100/95';
+  const cardBg = statusStyles.cardBackground ?? 'bg-base-100';
   const cardBaseClasses = `group/card relative z-10 overflow-hidden rounded-2xl border border-base-300/90 ${cardBg} backdrop-blur-sm transition-all duration-300 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 shadow-[0_1px_0_0_rgba(255,255,255,0.4)] ${statusStyles.cardBorder} ${statusStyles.cardShadow} ${statusStyles.focusRing} focus-visible:ring-offset-base-100`;
 
   const cycleStatus = () => {
     if (!isStarted && !isDone) {
       onStatusChange?.(t.id, 'tilde');
-      // optimistically expand the card when the user marks it in-progress
-      setLocalExpanded(true);
       return;
     }
     if (isStarted && !isDone) {
@@ -224,15 +234,17 @@ export default function TaskCard({
     onStatusChange?.(t.id, 'none');
   };
 
-  const cardInner = (
+  const cardCollapsed = (
     <div role="article" aria-label={`Task ${t.title}`} tabIndex={0} className={cardBaseClasses}>
       <span
         className={`absolute inset-x-0 top-0 h-1 ${statusStyles.accentBar}`}
         aria-hidden="true"
       />
 
-      <div className={`card-body ${view === 'mini' && !localExpanded ? 'pt-3 pb-2' : 'p-4'}`}>
-        <div className="flex flex-wrap items-center gap-4">
+      <div className={`card-body ${isCollapsedMini ? '' : ''}`}>
+        <div
+          className={`flex items-center ${isCollapsedMini ? 'items-center' : 'flex-wrap'} gap-4`}
+        >
           <button
             type="button"
             aria-label="Toggle task status"
@@ -264,10 +276,14 @@ export default function TaskCard({
             )}
           </button>
 
-          <div className={`flex-1 min-w-0 ${view === 'mini' && !localExpanded ? '' : 'space-y-2'}`}>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                <h3 className="card-title text-lg font-semibold leading-snug text-base-content align-middle">
+          <div className={`flex-1 min-w-0 ${isCollapsedMini ? 'flex items-center' : 'space-y-2'}`}>
+            <div className="flex items-center justify-between gap-3 w-full">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <h3
+                  className={`${
+                    isCollapsedMini ? 'text-base leading-none' : 'card-title text-lg leading-snug'
+                  } font-semibold text-base-content m-0`}
+                >
                   {t.title}
                 </h3>
 
@@ -296,7 +312,7 @@ export default function TaskCard({
                     className="btn btn-ghost btn-circle text-base-content/70 hover:text-primary"
                     title="Edit"
                   >
-                    <Edit className="h-6 w-6" />
+                    <Edit className="text-success *:h-6 w-6" />
                   </button>
                 )}
 
@@ -315,67 +331,65 @@ export default function TaskCard({
                   </button>
                 )}
 
-                {(view === 'mini' || localExpanded) && (
+                {view === 'mini' || view === 'full' ? (
                   <button
-                    aria-label={localExpanded ? 'Collapse task' : 'Expand task'}
-                    title={localExpanded ? 'Collapse' : 'Expand'}
+                    aria-label={
+                      view === 'mini'
+                        ? 'Expand task'
+                        : localExpanded
+                        ? 'Collapse task'
+                        : 'Expand task'
+                    }
+                    title={view === 'mini' ? 'Expand' : localExpanded ? 'Collapse' : 'Expand'}
                     aria-expanded={localExpanded}
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
-                      setLocalExpanded((v) => !v);
+                      setLocalExpanded(!localExpanded);
                     }}
                     className="btn btn-ghost btn-circle text-base-content/60 hover:text-base-content"
                   >
-                    {localExpanded ? (
-                      <ChevronUp className="h-6 w-6" />
-                    ) : (
-                      <ChevronDown className="h-6 w-6" />
-                    )}
+                    <ChevronDown
+                      className={`h-6 w-6 transition-transform duration-200 ${
+                        localExpanded ? 'rotate-180' : ''
+                      }`}
+                    />
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
-
-            {t.notes && !effectiveFull && view !== 'mini' ? (
-              <p
-                className={`line-clamp-2 text-lg font-semibold leading-relaxed ${statusStyles.supportingText}`}
-              >
-                {t.notes}
-              </p>
-            ) : null}
           </div>
         </div>
 
-        <AnimatePresence initial={false}>
-          {effectiveFull && (
-            <motion.div
-              key="expanded"
-              initial={{ height: 0, opacity: 0, scale: 0.995 }}
-              animate={{ height: 'auto', opacity: 1, scale: 1 }}
-              exit={{ height: 0, opacity: 0, scale: 0.995 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-              style={{ overflow: 'hidden' }}
-            >
-              <div className="pt-2 space-y-4">
-                <div
-                  className={`p-4 text-lg font-semibold leading-relaxed ${statusStyles.supportingText}`}
-                >
-                  {t.notes ? t.notes : <span className="italic opacity-60">No description</span>}
-                </div>
+        {/* Show expanded content for full view or when mini view is expanded */}
+        {/* Expanded content: always present in DOM so we can animate height/opacity */}
+        <div
+          aria-hidden={!localExpanded}
+          ref={expandedRef}
+          className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-[cubic-bezier(.2,.8,.2,1)] ${
+            localExpanded ? 'opacity-100' : 'opacity-0'
+          }`}
+          style={{ maxHeight: localExpanded ? `${expandedHeight}px` : '0px' }}
+        >
+          <div
+            className={`px-4 py-2 text-lg font-semibold leading-relaxed ${statusStyles.supportingText}`}
+          >
+            {t.notes ? t.notes : <span className="italic opacity-60">No description</span>}
+          </div>
 
-                <div className="flex flex-wrap items-center gap-2 font-medium text-xl">
-                  <span className={metaBadgeClass} title={dueLabel}>
-                    Due · {dueLabel}
-                  </span>
-                  <span className={metaBadgeClass} title={estimatedLabel}>
-                    Est · {estimatedLabel}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          <div
+            className={`flex flex-wrap items-center gap-2 font-medium text-xl ${
+              localExpanded ? 'mt-2' : 'mt-0'
+            }`}
+          >
+            <span className={`${statusStyles.badge} whitespace-nowrap`} title={dueLabel}>
+              Due · {dueLabel}
+            </span>
+            <span className={`${statusStyles.badge} whitespace-nowrap`} title={estimatedLabel}>
+              Est · {estimatedLabel}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -386,10 +400,10 @@ export default function TaskCard({
 
       {href ? (
         <Link href={href} className="block">
-          {cardInner}
+          {cardCollapsed}
         </Link>
       ) : (
-        cardInner
+        cardCollapsed
       )}
     </div>
   );

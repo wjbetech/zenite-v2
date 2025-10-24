@@ -11,6 +11,14 @@
   logs: false;
 }
 
+/* Override: remove DaisyUI default gap on .card-body which sets
+   `gap: calc(0.25rem * 2)` in generated CSS. We explicitly reset the gap
+   to 0 for card body content to avoid extra spacing in our compact cards.
+   Use !important to ensure the rule wins over plugin-generated rules. */
+.card-body {
+  gap: 0 !important;
+}
+
 /* light theme styles for 'pastel' theme */
 [data-theme='pastel'] {
   .text-accent {

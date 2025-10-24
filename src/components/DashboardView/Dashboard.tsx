@@ -224,7 +224,7 @@ export default function Dashboard() {
 
   return (
     <div
-      className="px-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-hidden"
+      className="px-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-hidden overflow-y-visible"
       style={{ boxSizing: 'border-box' }}
     >
       {/* Header, heatmap and lists container */}
@@ -288,7 +288,7 @@ export default function Dashboard() {
               <TaskViewToggle />
 
               {/* Task list content (render spinner OR the lists so they share space) */}
-              <div className="pt-4 overflow-hidden w-full">
+              <div className="pt-4 overflow-visible w-full">
                 {showImminent && effectiveView === 'imminent' && (
                   <React.Suspense>
                     <ImminentList

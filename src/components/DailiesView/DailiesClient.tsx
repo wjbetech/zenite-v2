@@ -13,6 +13,7 @@ import useDailyResetScheduler from '../../hooks/useDailyResetScheduler';
 import DailiesLoading from './DailiesLoading';
 import DailiesEmpty from './DailiesEmpty';
 import DailiesError from './DailiesError';
+import useSettingsStore from '../../lib/settingsStore';
 import { mapTasksToSortableItems } from '../../lib/task-mappers';
 
 export default function DailiesClient() {
@@ -38,6 +39,9 @@ export default function DailiesClient() {
 
   const daily = tasks.filter((t) => (t.recurrence ?? 'once') === 'daily');
   const [timerOpen, setTimerOpen] = React.useState(false); // default closed
+
+  const density = useSettingsStore((s) => s.density);
+  const view: 'full' | 'mini' = density === 'compact' ? 'mini' : 'full';
 
   // Extracted to a hook for testability and separation of concerns
   useDailyResetScheduler({ loadTasks, resetIfNeeded, resetNow });
@@ -130,6 +134,7 @@ export default function DailiesClient() {
                       <TaskCard
                         key={t.id}
                         task={t as unknown as CardTask}
+                        view={view}
                         right={t.projectName}
                         href={t.href}
                         onEdit={(task) => {

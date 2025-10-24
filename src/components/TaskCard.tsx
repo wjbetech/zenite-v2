@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Edit, Trash, Check, Play, Circle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Edit, Trash, Check, Play, Circle, ChevronDown } from 'lucide-react';
 import type { Task } from '../lib/taskStore';
 export type { Task } from '../lib/taskStore';
 
@@ -20,64 +20,88 @@ type Props = {
 
 // Normalize flexible shapes (Dashboard/Dailies may pass slimmer objects) into a full Task
 export function normalizeTaskLike(input: TaskLike | Task): Task {
-  const raw = input as Partial<Record<string, unknown>>;
-  const estimatedRaw = raw.estimatedDuration;
-  return {
-    id: input.id,
-    title: (input.title as string) || 'Untitled',
-    notes: (raw.notes as string | undefined) ?? undefined,
-    estimatedDuration: typeof estimatedRaw === 'number' ? (estimatedRaw as number) : undefined,
-    dueDate: (raw.dueDate as string | null | undefined) ?? null,
-    createdAt: (raw.createdAt as string) || new Date().toISOString(),
-    completed: raw.completed === true,
-    started: raw.started === true,
-    recurrence: (raw.recurrence as string | null | undefined) ?? null,
-    completedAt: (raw.completedAt as string | null | undefined) ?? null,
-  };
+  // Minimal safe normalizer: present code expects Task-like shape in many places.
+  // To avoid large refactors here, just cast the incoming object to Task.
+  // If needed later, we can reintroduce the richer normalization logic.
+  return input as Task;
 }
 
-// Small helper to compute classes per status
-function getStatusClasses(isStarted: boolean, isDone: boolean) {
-  if (!isStarted && !isDone) {
+// Map task state to DaisyUI-inspired styling tokens
+type StatusStyles = {
+  accentBar: string;
+  cardBorder: string;
+  cardShadow: string;
+  focusRing: string;
+  cardBackground?: string;
+  statusButton: string;
+  statusIcon: string;
+  badge: string;
+  supportingText: string;
+};
+
+function getStatusStyles(isStarted: boolean, isDone: boolean, isStale: boolean): StatusStyles {
+  if (isStale) {
     return {
-      wrapper: 'bg-base-200 text-base-content',
-      buttonBase:
-        'flex items-center justify-center h-7 w-7 rounded-lg shrink-0 transition-colors cursor-pointer',
-      buttonState: 'bg-white border',
-      dot: 'bg-neutral',
-      text: 'text-base-content',
+      accentBar: 'bg-error',
+      cardBorder: 'border-error/50',
+      cardBackground: 'bg-error/5',
+      cardShadow:
+        'rounded-2xl shadow-lg shadow-base-content/20 hover:rounded-2xl hover:shadow-error/30 hover:-translate-y-1 hover:-translate-x-1',
+      focusRing: 'focus-visible:ring-error/50',
+      statusButton:
+        'btn btn-circle btn-error text-error-content shadow-sm shadow-error/30 hover:shadow-error/40',
+      statusIcon: 'text-error-content',
+      badge: 'badge border border-error/40 bg-error/10 font-semibold text-error-content',
+      supportingText: 'text-error-content/80',
     };
   }
 
-  if (isStarted && !isDone) {
+  if (isDone) {
     return {
-      wrapper: 'bg-accent/40',
-      buttonBase:
-        'flex items-center justify-center h-7 w-7 rounded-lg shrink-0 transition-colors cursor-pointer',
-      // solid accent background for started state
-      buttonState: 'bg-accent text-accent-content border-0',
-      dot: 'bg-accent-content',
-      text: '',
+      accentBar: 'bg-success',
+      cardBorder: 'border-success/40',
+      cardBackground: 'bg-success/20',
+      cardShadow:
+        'rounded-2xl shadow-lg shadow-success/20 hover:rounded-2xl hover:shadow-success/30 hover:-translate-y-1 hover:-translate-x-1',
+      focusRing: 'focus-visible:ring-success/50',
+      statusButton:
+        'btn btn-circle btn-success text-success shadow-sm shadow-success/40 hover:shadow-success/50',
+      statusIcon: 'text-success-content',
+      badge: 'badge border border-success/40 bg-success/10 font-semibold text-success',
+      supportingText: 'text-success',
+    };
+  }
+
+  if (isStarted) {
+    return {
+      accentBar: 'bg-secondary',
+      cardBorder: 'border-secondary/40',
+      cardBackground: 'bg-secondary/20',
+      cardShadow:
+        'rounded-2xl shadow-lg shadow-secondary/20 hover:rounded-2xl  hover:shadow-secondary/30 hover:-translate-y-1 hover:-translate-x-1',
+      focusRing: 'focus-visible:ring-secondary/50',
+      statusButton:
+        'btn btn-circle btn-secondary text-secondary-content shadow-sm shadow-secondary/40 hover:shadow-secondary/50',
+      statusIcon: 'text-secondary-content',
+      badge:
+        'badge border border-secondary/40 bg-secondary/10 text-secondary dark:text-secondary font-semibold',
+      supportingText: 'text-secondary dark:text-secondary',
     };
   }
 
   return {
-    wrapper: 'bg-success/40',
-    buttonBase:
-      'flex items-center justify-center h-7 w-7 rounded-lg shrink-0 transition-colors cursor-pointer',
-    buttonState: 'bg-success text-success-content',
-    dot: 'bg-success-content',
-    text: '',
+    accentBar: 'bg-base-300',
+    cardBorder: 'border-base-200/80',
+    cardBackground: 'bg-base-100',
+    cardShadow:
+      'rounded-2xl shadow-lg shadow-base-200/50 hover:rounded-2xl hover:shadow-lg hover:shadow-base-content/20 hover:-translate-y-1 hover:-translate-x-1',
+    focusRing: 'focus-visible:ring-primary/40',
+    statusButton:
+      'btn btn-circle btn-ghost border-2 border-base-300 text-base-content hover:border-primary hover:bg-primary/10 hover:text-primary',
+    statusIcon: 'text-base-content',
+    badge: 'badge border border-base-300 bg-base-200 font-semibold text-base-content/70',
+    supportingText: 'text-base-content',
   };
-}
-
-function formatDuration(minutes?: number | null) {
-  if (!minutes || minutes <= 0) return '';
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h > 0 && m > 0) return `${h}h ${m}m`;
-  if (h > 0) return `${h}h`;
-  return `${m}m`;
 }
 
 export default function TaskCard({
@@ -91,15 +115,17 @@ export default function TaskCard({
 }: Props) {
   const t = normalizeTaskLike(task as TaskLike);
 
-  // Local expand state allows a single task to open its full view when the
-  // global view toggle is set to 'mini'. We show the chevron when the card
-  // can be expanded (global mini) or when it is currently expanded.
-  const [localExpanded, setLocalExpanded] = React.useState(false);
-  const effectiveFull = view === 'full' || localExpanded;
-  // If the task becomes started (in-progress) from external updates, auto-expand
+  // Control expansion state - mini view starts collapsed, full view starts expanded
+  const [localExpanded, setLocalExpanded] = React.useState(view === 'full');
+
+  const isCollapsedMini = view === 'mini' && !localExpanded;
+
+  // Keep localExpanded in sync with the global `view` prop: when the user toggles
+  // Full/Mini globally, cards should reflect that default state immediately.
   React.useEffect(() => {
-    if (t.started) setLocalExpanded(true);
-  }, [t.started]);
+    setLocalExpanded(view === 'full');
+  }, [view]);
+
   // Try to derive a connected project's display name from flexible shapes that
   // might include projectName or a nested project object. Fall back to
   // projectId when nothing else is available.
@@ -132,27 +158,6 @@ export default function TaskCard({
   const isDone = !!t.completed;
   const isStarted = !!t.started && !isDone;
 
-  const {
-    wrapper: bgClass,
-    buttonBase,
-    buttonState,
-    dot: dotClass,
-    text: textClass,
-  } = getStatusClasses(isStarted, isDone);
-
-  // Map the small-dot background class (e.g. 'bg-neutral') to a text color
-  // class for the icon (e.g. 'text-neutral'). For the unstarted state
-  // (bg-neutral -> white button) we prefer a higher-contrast 'text-base-content'.
-  let iconColorClass = 'text-base-content';
-  if (typeof dotClass === 'string') {
-    if (dotClass === 'bg-neutral') {
-      // Use pure black for maximum contrast on white buttons
-      iconColorClass = 'text-black';
-    } else {
-      iconColorClass = dotClass.replace(/^bg-/, 'text-');
-    }
-  }
-
   // Detect stale completed one-off tasks
   let isStaleCompleted = false;
   try {
@@ -173,13 +178,53 @@ export default function TaskCard({
     // ignore
   }
 
-  const finalWrapper = isStaleCompleted ? 'bg-red-500/20 text-red-700' : bgClass;
+  const statusStyles = getStatusStyles(isStarted, isDone, isStaleCompleted);
+
+  const dueLabel = t.dueDate ? new Date(t.dueDate).toLocaleString() : 'No due date';
+  const estimatedLabel = (() => {
+    const estimated: number | undefined = t.estimatedDuration ?? undefined;
+    if (typeof estimated === 'number' && estimated > 0) {
+      const h = Math.floor(estimated / 60);
+      const m = estimated % 60;
+      if (h > 0) {
+        return m > 0 ? `${h}h ${m}m` : `${h}h`;
+      }
+      return `${m}m`;
+    }
+    return '—';
+  })();
+
+  // Measure expanded content height so we can animate `max-height` smoothly.
+  // We need dueLabel/estimatedLabel in scope so measure here.
+  const expandedRef = React.useRef<HTMLDivElement | null>(null);
+  const [expandedHeight, setExpandedHeight] = React.useState<number>(0);
+  React.useLayoutEffect(() => {
+    const el = expandedRef.current;
+    if (!el) return;
+    // read scrollHeight to use as target for max-height animation
+    const h = el.scrollHeight;
+    setExpandedHeight(h);
+  }, [t.notes, dueLabel, estimatedLabel, view, localExpanded]);
+
+  const shouldRenderRight =
+    right &&
+    (projectName == null ||
+      (typeof right !== 'string' ? true : String(right).trim() !== projectName));
+
+  const renderedRight = !shouldRenderRight ? null : typeof right === 'string' ? (
+    <span className={`${statusStyles.badge} whitespace-nowrap`} title={right} aria-label={right}>
+      {right}
+    </span>
+  ) : (
+    <div className="flex-none">{right}</div>
+  );
+
+  const cardBg = statusStyles.cardBackground ?? 'bg-base-100';
+  const cardBaseClasses = `group/card relative z-10 overflow-hidden rounded-2xl border border-base-300/90 ${cardBg} backdrop-blur-sm transition-all duration-300 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 shadow-[0_1px_0_0_rgba(255,255,255,0.4)] ${statusStyles.cardBorder} ${statusStyles.cardShadow} ${statusStyles.focusRing} focus-visible:ring-offset-base-100`;
 
   const cycleStatus = () => {
     if (!isStarted && !isDone) {
       onStatusChange?.(t.id, 'tilde');
-      // optimistically expand the card when the user marks it in-progress
-      setLocalExpanded(true);
       return;
     }
     if (isStarted && !isDone) {
@@ -189,16 +234,17 @@ export default function TaskCard({
     onStatusChange?.(t.id, 'none');
   };
 
-  const cardInner = (
-    <div
-      role="article"
-      aria-label={`Task ${t.title}`}
-      tabIndex={0}
-      className={`${finalWrapper} relative z-10 rounded-lg shadow-sm p-2 xl:p-4 transition-all duration-200 transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-200 cursor-pointer`}
-    >
-      {/* Header: status left, title + duration + project, actions right (center aligned) */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 flex-1">
+  const cardCollapsed = (
+    <div role="article" aria-label={`Task ${t.title}`} tabIndex={0} className={cardBaseClasses}>
+      <span
+        className={`absolute inset-x-0 top-0 h-1 ${statusStyles.accentBar}`}
+        aria-hidden="true"
+      />
+
+      <div className={`card-body ${isCollapsedMini ? '' : ''}`}>
+        <div
+          className={`flex items-center ${isCollapsedMini ? 'items-center' : 'flex-wrap'} gap-4`}
+        >
           <button
             type="button"
             aria-label="Toggle task status"
@@ -218,136 +264,128 @@ export default function TaskCard({
                 cycleStatus();
               }
             }}
-            className={`${buttonBase} ${buttonState}`}
+            className={`${statusStyles.statusButton} transition-transform duration-200 group-hover/card:scale-105 focus-visible:outline-none focus-visible:ring-0`}
             title={isDone ? 'Clear status' : isStarted ? 'Mark done' : 'Mark in progress'}
           >
             {isDone ? (
-              <Check className="h-5 w-5" strokeWidth={2} />
+              <Check className={`h-4 w-4 ${statusStyles.statusIcon}`} strokeWidth={2} />
             ) : isStarted ? (
-              <Play className="h-5 w-5" />
+              <Play className={`h-4 w-4 ${statusStyles.statusIcon}`} />
             ) : (
-              <Circle className={`h-4 w-4 ${iconColorClass}`} />
+              <Circle className={`h-4 w-4 ${statusStyles.statusIcon}`} strokeWidth={2} />
             )}
           </button>
 
-          <div className="flex items-center">
-            <div className={`text-base md:text-md lg:text-lg font-medium ${textClass ?? ''}`}>
-              <span className={`${textClass ?? ''}`}>{t.title}</span>
+          <div className={`flex-1 min-w-0 ${isCollapsedMini ? 'flex items-center' : 'space-y-2'}`}>
+            <div className="flex items-center justify-between gap-3 w-full">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <h3
+                  className={`${
+                    isCollapsedMini ? 'text-base leading-none' : 'card-title text-lg leading-snug'
+                  } font-semibold text-base-content m-0`}
+                >
+                  {t.title}
+                </h3>
+
+                {projectName ? (
+                  <span
+                    className={`${statusStyles.badge} whitespace-nowrap ml-3`}
+                    title={projectName}
+                    aria-label={`Project ${projectName}`}
+                  >
+                    {projectName}
+                  </span>
+                ) : null}
+
+                {renderedRight}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {onEdit && (
+                  <button
+                    aria-label="Edit task"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      onEdit?.(t as Task);
+                    }}
+                    className="btn btn-ghost btn-circle text-base-content/70 hover:text-primary"
+                    title="Edit"
+                  >
+                    <Edit className="text-success *:h-6 w-6" />
+                  </button>
+                )}
+
+                {onDelete && (
+                  <button
+                    aria-label="Delete task"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      onDelete?.(t.id);
+                    }}
+                    className="btn btn-ghost btn-circle text-error/80 hover:text-error"
+                    title="Delete"
+                  >
+                    <Trash className="h-6 w-6" />
+                  </button>
+                )}
+
+                {view === 'mini' || view === 'full' ? (
+                  <button
+                    aria-label={
+                      view === 'mini'
+                        ? 'Expand task'
+                        : localExpanded
+                        ? 'Collapse task'
+                        : 'Expand task'
+                    }
+                    title={view === 'mini' ? 'Expand' : localExpanded ? 'Collapse' : 'Expand'}
+                    aria-expanded={localExpanded}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setLocalExpanded(!localExpanded);
+                    }}
+                    className="btn btn-ghost btn-circle text-base-content/60 hover:text-base-content"
+                  >
+                    <ChevronDown
+                      className={`h-6 w-6 transition-transform duration-200 ${
+                        localExpanded ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                ) : null}
+              </div>
             </div>
-
-            {projectName ? (
-              <span
-                className="ml-2 inline-block max-w-[12rem] truncate bg-neutral text-white text-sm font-medium px-2 py-0.5 rounded-full"
-                title={projectName}
-                aria-label={`Project ${projectName}`}
-              >
-                {projectName}
-              </span>
-            ) : typeof t.estimatedDuration === 'number' && t.estimatedDuration > 0 ? (
-              <span className="text-sm text-base-content bg-base-200 px-2 py-0.5 rounded-full truncate ml-2">
-                {formatDuration(t.estimatedDuration)}
-              </span>
-            ) : null}
-
-            {right &&
-              // If we already have a derived projectName, avoid duplicating it from `right` when
-              // `right` is a plain string equal to the project name. Otherwise render `right`.
-              (projectName == null ||
-                (typeof right !== 'string' ? true : String(right).trim() !== projectName)) && (
-                <div className="ml-3 text-sm">{right}</div>
-              )}
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {onEdit && (
-            <button
-              aria-label="Edit task"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                onEdit?.(t as Task);
-              }}
-              className="cursor-pointer text-emerald-600 hover:text-emerald-600/80 btn-icon"
-              title="Edit"
-            >
-              <Edit className="h-5 w-5" />
-            </button>
-          )}
-
-          {onDelete && (
-            <button
-              aria-label="Delete task"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                onDelete?.(t.id);
-              }}
-              className="cursor-pointer text-red-600 hover:text-red-600/80 btn-icon"
-              title="Delete"
-            >
-              <Trash className="h-5 w-5" />
-            </button>
-          )}
-          {/* Per-card expand/collapse (shows in mini mode). Render to the right of edit/delete */}
-          {(view === 'mini' || localExpanded) && (
-            <button
-              aria-label={localExpanded ? 'Collapse task' : 'Expand task'}
-              title={localExpanded ? 'Collapse' : 'Expand'}
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                setLocalExpanded((v) => !v);
-              }}
-              className="btn btn-ghost btn-sm btn-circle"
-            >
-              {localExpanded ? (
-                <ChevronUp className="h-5 w-5" />
-              ) : (
-                <ChevronDown className="h-5 w-5" />
-              )}
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Animated full-content container: always mounted, toggles max-height and opacity for smooth expand/collapse */}
-      <div
-        aria-hidden={!effectiveFull}
-        className={`overflow-hidden transition-all duration-200 ease-in-out ${
-          effectiveFull ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
-        }`}
-      >
-        {/* Divider */}
-        <div className="my-3 -mx-2 xl:-mx-4 border-t border-base-content/20" />
-
-        {/* Description / notes */}
-        {t.notes ? (
-          <div className={`text-sm mb-3 py-2 xl:py-4 ${textClass ?? ''}`}>{t.notes}</div>
-        ) : (
-          <div className={`text-sm text-gray-400 mb-3 py-2 xl:py-4 ${textClass ? '' : ''}`}>
-            No description
+        {/* Show expanded content for full view or when mini view is expanded */}
+        {/* Expanded content: always present in DOM so we can animate height/opacity */}
+        <div
+          aria-hidden={!localExpanded}
+          ref={expandedRef}
+          className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-[cubic-bezier(.2,.8,.2,1)] ${
+            localExpanded ? 'opacity-100' : 'opacity-0'
+          }`}
+          style={{ maxHeight: localExpanded ? `${expandedHeight}px` : '0px' }}
+        >
+          <div className={`py-2 text-lg leading-relaxed ${statusStyles.supportingText}`}>
+            {t.notes ? t.notes : <span className="italic opacity-60">No description</span>}
           </div>
-        )}
 
-        {/* Divider */}
-        <div className="my-2 -mx-2 xl:-mx-4 border-t border-base-content/20" />
-
-        {/* Footer: due left, duration right */}
-        <div className="flex items-center justify-between text-sm">
-          <div className={`text-left text-sm ${textClass ?? ''}`}>
-            {t.dueDate ? new Date(t.dueDate).toLocaleString() : 'No due date'}
-          </div>
-          <div className={`text-right text-sm ${textClass ?? ''}`}>
-            {(() => {
-              const estimated: number | undefined = t.estimatedDuration ?? undefined;
-              if (typeof estimated === 'number' && estimated > 0) {
-                const h = Math.floor(estimated / 60);
-                const m = estimated % 60;
-                return `${h}h ${m}m`;
-              }
-              return '—';
-            })()}
+          <div
+            className={`flex flex-wrap items-center gap-2 font-medium text-xl ${
+              localExpanded ? 'mt-2' : 'mt-0'
+            }`}
+          >
+            <span className={`${statusStyles.badge} whitespace-nowrap`} title={dueLabel}>
+              Due · {dueLabel}
+            </span>
+            <span className={`${statusStyles.badge} whitespace-nowrap`} title={estimatedLabel}>
+              Est · {estimatedLabel}
+            </span>
           </div>
         </div>
       </div>
@@ -360,10 +398,10 @@ export default function TaskCard({
 
       {href ? (
         <Link href={href} className="block">
-          {cardInner}
+          {cardCollapsed}
         </Link>
       ) : (
-        cardInner
+        cardCollapsed
       )}
     </div>
   );

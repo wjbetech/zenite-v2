@@ -11,10 +11,24 @@
   logs: false;
 }
 
+/* Override: remove DaisyUI default gap on .card-body which sets
+   `gap: calc(0.25rem * 2)` in generated CSS. We explicitly reset the gap
+   to 0 for card body content to avoid extra spacing in our compact cards.
+   Use !important to ensure the rule wins over plugin-generated rules. */
+.card-body {
+  gap: 0 !important;
+}
+
 /* light theme styles for 'pastel' theme */
 [data-theme='pastel'] {
   .text-accent {
     color: #2e51b1;
+  }
+  .text-success {
+    color: #447c52;
+  }
+  .text-secondary {
+    color: #916c8e;
   }
   .bg-accent {
     background-color: #a5c2dd;
@@ -29,11 +43,29 @@
   .text-accent {
     color: #b9a031;
   }
+  .text-secondary {
+    color: #af7aaf;
+  }
   .bg-accent {
     background-color: #dfdbc6;
   }
   .ring-accent {
     --tw-ring-color: #b9a031;
+  }
+}
+
+[data-theme='nord'] {
+  .text-success-content {
+    color: #377947;
+  }
+  .text-secondary-content {
+    color: #3e5c81;
+  }
+  .text-success {
+    color: #358847;
+  }
+  .text-secondary {
+    color: #446381;
   }
 }
 
@@ -99,8 +131,33 @@ a {
 
 body {
   min-height: 100vh;
-  /* Always reserve vertical scrollbar space to avoid layout shifts when modals open. */
-  overflow-y: scroll;
+}
+
+/* Prevent layout shifts / right-side gap when third-party scroll-lock logic sets
+   inline widths or hides scrollbars. We prefer a stable scrollbar gutter and
+   ensure the app container keeps the full viewport width while a scroll-lock
+   attribute is present (used by some UI libraries). This is a low-risk
+   override that avoids visual shifting when modals open. */
+:root {
+  /* Always reserve space for the scrollbar to avoid layout shifts */
+  scrollbar-gutter: stable;
+}
+
+:root[data-base-ui-scroll-locked] body {
+  /* Prevent scroll when modal is open */
+  overflow: hidden !important;
+}
+
+/* When a scroll-lock attribute is present, some libs set inline styles that
+   reduce the width of the app container (causing a right gap). Force the
+   main app containers to stay full-width to avoid the gap. */
+:root[data-base-ui-scroll-locked] #__next,
+:root[data-base-ui-scroll-locked] main,
+:root[data-base-ui-scroll-locked] .__next,
+:root[data-base-ui-scroll-locked] .app-root {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  box-sizing: border-box;
 }
 
 /* Glassmorphism utilities for navbar and small cards. */
@@ -233,6 +290,18 @@ html[data-theme='nord'] .nav-glass::before {
 }
 
 /* Remove the scrollbar corner background so corner doesn't show a block */
+
+/* DaisyUI tooltip tweaks: limit width and allow wrapping so tooltips don't overflow the page */
+.tooltip[data-tip] {
+  max-width: 28rem; /* ~448px */
+  white-space: normal; /* allow wrapping */
+  overflow-wrap: anywhere;
+}
+
+.tooltip.tooltip-left {
+  /* ensure tooltip aligns to the left of the reference and doesn't exceed viewport */
+  transform-origin: right center;
+}
 ::-webkit-scrollbar-corner {
   background: transparent;
 }

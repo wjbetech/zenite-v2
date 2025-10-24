@@ -62,11 +62,7 @@ export default function WeekList({
 
   return (
     <div className="p-0 pt-2">
-      <div
-        className={`transition-all duration-300 ease-in-out ${
-          !heatmapOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
-        } overflow-hidden`}
-      >
+      <div className={`transition-all duration-300 ease-in-out overflow-visible`}>
         <NativeSortableDaily
           items={tasks.map((t) => ({
             id: t.id,

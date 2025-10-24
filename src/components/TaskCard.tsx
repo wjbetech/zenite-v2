@@ -67,8 +67,8 @@ function getStatusStyles(isStarted: boolean, isDone: boolean, isStale: boolean):
       statusButton:
         'btn btn-circle btn-success text-success shadow-sm shadow-success/40 hover:shadow-success/50',
       statusIcon: 'text-success-content',
-      badge: 'badge border border-success/40 bg-success/10 font-semibold text-success-content',
-      supportingText: 'text-success-content',
+      badge: 'badge border border-success/40 bg-success/10 font-semibold text-success',
+      supportingText: 'text-success',
     };
   }
 
@@ -84,8 +84,8 @@ function getStatusStyles(isStarted: boolean, isDone: boolean, isStale: boolean):
         'btn btn-circle btn-secondary text-secondary-content shadow-sm shadow-secondary/40 hover:shadow-secondary/50',
       statusIcon: 'text-secondary-content',
       badge:
-        'badge border border-secondary/40 bg-secondary/10 text-secondary-content dark:text-secondary font-semibold',
-      supportingText: 'text-secondary-content dark:text-secondary',
+        'badge border border-secondary/40 bg-secondary/10 text-secondary dark:text-secondary font-semibold',
+      supportingText: 'text-secondary dark:text-secondary',
     };
   }
 
@@ -371,9 +371,7 @@ export default function TaskCard({
           }`}
           style={{ maxHeight: localExpanded ? `${expandedHeight}px` : '0px' }}
         >
-          <div
-            className={`px-4 py-2 text-lg font-semibold leading-relaxed ${statusStyles.supportingText}`}
-          >
+          <div className={`py-2 text-lg leading-relaxed ${statusStyles.supportingText}`}>
             {t.notes ? t.notes : <span className="italic opacity-60">No description</span>}
           </div>
 

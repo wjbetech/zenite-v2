@@ -24,6 +24,12 @@
   .text-accent {
     color: #2e51b1;
   }
+  .text-success {
+    color: #447c52;
+  }
+  .text-secondary {
+    color: #916c8e;
+  }
   .bg-accent {
     background-color: #a5c2dd;
   }
@@ -36,6 +42,9 @@
 [data-theme='cupcake'] {
   .text-accent {
     color: #b9a031;
+  }
+  .text-secondary {
+    color: #af7aaf;
   }
   .bg-accent {
     background-color: #dfdbc6;
@@ -51,6 +60,12 @@
   }
   .text-secondary-content {
     color: #3e5c81;
+  }
+  .text-success {
+    color: #358847;
+  }
+  .text-secondary {
+    color: #446381;
   }
 }
 

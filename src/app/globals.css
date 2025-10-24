@@ -37,6 +37,15 @@
   }
 }
 
+[data-theme='nord'] {
+  .text-success-content {
+    color: #377947;
+  }
+  .text-secondary-content {
+    color: #3e5c81;
+  }
+}
+
 /* dark theme styles for 'business' theme */
 [data-theme='business'] {
   .text-neutral {

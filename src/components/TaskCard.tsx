@@ -59,9 +59,9 @@ function getStatusStyles(isStarted: boolean, isDone: boolean, isStale: boolean):
         'rounded-2xl shadow-lg shadow-base-content/20 hover:rounded-2xl hover:shadow-error/30 hover:-translate-y-1 hover:-translate-x-1',
       focusRing: 'focus-visible:ring-error/50',
       statusButton:
-        'btn btn-circle btn-sm btn-error text-error-content shadow-sm shadow-error/30 hover:shadow-error/40',
+        'btn btn-circle btn-error text-error-content shadow-sm shadow-error/30 hover:shadow-error/40',
       statusIcon: 'text-error-content',
-      badge: 'badge badge-sm border border-error/40 bg-error/10 text-error-content/90',
+      badge: 'badge border border-error/40 bg-error/10 font-semibold text-error-content',
       supportingText: 'text-error-content/80',
     };
   }
@@ -75,9 +75,9 @@ function getStatusStyles(isStarted: boolean, isDone: boolean, isStale: boolean):
         'rounded-2xl shadow-lg shadow-success/20 hover:rounded-2xl hover:shadow-success/30 hover:-translate-y-1 hover:-translate-x-1',
       focusRing: 'focus-visible:ring-success/50',
       statusButton:
-        'btn btn-circle btn-sm btn-success text-success-content shadow-sm shadow-success/40 hover:shadow-success/50',
+        'btn btn-circle btn-success text-success shadow-sm shadow-success/40 hover:shadow-success/50',
       statusIcon: 'text-success-content',
-      badge: 'badge badge-sm border border-success/40 bg-success/10 text-success-content/90',
+      badge: 'badge border border-success/40 bg-success/10 font-semibold text-success-content',
       supportingText: 'text-success-content',
     };
   }
@@ -91,10 +91,11 @@ function getStatusStyles(isStarted: boolean, isDone: boolean, isStale: boolean):
         'rounded-2xl shadow-lg shadow-secondary/20 hover:rounded-2xl  hover:shadow-secondary/30 hover:-translate-y-1 hover:-translate-x-1',
       focusRing: 'focus-visible:ring-secondary/50',
       statusButton:
-        'btn btn-circle btn-sm btn-secondary text-secondary-content shadow-sm shadow-secondary/40 hover:shadow-secondary/50',
+        'btn btn-circle btn-secondary text-secondary-content shadow-sm shadow-secondary/40 hover:shadow-secondary/50',
       statusIcon: 'text-secondary-content',
-      badge: 'badge badge-sm border border-secondary/40 bg-secondary/10 text-secondary-content/90',
-      supportingText: 'text-secondary-content',
+      badge:
+        'badge border border-secondary/40 bg-secondary/10 text-secondary-content dark:text-secondary font-semibold',
+      supportingText: 'text-secondary-content dark:text-secondary',
     };
   }
 
@@ -106,9 +107,9 @@ function getStatusStyles(isStarted: boolean, isDone: boolean, isStale: boolean):
       'rounded-2xl shadow-lg shadow-base-200/50 hover:rounded-2xl hover:shadow-lg hover:shadow-base-content/20 hover:-translate-y-1 hover:-translate-x-1',
     focusRing: 'focus-visible:ring-primary/40',
     statusButton:
-      'btn btn-circle btn-sm btn-ghost border-2 border-base-300 text-base-content hover:border-primary hover:bg-primary/10 hover:text-primary',
+      'btn btn-circle btn-ghost border-2 border-base-300 text-base-content hover:border-primary hover:bg-primary/10 hover:text-primary',
     statusIcon: 'text-base-content',
-    badge: 'badge badge-sm border border-base-300 bg-base-200 text-base-content/70',
+    badge: 'badge border border-base-300 bg-base-200 font-semibold text-base-content/70',
     supportingText: 'text-base-content',
   };
 }
@@ -239,8 +240,8 @@ export default function TaskCard({
         aria-hidden="true"
       />
 
-      <div className="card-body gap-5 p-5">
-        <div className="flex flex-wrap items-start gap-4">
+      <div className={`card-body ${view === 'mini' && !localExpanded ? 'pt-3 pb-2' : 'p-4'}`}>
+        <div className="flex flex-wrap items-center gap-4">
           <button
             type="button"
             aria-label="Toggle task status"
@@ -264,7 +265,7 @@ export default function TaskCard({
             title={isDone ? 'Clear status' : isStarted ? 'Mark done' : 'Mark in progress'}
           >
             {isDone ? (
-              <Check className={`h-5 w-5 ${statusStyles.statusIcon}`} strokeWidth={2} />
+              <Check className={`h-4 w-4 ${statusStyles.statusIcon}`} strokeWidth={2} />
             ) : isStarted ? (
               <Play className={`h-4 w-4 ${statusStyles.statusIcon}`} />
             ) : (
@@ -272,10 +273,10 @@ export default function TaskCard({
             )}
           </button>
 
-          <div className="flex-1 min-w-0 space-y-3">
-            <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className={`flex-1 min-w-0 ${view === 'mini' && !localExpanded ? '' : 'space-y-2'}`}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                <h3 className="card-title text-lg font-semibold leading-snug text-base-content">
+                <h3 className="card-title text-lg font-semibold leading-snug text-base-content align-middle">
                   {t.title}
                 </h3>
 
@@ -301,10 +302,10 @@ export default function TaskCard({
                       e.preventDefault();
                       onEdit?.(t as Task);
                     }}
-                    className="btn btn-ghost btn-sm btn-circle text-base-content/70 hover:text-primary"
+                    className="btn btn-ghost btn-circle text-base-content/70 hover:text-primary"
                     title="Edit"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-6 w-6" />
                   </button>
                 )}
 
@@ -316,10 +317,10 @@ export default function TaskCard({
                       e.preventDefault();
                       onDelete?.(t.id);
                     }}
-                    className="btn btn-ghost btn-sm btn-circle text-error/80 hover:text-error"
+                    className="btn btn-ghost btn-circle text-error/80 hover:text-error"
                     title="Delete"
                   >
-                    <Trash className="h-4 w-4" />
+                    <Trash className="h-6 w-6" />
                   </button>
                 )}
 
@@ -333,20 +334,22 @@ export default function TaskCard({
                       e.preventDefault();
                       setLocalExpanded((v) => !v);
                     }}
-                    className="btn btn-ghost btn-sm btn-circle text-base-content/60 hover:text-base-content"
+                    className="btn btn-ghost btn-circle text-base-content/60 hover:text-base-content"
                   >
                     {localExpanded ? (
-                      <ChevronUp className="h-4 w-4" />
+                      <ChevronUp className="h-6 w-6" />
                     ) : (
-                      <ChevronDown className="h-4 w-4" />
+                      <ChevronDown className="h-6 w-6" />
                     )}
                   </button>
                 )}
               </div>
             </div>
 
-            {t.notes && !effectiveFull ? (
-              <p className={`line-clamp-2 text-sm leading-relaxed ${statusStyles.supportingText}`}>
+            {t.notes && !effectiveFull && view !== 'mini' ? (
+              <p
+                className={`line-clamp-2 text-lg font-semibold leading-relaxed ${statusStyles.supportingText}`}
+              >
                 {t.notes}
               </p>
             ) : null}
@@ -359,14 +362,14 @@ export default function TaskCard({
             effectiveFull ? 'max-h-[480px] opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
-          <div className="pt-2 space-y-4">
+          <div className="space-y-4">
             <div
-              className={`rounded-xl border border-dashed border-base-300/60 bg-base-200/40 p-4 text-sm leading-relaxed ${statusStyles.supportingText}`}
+              className={`text-lg font-semibold leading-relaxed ${statusStyles.supportingText} ${effectiveFull}`}
             >
               {t.notes ? t.notes : <span className="italic opacity-60">No description</span>}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
+            <div className="flex flex-wrap items-center gap-2 font-medium text-xl">
               <span className={metaBadgeClass} title={dueLabel}>
                 Due · {dueLabel}
               </span>

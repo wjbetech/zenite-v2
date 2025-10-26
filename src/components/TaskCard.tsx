@@ -371,7 +371,7 @@ export default function TaskCard({
           }`}
           style={{ maxHeight: localExpanded ? `${expandedHeight}px` : '0px' }}
         >
-          <div className={`py-2 text-lg leading-relaxed ${statusStyles.supportingText}`}>
+          <div className={`py-2 text-lg leading-relaxed ${statusStyles.supportingText} whitespace-pre-wrap break-words`}>
             {t.notes ? t.notes : <span className="italic opacity-60">No description</span>}
           </div>
 

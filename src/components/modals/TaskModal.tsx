@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import useTaskStore, { Task } from '../../lib/taskStore';
 import useProjectStore, { RemoteProject, normalizeRemoteProject } from '../../lib/projectStore';
 import api from '../../lib/api';
-import { sanitizeTitle, sanitizeDescription } from '../../lib/text-format';
+import { sanitizeTitle, sanitizeDescription, sanitizeDescriptionPreserveNewlines } from '../../lib/text-format';
 import { normalizeWhitespaceForTyping } from '../../lib/text-sanitizer';
 import { toast } from 'react-toastify';
 import ChevronDown from '../icons/ChevronDown';
@@ -67,7 +67,14 @@ export default function TaskModal({
 
   async function submit(e?: React.FormEvent) {
     e?.preventDefault();
-    if (!title.trim() || saving) return;
+    if (saving) return;
+
+    // Determine whether we're expected to create/update a task. When the
+    // modal is used for "Add New Project" and the user has not toggled
+    // "Create task", we should allow creating only the project without a
+    // task. Only require a title when a task will be created/updated.
+    const willCreateOrUpdateTask = Boolean(initial?.id) || Boolean(showTaskInputs);
+    if (willCreateOrUpdateTask && !title.trim()) return;
 
     setSubmitError(null);
     setSaving(true);
@@ -95,13 +102,16 @@ export default function TaskModal({
       } else {
         createdProjectName = await tryCreateProjectBeforeTask();
 
-        await createTask({
-          title: sanitizeTitle(title || ''),
-          notes: sanitizeDescription(notes || ''),
-          dueDate,
-          projectId,
-          recurrence: recurrence ?? undefined,
-        });
+        // Only create a task if the user requested it (or we're in edit mode).
+        if (willCreateOrUpdateTask) {
+          await createTask({
+            title: sanitizeTitle(title || ''),
+            notes: sanitizeDescription(notes || ''),
+            dueDate,
+            projectId,
+            recurrence: recurrence ?? undefined,
+          });
+        }
       }
 
       onOpenChange(false);
@@ -158,9 +168,10 @@ export default function TaskModal({
         createdRemote = null;
       }
 
-      // sanitize project name/description on create path
-      const sanitizedName = sanitizeTitle(name);
-      const sanitizedDescription = sanitizeDescription(description || '');
+  // sanitize project name/description on create path
+  const sanitizedName = sanitizeTitle(name);
+  // Preserve paragraph/newline boundaries for project descriptions
+  const sanitizedDescription = sanitizeDescriptionPreserveNewlines(description || '');
 
       if (createdRemote) {
         const normalized = normalizeRemoteProject(createdRemote as RemoteProject);

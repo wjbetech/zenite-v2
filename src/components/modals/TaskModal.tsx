@@ -4,7 +4,11 @@ import React, { useState, useEffect } from 'react';
 import useTaskStore, { Task } from '../../lib/taskStore';
 import useProjectStore, { RemoteProject, normalizeRemoteProject } from '../../lib/projectStore';
 import api from '../../lib/api';
-import { sanitizeTitle, sanitizeDescription, sanitizeDescriptionPreserveNewlines } from '../../lib/text-format';
+import {
+  sanitizeTitle,
+  sanitizeDescription,
+  sanitizeDescriptionPreserveNewlines,
+} from '../../lib/text-format';
 import { normalizeWhitespaceForTyping } from '../../lib/text-sanitizer';
 import { toast } from 'react-toastify';
 import ChevronDown from '../icons/ChevronDown';
@@ -168,10 +172,10 @@ export default function TaskModal({
         createdRemote = null;
       }
 
-  // sanitize project name/description on create path
-  const sanitizedName = sanitizeTitle(name);
-  // Preserve paragraph/newline boundaries for project descriptions
-  const sanitizedDescription = sanitizeDescriptionPreserveNewlines(description || '');
+      // sanitize project name/description on create path
+      const sanitizedName = sanitizeTitle(name);
+      // Preserve paragraph/newline boundaries for project descriptions
+      const sanitizedDescription = sanitizeDescriptionPreserveNewlines(description || '');
 
       if (createdRemote) {
         const normalized = normalizeRemoteProject(createdRemote as RemoteProject);

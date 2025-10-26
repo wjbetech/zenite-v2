@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 
 import React from 'react';
 import { normalizeWhitespaceForTyping } from '../../lib/text-sanitizer';
@@ -38,7 +38,9 @@ export default function ProjectCreationFields({
         id="new-project-description"
         value={newProjectDescription}
         onChange={(e) => setNewProjectDescription(normalizeWhitespaceForTyping(e.target.value))}
-        onBlur={() => setNewProjectDescription(sanitizeDescriptionPreserveNewlines(newProjectDescription || ''))}
+        onBlur={() =>
+          setNewProjectDescription(sanitizeDescriptionPreserveNewlines(newProjectDescription || ''))
+        }
         className="textarea w-full rounded-lg bg-base-100 whitespace-pre-wrap"
         rows={3}
         disabled={newProjectLoading}

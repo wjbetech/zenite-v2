@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { useUser, SignOutButton, SignInButton } from '@clerk/nextjs';
+import { useUser, SignInButton } from '@clerk/nextjs';
 
 export default function ProfileHeader() {
   const { user } = useUser();
@@ -53,11 +53,7 @@ export default function ProfileHeader() {
         </div>
       </div>
 
-      <div className="ml-auto">
-        <SignOutButton>
-          <button className="btn border-on btn-accent cursor-pointer">Sign out</button>
-        </SignOutButton>
-      </div>
+      {/* Sign out control intentionally removed from Profile page — use Navbar's sign out */}
     </div>
   );
 }

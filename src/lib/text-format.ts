@@ -123,7 +123,10 @@ export function sanitizeDescriptionPreserveNewlines(input: string): string {
   // Normalize CRLF -> LF and collapse weird whitespace, but keep newlines
   const normalized = normalizeWhitespaceForTyping(input).replace(/\r\n?/g, '\n');
   // Split into paragraphs on one or more newlines
-  const paragraphs = normalized.split(/\n+/).map((p) => p.trim()).filter(Boolean);
+  const paragraphs = normalized
+    .split(/\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
   if (paragraphs.length === 0) return '';
 
   const sanitized = paragraphs

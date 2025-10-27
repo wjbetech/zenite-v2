@@ -10,6 +10,8 @@ export type Task = {
   notes?: string;
   estimatedDuration?: number;
   dueDate?: string | null;
+  startsAt?: string | null;
+  dueTime?: string | null;
   recurrence?: string | null;
   createdAt: string;
   completed?: boolean;
@@ -24,6 +26,8 @@ export type CreateTaskInput = {
   notes?: string;
   estimatedDuration?: number;
   dueDate?: string | null;
+  startsAt?: string | null;
+  dueTime?: string | null;
   recurrence?: string | null;
   projectId?: string | null;
   started?: boolean;
@@ -59,6 +63,8 @@ const mapRemoteTask = (remote: Record<string, unknown>): Task => ({
     return undefined;
   })(),
   dueDate: (remote.dueDate as string | null | undefined) ?? null,
+  startsAt: (remote.startsAt as string | null | undefined) ?? null,
+  dueTime: (remote.dueTime as string | null | undefined) ?? null,
   recurrence: (remote.recurrence as string | null | undefined) ?? null,
   createdAt: (remote.createdAt as string) ?? new Date().toISOString(),
   completed: remote.completed === true,

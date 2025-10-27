@@ -12,6 +12,8 @@ type SerializableTask = {
   notes?: string;
   estimatedDuration?: number;
   dueDate?: string | null;
+  dueTime?: string | null;
+  startsAt?: string | null;
   recurrence?: string | null;
   createdAt: string;
   completed?: boolean;
@@ -36,12 +38,11 @@ function statusFromFlags({ started, completed }: StatusFlagInput) {
 }
 
 function serializeTask(task: PrismaTask): SerializableTask {
-  return {
+  const out: SerializableTask = {
     id: task.id,
     title: task.title,
     notes: task.description ?? undefined,
-    estimatedDuration:
-      typeof task.estimatedDuration === 'number' ? task.estimatedDuration : undefined,
+    // dueDate is included and normalized to ISO or null
     dueDate: task.dueDate ? new Date(task.dueDate).toISOString() : null,
     recurrence: task.recurrence ?? null,
     createdAt: new Date(task.createdAt).toISOString(),
@@ -51,6 +52,19 @@ function serializeTask(task: PrismaTask): SerializableTask {
     projectId: task.projectId ?? null,
     ownerId: task.ownerId ?? undefined,
   };
+
+  // Include optional numeric/time fields only when present (not null/undefined)
+  if (task.estimatedDuration !== undefined && task.estimatedDuration !== null) {
+    out.estimatedDuration = task.estimatedDuration as number;
+  }
+  if (task.dueTime != null) {
+    out.dueTime = new Date(task.dueTime).toISOString();
+  }
+  if (task.startsAt != null) {
+    out.startsAt = new Date(task.startsAt).toISOString();
+  }
+
+  return out;
 }
 
 function parseDate(value: unknown): Date | null | undefined {
@@ -110,6 +124,8 @@ export async function POST(request: Request) {
     }
 
     const dueDate = parseDate(body.dueDate);
+    const dueTimeInput = parseDate(body.dueTime);
+    const startsAtInput = parseDate(body.startsAt);
     const completed = body.completed === true;
     const started = body.started === true;
     const completedAtInput = parseDate(body.completedAt);
@@ -123,7 +139,42 @@ export async function POST(request: Request) {
           ? Number(body.estimatedDuration)
           : undefined,
         recurrence,
-        dueDate: dueDate ?? null,
+        // dueTime: prefer explicit dueTime; otherwise default to 23:59 of the dueDate
+        // If this is a daily recurrence and no dueDate was supplied, default the dueDate to today
+        // and set dueTime to 23:59 for the created task.
+        dueDate:
+          // If recurrence is daily and caller didn't supply a dueDate (parseDate returned undefined),
+          // default dueDate to today. If caller supplied null, preserve null.
+          recurrence === 'daily' && dueDate === undefined
+            ? new Date(
+                new Date().getFullYear(),
+                new Date().getMonth(),
+                new Date().getDate(),
+                0,
+                0,
+                0,
+                0,
+              )
+            : dueDate ?? null,
+        dueTime:
+          dueTimeInput !== undefined
+            ? dueTimeInput ?? null
+            : // If dueDate is present (either supplied or defaulted above), default time to 23:59
+            recurrence === 'daily' && dueDate === undefined
+            ? new Date(
+                new Date().getFullYear(),
+                new Date().getMonth(),
+                new Date().getDate(),
+                23,
+                59,
+                0,
+                0,
+              )
+            : dueDate
+            ? new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 23, 59, 0, 0)
+            : null,
+        // startsAt: prefer explicit startsAt if provided, otherwise null
+        startsAt: startsAtInput !== undefined ? startsAtInput ?? null : null,
         status: statusFromFlags({ started, completed }),
         completedAt: completed
           ? completedAtInput ?? new Date()
@@ -172,6 +223,24 @@ export async function PATCH(request: Request) {
   if ('dueDate' in body) {
     const due = parseDate(body.dueDate);
     data.dueDate = due === undefined ? null : due;
+    // If dueDate was included in the patch and dueTime wasn't explicitly provided,
+    // default dueTime to 23:59 of the provided dueDate (or null if dueDate is null)
+    if ('dueTime' in body) {
+      const dt = parseDate(body.dueTime);
+      data.dueTime = dt === undefined ? null : dt;
+    } else {
+      // If parseDate returned undefined (invalid), store null. If it returned null (explicit clear), store null.
+      if (due === undefined || due === null) {
+        data.dueTime = null;
+      } else {
+        data.dueTime = new Date(due.getFullYear(), due.getMonth(), due.getDate(), 23, 59, 0, 0);
+      }
+    }
+    // startsAt handling: if included, parse and set; otherwise leave unchanged (handled above only when dueDate in body)
+    if ('startsAt' in body) {
+      const st = parseDate(body.startsAt);
+      data.startsAt = st === undefined ? null : st;
+    }
   }
   if (typeof body.recurrence === 'string' || body.recurrence === null) {
     data.recurrence = body.recurrence;
@@ -273,6 +342,12 @@ export async function PATCH(request: Request) {
 
   if (shouldUpdateStatus) {
     data.status = statusFromFlags(statusFlags);
+  }
+
+  // allow updating dueTime directly when dueDate isn't part of the patch
+  if (!('dueDate' in body) && 'dueTime' in body) {
+    const dt = parseDate(body.dueTime);
+    data.dueTime = dt === undefined ? null : dt;
   }
 
   if (projectIdToAssign !== undefined) {

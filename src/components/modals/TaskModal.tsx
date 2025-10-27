@@ -33,6 +33,8 @@ export default function TaskModal({
   const [title, setTitle] = useState(initial?.title ?? '');
   const [notes, setNotes] = useState(initial?.notes ?? '');
   const [dueDate, setDueDate] = useState<string | null>(initial?.dueDate ?? null);
+  const [startsAt, setStartsAt] = useState<string | null>(initial?.startsAt ?? null);
+  const [dueTime, setDueTime] = useState<string | null>(initial?.dueTime ?? null);
   const [recurrence, setRecurrence] = useState<string | null>(initial?.recurrence ?? 'once');
   const [projectId, setProjectId] = useState<string | null>(initial?.projectId ?? null);
   const projects = useProjectStore((s) => s.projects);
@@ -54,6 +56,8 @@ export default function TaskModal({
     setTitle(initial?.title ?? '');
     setNotes(initial?.notes ?? '');
     setDueDate(initial?.dueDate ?? null);
+    setStartsAt(initial?.startsAt ?? null);
+    setDueTime(initial?.dueTime ?? null);
     setRecurrence(initial?.recurrence ?? 'once');
     setProjectId(initial?.projectId ?? null);
     // reset the 'new project created' subheader when modal opens or initial changes
@@ -68,6 +72,32 @@ export default function TaskModal({
     const id = setTimeout(() => setLocalToast(null), 3000);
     return () => clearTimeout(id);
   }, [localToast]);
+
+  // Helpers for formatting ISO strings into input-friendly values
+  function toLocalDateTimeValue(iso: string) {
+    try {
+      const d = new Date(iso);
+      const y = d.getFullYear();
+      const m = `${d.getMonth() + 1}`.padStart(2, '0');
+      const day = `${d.getDate()}`.padStart(2, '0');
+      const hh = `${d.getHours()}`.padStart(2, '0');
+      const mm = `${d.getMinutes()}`.padStart(2, '0');
+      return `${y}-${m}-${day}T${hh}:${mm}`;
+    } catch {
+      return '';
+    }
+  }
+
+  function toTimeValue(iso: string) {
+    try {
+      const d = new Date(iso);
+      const hh = `${d.getHours()}`.padStart(2, '0');
+      const mm = `${d.getMinutes()}`.padStart(2, '0');
+      return `${hh}:${mm}`;
+    } catch {
+      return '';
+    }
+  }
 
   async function submit(e?: React.FormEvent) {
     e?.preventDefault();
@@ -100,6 +130,8 @@ export default function TaskModal({
           title: sanitizeTitle(title || ''),
           notes: sanitizeDescription(notes || ''),
           dueDate,
+          startsAt,
+          dueTime,
           projectId,
           recurrence: recurrence ?? undefined,
         });
@@ -112,6 +144,8 @@ export default function TaskModal({
             title: sanitizeTitle(title || ''),
             notes: sanitizeDescription(notes || ''),
             dueDate,
+            startsAt,
+            dueTime,
             projectId,
             recurrence: recurrence ?? undefined,
           });
@@ -307,7 +341,7 @@ export default function TaskModal({
             />
 
             <label className="block mt-5">
-              <div className="text-sm">Due date</div>
+              <div className="text-sm">Due Date</div>
               <input
                 type="date"
                 value={dueDate ? dueDate.split('T')[0] : ''}
@@ -317,6 +351,45 @@ export default function TaskModal({
                 className="pika-single p-2 rounded-lg bg-base-100"
               />
             </label>
+
+            {/* Start and due time inputs placed under Due Date */}
+            <div className="mt-3 flex flex-col gap-3 md:flex-row">
+              <div className="w-full md:w-1/2">
+                <label className="block mb-1 text-sm">Start</label>
+                <input
+                  type="datetime-local"
+                  value={startsAt ? toLocalDateTimeValue(startsAt) : ''}
+                  onChange={(e) => setStartsAt(e.target.value ? new Date(e.target.value).toISOString() : null)}
+                  className="p-2 rounded-lg bg-base-100 w-full"
+                />
+              </div>
+
+              <div className="w-full md:w-1/2">
+                <label className="block mb-1 text-sm">Due time</label>
+                <input
+                  type="time"
+                  value={dueTime ? toTimeValue(dueTime) : ''}
+                  onChange={(e) => {
+                    const time = e.target.value; // HH:MM
+                    if (!time) return setDueTime(null);
+                    // Combine with dueDate's date if available, otherwise use today's date
+                    const base = dueDate ? new Date(dueDate) : new Date();
+                    const [hh, mm] = time.split(':').map((s) => Number(s));
+                    const composed = new Date(
+                      base.getFullYear(),
+                      base.getMonth(),
+                      base.getDate(),
+                      hh,
+                      mm,
+                      0,
+                      0,
+                    ).toISOString();
+                    setDueTime(composed);
+                  }}
+                  className="p-2 rounded-lg bg-base-100 w-full"
+                />
+              </div>
+            </div>
 
             <div className="mt-5 flex flex-col gap-4 md:flex-row md:gap-4">
               <div className="w-full md:w-1/2">

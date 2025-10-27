@@ -298,11 +298,7 @@ export default function TaskCard({
           <div className={`flex-1 min-w-0 ${isCollapsedMini ? 'flex items-center' : 'space-y-2'}`}>
             <div className="flex items-center justify-between gap-3 w-full">
               <div className="flex min-w-0 flex-1 items-center gap-2">
-                <h3
-                  className={`${
-                    isCollapsedMini ? 'text-base leading-none' : 'card-title text-lg leading-snug'
-                  } font-semibold text-base-content m-0`}
-                >
+                <h3 className="text-base leading-none font-semibold text-base-content m-0">
                   {t.title}
                 </h3>
 
@@ -399,7 +395,10 @@ export default function TaskCard({
 
             {/* Estimated duration pill aligned to the far-right of the description */}
             <div className="flex-shrink-0 self-start mt-2">
-              <span className="text-base-content font-medium whitespace-nowrap" title={estimatedLabel}>
+              <span
+                className="text-base-content font-medium whitespace-nowrap"
+                title={estimatedLabel}
+              >
                 Est · {estimatedLabel}
               </span>
             </div>
@@ -422,7 +421,10 @@ export default function TaskCard({
             <div className="col-span-1 text-center">—</div>
 
             <div className="col-span-1 text-right">
-              <span className={`${statusStyles.badge} w-full inline-block truncate`} title={dueLabel}>
+              <span
+                className={`${statusStyles.badge} w-full inline-block truncate`}
+                title={dueLabel}
+              >
                 Due · {dueLabel}
               </span>
             </div>

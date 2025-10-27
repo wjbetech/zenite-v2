@@ -105,6 +105,8 @@ const useTaskStore = create<State>((set, get) => ({
       description: sanitizeDescription(payload.notes || ''),
       estimatedDuration: payload.estimatedDuration,
       dueDate: payload.dueDate ?? null,
+      startsAt: payload.startsAt ?? null,
+      dueTime: payload.dueTime ?? null,
       recurrence: payload.recurrence ?? null,
       projectId: payload.projectId ?? null,
       started: payload.started,
@@ -136,6 +138,12 @@ const useTaskStore = create<State>((set, get) => ({
     }
     if (patch.dueDate !== undefined) {
       payload.dueDate = patch.dueDate;
+    }
+    if (patch.startsAt !== undefined) {
+      payload.startsAt = patch.startsAt ?? null;
+    }
+    if (patch.dueTime !== undefined) {
+      payload.dueTime = patch.dueTime ?? null;
     }
     if (patch.recurrence !== undefined) {
       payload.recurrence = patch.recurrence;

@@ -15,6 +15,8 @@ export default function EditTaskModal({ open, onOpenChange, task, onSave }: Prop
   const [title, setTitle] = React.useState('');
   const [notes, setNotes] = React.useState('');
   const [dueDate, setDueDate] = React.useState<string>('');
+  const [startsAt, setStartsAt] = React.useState<string | null>(null);
+  const [dueTime, setDueTime] = React.useState<string | null>(null);
   // duration inputs: separate hours and minutes to represent a duration
   const [durationHours, setDurationHours] = React.useState<string>('');
   const [durationMinutes, setDurationMinutes] = React.useState<string>('');
@@ -45,12 +47,40 @@ export default function EditTaskModal({ open, onOpenChange, task, onSave }: Prop
       } else {
         setDueDate('');
       }
+      setStartsAt(task.startsAt ?? null);
+      setDueTime(task.dueTime ?? null);
       setProjectId(task.projectId ?? 'none');
     } else {
       setTitle('');
       setNotes('');
     }
   }, [task]);
+
+  // Helpers for formatting ISO strings into input-friendly values
+  function toLocalDateTimeValue(iso: string) {
+    try {
+      const d = new Date(iso);
+      const y = d.getFullYear();
+      const m = `${d.getMonth() + 1}`.padStart(2, '0');
+      const day = `${d.getDate()}`.padStart(2, '0');
+      const hh = `${d.getHours()}`.padStart(2, '0');
+      const mm = `${d.getMinutes()}`.padStart(2, '0');
+      return `${y}-${m}-${day}T${hh}:${mm}`;
+    } catch {
+      return '';
+    }
+  }
+
+  function toTimeValue(iso: string) {
+    try {
+      const d = new Date(iso);
+      const hh = `${d.getHours()}`.padStart(2, '0');
+      const mm = `${d.getMinutes()}`.padStart(2, '0');
+      return `${hh}:${mm}`;
+    } catch {
+      return '';
+    }
+  }
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -73,6 +103,8 @@ export default function EditTaskModal({ open, onOpenChange, task, onSave }: Prop
       // ensure we pass a number (minutes) only when parsed and > 0
       estimatedDuration: typeof total === 'number' && total > 0 ? total : undefined,
       dueDate: dueDate === '' ? null : dueDate,
+      startsAt: startsAt === null ? undefined : startsAt,
+      dueTime: dueTime === null ? undefined : dueTime,
     };
     onSave(task.id, patch);
     onOpenChange(false);
@@ -160,6 +192,51 @@ export default function EditTaskModal({ open, onOpenChange, task, onSave }: Prop
             onChange={(e) => setDueDate(e.target.value)}
             aria-label="Due date"
           />
+
+          <div className="mt-3 flex flex-col gap-3 md:flex-row">
+            <div className="w-full md:w-1/2">
+              <label className="label">
+                <span className="label-text">Start Time (optional)</span>
+              </label>
+              <input
+                type="datetime-local"
+                className="input input-bordered rounded-md w-full"
+                value={startsAt ? toLocalDateTimeValue(startsAt) : ''}
+                onChange={(e) =>
+                  setStartsAt(e.target.value ? new Date(e.target.value).toISOString() : null)
+                }
+                aria-label="Start time"
+              />
+            </div>
+
+            <div className="w-full md:w-1/2">
+              <label className="label">
+                <span className="label-text">Due Time (optional)</span>
+              </label>
+              <input
+                type="time"
+                className="input input-bordered rounded-md w-full"
+                value={dueTime ? toTimeValue(dueTime) : ''}
+                onChange={(e) => {
+                  const time = e.target.value; // HH:MM
+                  if (!time) return setDueTime(null);
+                  const base = dueDate ? new Date(dueDate) : new Date();
+                  const [hh, mm] = time.split(':').map((s) => Number(s));
+                  const composed = new Date(
+                    base.getFullYear(),
+                    base.getMonth(),
+                    base.getDate(),
+                    hh,
+                    mm,
+                    0,
+                    0,
+                  ).toISOString();
+                  setDueTime(composed);
+                }}
+                aria-label="Due time"
+              />
+            </div>
+          </div>
 
           <div className="flex flex-row align-middle py-4 gap-2 items-center">
             <label className="label">

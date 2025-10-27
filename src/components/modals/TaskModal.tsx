@@ -67,6 +67,37 @@ export default function TaskModal({
     setSubmitError(null);
     setSaving(false);
   }, [initial, open, allowCreateProject]);
+
+  // When a dueDate is provided, ensure the startsAt date portion matches that day.
+  // If startsAt is unset, default it to midnight of the due date. If startsAt has a
+  // time component, preserve the time but update the date to match dueDate.
+  useEffect(() => {
+    if (!dueDate) return;
+    try {
+      const d = new Date(dueDate);
+      if (Number.isNaN(d.getTime())) return;
+      if (!startsAt) {
+        const s = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0).toISOString();
+        if (s !== startsAt) setStartsAt(s);
+      } else {
+        const existing = new Date(startsAt);
+        if (!Number.isNaN(existing.getTime())) {
+          const s = new Date(
+            d.getFullYear(),
+            d.getMonth(),
+            d.getDate(),
+            existing.getHours(),
+            existing.getMinutes(),
+            existing.getSeconds(),
+            existing.getMilliseconds(),
+          ).toISOString();
+          if (s !== startsAt) setStartsAt(s);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [dueDate, startsAt]);
   useEffect(() => {
     if (!localToast) return;
     const id = setTimeout(() => setLocalToast(null), 3000);
@@ -359,7 +390,9 @@ export default function TaskModal({
                 <input
                   type="datetime-local"
                   value={startsAt ? toLocalDateTimeValue(startsAt) : ''}
-                  onChange={(e) => setStartsAt(e.target.value ? new Date(e.target.value).toISOString() : null)}
+                  onChange={(e) =>
+                    setStartsAt(e.target.value ? new Date(e.target.value).toISOString() : null)
+                  }
                   className="p-2 rounded-lg bg-base-100 w-full"
                 />
               </div>

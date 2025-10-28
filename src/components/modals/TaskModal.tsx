@@ -22,11 +22,13 @@ export default function TaskModal({
   onOpenChange,
   initial,
   allowCreateProject,
+  submitLabel,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   initial?: Partial<Task> & { id?: string };
   allowCreateProject?: boolean;
+  submitLabel?: string;
 }) {
   const createTask = useTaskStore((s) => s.createTask);
   const updateTask = useTaskStore((s) => s.updateTask);
@@ -422,12 +424,13 @@ export default function TaskModal({
                   Estimated duration (hrs. / mins.)
                 </span>
               </label>
-              <div className="flex flex-row gap-2 w-full items-center">
+              {/* push inputs to the right and keep them inline */}
+              <div className="flex flex-row gap-2 w-full items-center justify-end">
                 <input
                   type="number"
                   min={0}
                   step={1}
-                  className="input input-bordered rounded-md w-full items-center text-right"
+                  className="input input-bordered rounded-md w-20 max-w-[5rem] pr-4 text-right"
                   value={durationHours}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -439,7 +442,7 @@ export default function TaskModal({
                       !Number.isFinite(mm) ||
                       hh < 0 ||
                       mm < 0 ||
-                      mm >= 60
+                      mm > 60
                     ) {
                       setEstimatedDuration(undefined);
                     } else {
@@ -453,9 +456,9 @@ export default function TaskModal({
                 <input
                   type="number"
                   min={0}
-                  max={59}
+                  max={60}
                   step={1}
-                  className="input input-bordered rounded-md w-full items-center text-right"
+                  className="input input-bordered rounded-md w-20 max-w-[5rem] pr-4 text-right"
                   value={durationMinutes}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -467,7 +470,7 @@ export default function TaskModal({
                       !Number.isFinite(mm) ||
                       hh < 0 ||
                       mm < 0 ||
-                      mm >= 60
+                      mm > 60
                     ) {
                       setEstimatedDuration(undefined);
                     } else {

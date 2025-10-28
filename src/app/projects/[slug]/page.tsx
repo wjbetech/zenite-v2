@@ -31,7 +31,7 @@ export default async function Page(props: unknown) {
     // matches the other pages' empty-state / error UX.
     console.error('Project detail: failed to query database', err);
     return (
-      <main className="">
+      <main className="mx-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-visible max-w-[95%]">
         <div className="px-4 pt-4">
           <h1 className="text-2xl font-semibold mb-4">Project not available</h1>
 
@@ -50,7 +50,7 @@ export default async function Page(props: unknown) {
 
   if (!project) {
     return (
-      <main className="p-6">
+      <main className="mx-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-visible max-w-[95%]">
         <div className="px-4 pt-4">
           <h1 className="text-2xl font-semibold mb-4">Project not found</h1>
           <div className="text-sm text-gray-500">No project matched the slug: {slug}</div>
@@ -60,12 +60,12 @@ export default async function Page(props: unknown) {
   }
 
   return (
-    <main className="">
+    <main className="mx-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-visible max-w-[95%]">
       <div className="px-4 pt-4">
         <h1 className="text-2xl font-semibold mb-4">{project.name}</h1>
         <p className="text-sm text-gray-500 mb-4">{project.description}</p>
       </div>
-      <div className="pl-4 pr-4 flex-1 min-h-0 overflow-y-auto overflow-x-visible pb-10">
+      <div className="px-4 flex-1 min-h-0 overflow-y-auto overflow-x-visible pb-10">
         <ProjectTasksClient projectId={project.id} />
       </div>
     </main>

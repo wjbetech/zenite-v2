@@ -38,6 +38,11 @@ export default function TaskModal({
   const [dueTime, setDueTime] = useState<string | null>(initial?.dueTime ?? null);
   const [recurrence, setRecurrence] = useState<string | null>(initial?.recurrence ?? 'once');
   const [projectId, setProjectId] = useState<string | null>(initial?.projectId ?? null);
+  const [estimatedDuration, setEstimatedDuration] = useState<number | undefined>(
+    initial?.estimatedDuration ?? undefined,
+  );
+  const [durationHours, setDurationHours] = useState<string>('');
+  const [durationMinutes, setDurationMinutes] = useState<string>('');
   const projects = useProjectStore((s) => s.projects);
   const [newProjectCreated, setNewProjectCreated] = useState(false);
   const [showTaskInputs, setShowTaskInputs] = useState(true);
@@ -61,6 +66,17 @@ export default function TaskModal({
     setDueTime(initial?.dueTime ?? null);
     setRecurrence(initial?.recurrence ?? 'once');
     setProjectId(initial?.projectId ?? null);
+    setEstimatedDuration(initial?.estimatedDuration ?? undefined);
+    // initialize hours/minutes inputs from estimatedDuration (minutes)
+    if (initial?.estimatedDuration && Number.isFinite(initial.estimatedDuration)) {
+      const hh = Math.floor(initial.estimatedDuration / 60).toString();
+      const mm = (initial.estimatedDuration % 60).toString();
+      setDurationHours(hh);
+      setDurationMinutes(mm);
+    } else {
+      setDurationHours('');
+      setDurationMinutes('');
+    }
     // reset the 'new project created' subheader when modal opens or initial changes
     setNewProjectCreated(false);
     // default: when opened as New Project (and not editing) hide task inputs
@@ -113,6 +129,9 @@ export default function TaskModal({
     }
   }
 
+  // Helpers to convert between minutes (number) and HH:MM time input value
+  // durationHours/durationMinutes are kept in sync with estimatedDuration below
+
   async function submit(e?: React.FormEvent) {
     e?.preventDefault();
     if (saving) return;
@@ -146,6 +165,7 @@ export default function TaskModal({
           dueDate,
           startsAt,
           dueTime,
+          estimatedDuration: estimatedDuration ?? undefined,
           projectId,
           recurrence: recurrence ?? undefined,
         });
@@ -160,6 +180,7 @@ export default function TaskModal({
             dueDate,
             startsAt,
             dueTime,
+            estimatedDuration: estimatedDuration ?? undefined,
             projectId,
             recurrence: recurrence ?? undefined,
           });
@@ -391,6 +412,71 @@ export default function TaskModal({
                     setDueTime(composed);
                   }}
                   className="p-2 rounded-lg bg-base-100 w-full"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-row align-middle py-4 gap-2 items-center mt-5">
+              <label className="label mr-4">
+                <span className="label-text align-middle text-base-content">
+                  Estimated duration (hrs. / mins.)
+                </span>
+              </label>
+              <div className="flex flex-row gap-2 w-full items-center">
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  className="input input-bordered rounded-md w-full items-center text-right"
+                  value={durationHours}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setDurationHours(v);
+                    const hh = v === '' ? 0 : Number(v);
+                    const mm = durationMinutes === '' ? 0 : Number(durationMinutes);
+                    if (
+                      !Number.isFinite(hh) ||
+                      !Number.isFinite(mm) ||
+                      hh < 0 ||
+                      mm < 0 ||
+                      mm >= 60
+                    ) {
+                      setEstimatedDuration(undefined);
+                    } else {
+                      const total = hh * 60 + mm;
+                      setEstimatedDuration(total > 0 ? total : undefined);
+                    }
+                  }}
+                  aria-label="Estimated duration hours"
+                  placeholder="0"
+                />
+                <input
+                  type="number"
+                  min={0}
+                  max={59}
+                  step={1}
+                  className="input input-bordered rounded-md w-full items-center text-right"
+                  value={durationMinutes}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setDurationMinutes(v);
+                    const hh = durationHours === '' ? 0 : Number(durationHours);
+                    const mm = v === '' ? 0 : Number(v);
+                    if (
+                      !Number.isFinite(hh) ||
+                      !Number.isFinite(mm) ||
+                      hh < 0 ||
+                      mm < 0 ||
+                      mm >= 60
+                    ) {
+                      setEstimatedDuration(undefined);
+                    } else {
+                      const total = hh * 60 + mm;
+                      setEstimatedDuration(total > 0 ? total : undefined);
+                    }
+                  }}
+                  aria-label="Estimated duration minutes"
+                  placeholder="0"
                 />
               </div>
             </div>

@@ -65,7 +65,7 @@ export default async function Page(props: unknown) {
         <h1 className="text-2xl font-semibold mb-4">{project.name}</h1>
         <p className="text-sm text-gray-500 mb-4">{project.description}</p>
       </div>
-      <div className="px-4 flex-1 min-h-0 overflow-y-auto overflow-x-visible pb-10">
+      <div className="px-3 flex-1 min-h-0 overflow-y-auto overflow-x-visible pb-10">
         <ProjectTasksClient projectId={project.id} />
       </div>
     </main>

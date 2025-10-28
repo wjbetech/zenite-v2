@@ -3,6 +3,7 @@
 import React from 'react';
 import type { Task } from '../../lib/taskStore';
 import useProjectStore from '../../lib/projectStore';
+import { composeDueTimeIso } from '../../lib/taskDateUtils';
 
 type Props = {
   open: boolean;
@@ -81,6 +82,9 @@ export default function EditTaskModal({ open, onOpenChange, task, onSave }: Prop
       return '';
     }
   }
+
+  // import centralized composer
+  // (import added at top by patch below)
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -219,18 +223,7 @@ export default function EditTaskModal({ open, onOpenChange, task, onSave }: Prop
                 value={dueTime ? toTimeValue(dueTime) : ''}
                 onChange={(e) => {
                   const time = e.target.value; // HH:MM
-                  if (!time) return setDueTime(null);
-                  const base = dueDate ? new Date(dueDate) : new Date();
-                  const [hh, mm] = time.split(':').map((s) => Number(s));
-                  const composed = new Date(
-                    base.getFullYear(),
-                    base.getMonth(),
-                    base.getDate(),
-                    hh,
-                    mm,
-                    0,
-                    0,
-                  ).toISOString();
+                  const composed = composeDueTimeIso(dueDate || null, time || null);
                   setDueTime(composed);
                 }}
                 aria-label="Due time"

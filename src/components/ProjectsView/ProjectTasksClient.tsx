@@ -19,6 +19,9 @@ type ApiTask = {
   title: string;
   description?: string | null;
   dueDate?: string | null;
+  dueTime?: string | null;
+  startsAt?: string | null;
+  estimatedDuration?: number | string | null;
   createdAt: string;
   completedAt?: string | null;
 };
@@ -53,6 +56,15 @@ export default function ProjectTasksClient({ projectId }: Props) {
           title: t.title,
           notes: t.description ?? undefined,
           dueDate: t.dueDate ?? null,
+          dueTime: (t as ApiTask).dueTime ?? null,
+          startsAt: (t as ApiTask).startsAt ?? null,
+          estimatedDuration: (() => {
+            const v = (t as ApiTask).estimatedDuration;
+            if (typeof v === 'number') return v as number;
+            if (typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v)))
+              return Number(v);
+            return undefined;
+          })(),
           createdAt: t.createdAt,
           completed: !!t.completedAt,
           // Bind the projectId so TaskSection / TaskCard can render the project badge
@@ -97,6 +109,15 @@ export default function ProjectTasksClient({ projectId }: Props) {
           title: payload.title ?? 'Untitled',
           notes: payload.notes ?? undefined,
           dueDate: payload.dueDate ?? null,
+          dueTime: (payload as ApiTask).dueTime ?? null,
+          startsAt: (payload as ApiTask).startsAt ?? null,
+          estimatedDuration: (() => {
+            const v = (payload as ApiTask).estimatedDuration;
+            if (typeof v === 'number') return v as number;
+            if (typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v)))
+              return Number(v);
+            return undefined;
+          })(),
           createdAt: payload.createdAt ?? new Date().toISOString(),
           completed: !!payload.completed,
           // ensure we also reflect the started flag returned by the API
@@ -145,6 +166,15 @@ export default function ProjectTasksClient({ projectId }: Props) {
           title: payload.title ?? 'Untitled',
           notes: payload.notes ?? undefined,
           dueDate: payload.dueDate ?? null,
+          dueTime: (payload as ApiTask).dueTime ?? null,
+          startsAt: (payload as ApiTask).startsAt ?? null,
+          estimatedDuration: (() => {
+            const v = (payload as ApiTask).estimatedDuration;
+            if (typeof v === 'number') return v as number;
+            if (typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v)))
+              return Number(v);
+            return undefined;
+          })(),
           createdAt: payload.createdAt ?? new Date().toISOString(),
           completed: !!payload.completed,
           // ensure project association remains for rendering

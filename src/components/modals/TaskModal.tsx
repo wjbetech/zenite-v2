@@ -10,6 +10,7 @@ import {
   sanitizeDescriptionPreserveNewlines,
 } from '../../lib/text-format';
 import { normalizeWhitespaceForTyping } from '../../lib/text-sanitizer';
+import { composeDueTimeIso, alignStartsAtToDueDate } from '../../lib/taskDateUtils';
 import { toast } from 'react-toastify';
 import ChevronDown from '../icons/ChevronDown';
 import TaskModalLocalToast from './TaskModalLocalToast';
@@ -74,26 +75,8 @@ export default function TaskModal({
   useEffect(() => {
     if (!dueDate) return;
     try {
-      const d = new Date(dueDate);
-      if (Number.isNaN(d.getTime())) return;
-      if (!startsAt) {
-        const s = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0).toISOString();
-        if (s !== startsAt) setStartsAt(s);
-      } else {
-        const existing = new Date(startsAt);
-        if (!Number.isNaN(existing.getTime())) {
-          const s = new Date(
-            d.getFullYear(),
-            d.getMonth(),
-            d.getDate(),
-            existing.getHours(),
-            existing.getMinutes(),
-            existing.getSeconds(),
-            existing.getMilliseconds(),
-          ).toISOString();
-          if (s !== startsAt) setStartsAt(s);
-        }
-      }
+      const adjusted = alignStartsAtToDueDate(startsAt ?? null, dueDate ?? null);
+      if (adjusted && adjusted !== startsAt) setStartsAt(adjusted);
     } catch {
       // ignore
     }
@@ -404,19 +387,7 @@ export default function TaskModal({
                   value={dueTime ? toTimeValue(dueTime) : ''}
                   onChange={(e) => {
                     const time = e.target.value; // HH:MM
-                    if (!time) return setDueTime(null);
-                    // Combine with dueDate's date if available, otherwise use today's date
-                    const base = dueDate ? new Date(dueDate) : new Date();
-                    const [hh, mm] = time.split(':').map((s) => Number(s));
-                    const composed = new Date(
-                      base.getFullYear(),
-                      base.getMonth(),
-                      base.getDate(),
-                      hh,
-                      mm,
-                      0,
-                      0,
-                    ).toISOString();
+                    const composed = composeDueTimeIso(dueDate ?? null, time ?? null);
                     setDueTime(composed);
                   }}
                   className="p-2 rounded-lg bg-base-100 w-full"

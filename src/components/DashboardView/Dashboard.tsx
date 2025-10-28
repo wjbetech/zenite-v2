@@ -255,8 +255,39 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="flex-1 flex flex-col min-h-0">
+          {/* Tabs and view toggle: keep these outside the scrollable area so they remain fixed */}
+          <div
+            className="mx-auto w-full relative"
+            style={{
+              maxWidth: 'calc(100vw - var(--sidebar-width) - 3rem)',
+              boxSizing: 'border-box',
+            }}
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1">
+                <TabsBox
+                  tabsRef={tabsRef}
+                  onPointerDown={onPointerDown}
+                  onPointerMove={onPointerMove}
+                  onPointerUp={onPointerUp}
+                  onScroll={onScroll}
+                  scrollTabsBy={scrollTabsBy}
+                  canScrollLeft={canScrollLeft}
+                  canScrollRight={canScrollRight}
+                  didDrag={didDrag}
+                  tabDefs={tabDefs}
+                  activeView={effectiveView}
+                  setView={setEffectiveView}
+                />
+              </div>
+            </div>
+
+            <TaskViewToggle />
+          </div>
+
           {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
-          <div className="flex-1 min-h-0">
+          {/* Make this inner area the only vertical scroll container so header, tabs and toggle stay fixed */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <div
               className="mx-auto w-full relative"
               style={{
@@ -264,29 +295,6 @@ export default function Dashboard() {
                 boxSizing: 'border-box',
               }}
             >
-              {/* Tabs - horizontally scrollable using TabsBox component */}
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <TabsBox
-                    tabsRef={tabsRef}
-                    onPointerDown={onPointerDown}
-                    onPointerMove={onPointerMove}
-                    onPointerUp={onPointerUp}
-                    onScroll={onScroll}
-                    scrollTabsBy={scrollTabsBy}
-                    canScrollLeft={canScrollLeft}
-                    canScrollRight={canScrollRight}
-                    didDrag={didDrag}
-                    tabDefs={tabDefs}
-                    activeView={effectiveView}
-                    setView={setEffectiveView}
-                  />
-                </div>
-              </div>
-
-              {/* task lists render here when not loading */}
-              <TaskViewToggle />
-
               {/* Task list content (render spinner OR the lists so they share space) */}
               <div className="pt-4 overflow-visible w-full">
                 {showImminent && effectiveView === 'imminent' && (

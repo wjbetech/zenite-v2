@@ -256,7 +256,8 @@ export default function Dashboard() {
       ) : (
         <div className="flex-1 flex flex-col min-h-0">
           {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
-          <div className="flex-1 min-h-0">
+          {/* Make this inner area the only vertical scroll container so header and tabs stay fixed */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <div
               className="mx-auto w-full relative"
               style={{

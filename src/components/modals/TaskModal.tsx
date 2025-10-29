@@ -22,7 +22,6 @@ export default function TaskModal({
   onOpenChange,
   initial,
   allowCreateProject,
-  submitLabel,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -303,16 +302,18 @@ export default function TaskModal({
     })();
   }
 
+  // form classes: remove border when creating a new task (no initial.id)
+  const formClass = `relative z-10 w-full max-w-2xl bg-base-100 rounded-lg p-6 shadow-lg ${
+    initial?.id ? 'border-1' : ''
+  }`;
+
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <TaskModalLocalToast toast={localToast} />
       <div className="absolute inset-0 bg-black/80" onClick={() => onOpenChange(false)} />
-      <form
-        onSubmit={submit}
-        className="relative z-10 w-full max-w-2xl bg-base-100 rounded-lg p-6 shadow-lg border-1"
-      >
+      <form onSubmit={submit} className={formClass}>
         <h3 className="text-lg font-medium mb-3">
           {initial?.id ? 'Edit Task' : allowCreateProject ? 'Add New Project' : 'Add New Task'}
         </h3>
@@ -377,43 +378,56 @@ export default function TaskModal({
               rows={4}
             />
 
-            <label className="block mt-5">
-              <div className="text-sm">Due Date</div>
-              <input
-                type="date"
-                value={dueDate ? dueDate.split('T')[0] : ''}
-                onChange={(e) =>
-                  setDueDate(e.target.value ? new Date(e.target.value).toISOString() : null)
-                }
-                className="pika-single p-2 rounded-lg bg-base-100"
-              />
+            <label className="label mt-5">
+              <span className="label-text text-base-content">
+                Due Date
+                <span className="text-xs text-base-content"> (optional)</span>
+              </span>
             </label>
+            <input
+              type="date"
+              className="input input-bordered rounded-md w-full"
+              value={dueDate ? dueDate.split('T')[0] : ''}
+              onChange={(e) =>
+                setDueDate(e.target.value ? new Date(e.target.value).toISOString() : null)
+              }
+            />
 
             {/* Start and due time inputs placed under Due Date */}
             <div className="mt-3 flex flex-col gap-3 md:flex-row">
               <div className="w-full md:w-1/2">
-                <label className="block mb-1 text-sm">Start</label>
+                <label className="label">
+                  <span className="label-text text-base-content">
+                    Start Time
+                    <span className="text-xs text-base-content"> (optional)</span>
+                  </span>
+                </label>
                 <input
                   type="datetime-local"
+                  className="input input-bordered rounded-md w-full"
                   value={startsAt ? toLocalDateTimeValue(startsAt) : ''}
                   onChange={(e) =>
                     setStartsAt(e.target.value ? new Date(e.target.value).toISOString() : null)
                   }
-                  className="p-2 rounded-lg bg-base-100 w-full"
                 />
               </div>
 
               <div className="w-full md:w-1/2">
-                <label className="block mb-1 text-sm">Due time</label>
+                <label className="label">
+                  <span className="label-text text-base-content">
+                    Due Time
+                    <span className="text-xs text-base-content"> (optional)</span>
+                  </span>
+                </label>
                 <input
                   type="time"
+                  className="input input-bordered rounded-md w-full"
                   value={dueTime ? toTimeValue(dueTime) : ''}
                   onChange={(e) => {
                     const time = e.target.value; // HH:MM
                     const composed = composeDueTimeIso(dueDate ?? null, time ?? null);
                     setDueTime(composed);
                   }}
-                  className="p-2 rounded-lg bg-base-100 w-full"
                 />
               </div>
             </div>

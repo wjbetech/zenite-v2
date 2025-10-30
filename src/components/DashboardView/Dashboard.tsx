@@ -295,8 +295,12 @@ export default function Dashboard() {
                 boxSizing: 'border-box',
               }}
             >
-              {/* Task list content (render spinner OR the lists so they share space) */}
-              <div className="pt-4 overflow-visible w-full">
+        {/* Task list content (render spinner OR the lists so they share space).
+          Add bottom padding inside the scrollable area so the last TaskCard
+          doesn't butt up against the viewport bottom. Because this padding
+          lives inside the `overflow-y-auto` scroll container it won't
+          increase the page height or create an outer scrollbar. */}
+        <div className="pt-4 pb-12 overflow-visible w-full">
                 {showImminent && effectiveView === 'imminent' && (
                   <React.Suspense>
                     <ImminentList

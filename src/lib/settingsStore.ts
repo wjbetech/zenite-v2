@@ -28,6 +28,9 @@ type SettingsState = {
   // Local notifications (client-side)
   notificationsEnabled: boolean;
 
+  // Daily tasks reset time (local time in HH:MM format, e.g. '04:00')
+  dailyResetTime: string | null;
+
   // Telemetry / analytics opt-in
   telemetryEnabled: boolean;
 
@@ -44,6 +47,7 @@ type SettingsState = {
   setTaskDefaults: (v: Partial<TaskDefaults>) => void;
   setShowCompleted: (v: boolean) => void;
   setNotificationsEnabled: (v: boolean) => void;
+  setDailyResetTime: (v: string | null) => void;
   setTelemetryEnabled: (v: boolean) => void;
   setSyncEnabled: (v: boolean) => void;
 };
@@ -60,6 +64,7 @@ function readInitial(): Omit<
   | 'setTaskDefaults'
   | 'setShowCompleted'
   | 'setNotificationsEnabled'
+  | 'setDailyResetTime'
   | 'setTelemetryEnabled'
   | 'setSyncEnabled'
 > {
@@ -79,6 +84,7 @@ function readInitial(): Omit<
         },
         showCompleted: false,
         notificationsEnabled: false,
+        dailyResetTime: '04:00',
         telemetryEnabled: true,
         syncEnabled: false,
       };
@@ -98,6 +104,7 @@ function readInitial(): Omit<
         },
         showCompleted: false,
         notificationsEnabled: false,
+        dailyResetTime: '04:00',
         telemetryEnabled: true,
         syncEnabled: false,
       };
@@ -116,6 +123,7 @@ function readInitial(): Omit<
       },
       showCompleted: parsed.showCompleted ?? false,
       notificationsEnabled: parsed.notificationsEnabled ?? false,
+      dailyResetTime: parsed.dailyResetTime ?? '04:00',
       telemetryEnabled: parsed.telemetryEnabled ?? true,
       syncEnabled: parsed.syncEnabled ?? false,
     };
@@ -134,6 +142,7 @@ function readInitial(): Omit<
       },
       showCompleted: false,
       notificationsEnabled: false,
+      dailyResetTime: '04:00',
       telemetryEnabled: true,
       syncEnabled: false,
     };
@@ -151,6 +160,7 @@ function persist(state: {
   notificationsEnabled: boolean;
   telemetryEnabled: boolean;
   syncEnabled: boolean;
+  dailyResetTime: string | null;
 }) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -171,6 +181,7 @@ const useSettingsStore = create<SettingsState>((set) => {
     notificationsEnabled: initial.notificationsEnabled,
     telemetryEnabled: initial.telemetryEnabled,
     syncEnabled: initial.syncEnabled,
+    dailyResetTime: initial.dailyResetTime,
 
     setNewTasks: (v: boolean) =>
       set((s) => {
@@ -186,6 +197,7 @@ const useSettingsStore = create<SettingsState>((set) => {
             notificationsEnabled: s.notificationsEnabled,
             telemetryEnabled: s.telemetryEnabled,
             syncEnabled: s.syncEnabled,
+            dailyResetTime: s.dailyResetTime,
           });
         } catch {}
         return { newTasks: v } as Partial<SettingsState> as SettingsState;
@@ -204,6 +216,7 @@ const useSettingsStore = create<SettingsState>((set) => {
             notificationsEnabled: s.notificationsEnabled,
             telemetryEnabled: s.telemetryEnabled,
             syncEnabled: s.syncEnabled,
+            dailyResetTime: s.dailyResetTime,
           });
         } catch {}
         return { today: v } as Partial<SettingsState> as SettingsState;
@@ -222,6 +235,7 @@ const useSettingsStore = create<SettingsState>((set) => {
             notificationsEnabled: s.notificationsEnabled,
             telemetryEnabled: s.telemetryEnabled,
             syncEnabled: s.syncEnabled,
+            dailyResetTime: s.dailyResetTime,
           });
         } catch {}
         return { week: v } as Partial<SettingsState> as SettingsState;
@@ -240,6 +254,7 @@ const useSettingsStore = create<SettingsState>((set) => {
             notificationsEnabled: s.notificationsEnabled,
             telemetryEnabled: s.telemetryEnabled,
             syncEnabled: s.syncEnabled,
+            dailyResetTime: s.dailyResetTime,
           });
         } catch {}
         return { imminent: v } as Partial<SettingsState> as SettingsState;
@@ -259,6 +274,7 @@ const useSettingsStore = create<SettingsState>((set) => {
             notificationsEnabled: s.notificationsEnabled,
             telemetryEnabled: s.telemetryEnabled,
             syncEnabled: s.syncEnabled,
+            dailyResetTime: s.dailyResetTime,
           });
         } catch {}
         return { density: v } as Partial<SettingsState> as SettingsState;
@@ -279,6 +295,7 @@ const useSettingsStore = create<SettingsState>((set) => {
             notificationsEnabled: s.notificationsEnabled,
             telemetryEnabled: s.telemetryEnabled,
             syncEnabled: s.syncEnabled,
+            dailyResetTime: s.dailyResetTime,
           });
         } catch {}
         return { taskDefaults: nextDefaults } as Partial<SettingsState> as SettingsState;
@@ -298,6 +315,7 @@ const useSettingsStore = create<SettingsState>((set) => {
             notificationsEnabled: s.notificationsEnabled,
             telemetryEnabled: s.telemetryEnabled,
             syncEnabled: s.syncEnabled,
+            dailyResetTime: s.dailyResetTime,
           });
         } catch {}
         return { showCompleted: v } as Partial<SettingsState> as SettingsState;
@@ -315,11 +333,32 @@ const useSettingsStore = create<SettingsState>((set) => {
             taskDefaults: s.taskDefaults,
             showCompleted: s.showCompleted,
             notificationsEnabled: v,
+            dailyResetTime: s.dailyResetTime,
             telemetryEnabled: s.telemetryEnabled,
             syncEnabled: s.syncEnabled,
           });
         } catch {}
         return { notificationsEnabled: v } as Partial<SettingsState> as SettingsState;
+      }),
+
+    setDailyResetTime: (v: string | null) =>
+      set((s) => {
+        try {
+          persist({
+            newTasks: s.newTasks,
+            today: s.today,
+            week: s.week,
+            imminent: s.imminent,
+            density: s.density,
+            taskDefaults: s.taskDefaults,
+            showCompleted: s.showCompleted,
+            notificationsEnabled: s.notificationsEnabled,
+            dailyResetTime: v,
+            telemetryEnabled: s.telemetryEnabled,
+            syncEnabled: s.syncEnabled,
+          });
+        } catch {}
+        return { dailyResetTime: v } as Partial<SettingsState> as SettingsState;
       }),
 
     setTelemetryEnabled: (v) =>
@@ -336,6 +375,7 @@ const useSettingsStore = create<SettingsState>((set) => {
             notificationsEnabled: s.notificationsEnabled,
             telemetryEnabled: v,
             syncEnabled: s.syncEnabled,
+            dailyResetTime: s.dailyResetTime,
           });
         } catch {}
         return { telemetryEnabled: v } as Partial<SettingsState> as SettingsState;
@@ -355,6 +395,7 @@ const useSettingsStore = create<SettingsState>((set) => {
             notificationsEnabled: s.notificationsEnabled,
             telemetryEnabled: s.telemetryEnabled,
             syncEnabled: v,
+            dailyResetTime: s.dailyResetTime,
           });
         } catch {}
         return { syncEnabled: v } as Partial<SettingsState> as SettingsState;

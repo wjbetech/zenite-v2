@@ -180,10 +180,7 @@ export default function TaskModal({
         if (onSaveExternal) {
           try {
             // call synchronously so tests that mock onSave see the call immediately
-            (onSaveExternal as unknown as (id: string, patch: Partial<Task>) => void)(
-              id,
-              patch,
-            );
+            (onSaveExternal as unknown as (id: string, patch: Partial<Task>) => void)(id, patch);
           } catch (e) {
             console.warn('TaskModal onSave callback threw', e);
           }
@@ -192,10 +189,7 @@ export default function TaskModal({
           await updateTask(id, patch);
           try {
             if (typeof onSaveExternal === 'function')
-              (onSaveExternal as unknown as (id: string, patch: Partial<Task>) => void)(
-                id,
-                patch,
-              );
+              (onSaveExternal as unknown as (id: string, patch: Partial<Task>) => void)(id, patch);
           } catch (e) {
             console.warn('TaskModal onSave callback threw', e);
           }

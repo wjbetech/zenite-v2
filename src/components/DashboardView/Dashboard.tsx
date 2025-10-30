@@ -396,7 +396,7 @@ export default function Dashboard() {
         </div>
       )}
 
-    {/* Removed absolute overlay to avoid covering the scrollbar. The scroll
+      {/* Removed absolute overlay to avoid covering the scrollbar. The scroll
         container now has `mb-12` so its track ends above the page bottom
         while the page height remains unchanged. */}
 

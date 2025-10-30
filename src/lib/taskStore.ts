@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import api, { UpdateTaskPayload } from './api';
+import useSettingsStore from './settingsStore';
 import { sanitizeTitle, sanitizeDescription } from './text-format';
 
 export type Task = {
@@ -185,9 +186,25 @@ const useTaskStore = create<State>((set, get) => ({
     try {
       const last = window.localStorage.getItem(LAST_DAILY_RESET_KEY);
       const today = todayKey();
-      if (last !== today) {
-        await get().resetDailiesNow();
+      // If we've already reset today, nothing to do
+      if (last === today) return;
+
+      // Respect user's configured daily reset time (local)
+      const configured = useSettingsStore.getState().dailyResetTime;
+      if (configured) {
+        // configured is expected as 'HH:MM'
+        const [hhStr, mmStr] = configured.split(':');
+        const hh = Number(hhStr ?? '0');
+        const mm = Number(mmStr ?? '0');
+        const now = new Date();
+        const resetToday = new Date(now);
+        resetToday.setHours(hh, mm, 0, 0);
+        // Only reset if the current local time has passed the configured reset time
+        if (now < resetToday) return;
       }
+
+      // Time condition met or no configured time — perform reset
+      await get().resetDailiesNow();
     } catch (err) {
       console.error('resetDailiesIfNeeded failed', err);
     }

@@ -224,7 +224,7 @@ export default function Dashboard() {
 
   return (
     <div
-      className="px-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-hidden overflow-y-visible"
+      className="px-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-hidden overflow-y-visible relative"
       style={{ boxSizing: 'border-box' }}
     >
       {/* Header, heatmap and lists container */}
@@ -287,7 +287,7 @@ export default function Dashboard() {
 
           {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
           {/* Make this inner area the only vertical scroll container so header, tabs and toggle stay fixed */}
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto mb-12">
             <div
               className="mx-auto w-full relative"
               style={{
@@ -295,7 +295,11 @@ export default function Dashboard() {
                 boxSizing: 'border-box',
               }}
             >
-              {/* Task list content (render spinner OR the lists so they share space) */}
+              {/* Task list content (render spinner OR the lists so they share space).
+          Add bottom padding inside the scrollable area so the last TaskCard
+          doesn't butt up against the viewport bottom. Because this padding
+          lives inside the `overflow-y-auto` scroll container it won't
+          increase the page height or create an outer scrollbar. */}
               <div className="pt-4 overflow-visible w-full">
                 {showImminent && effectiveView === 'imminent' && (
                   <React.Suspense>
@@ -391,6 +395,10 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+    {/* Removed absolute overlay to avoid covering the scrollbar. The scroll
+        container now has `mb-12` so its track ends above the page bottom
+        while the page height remains unchanged. */}
 
       <TaskModal
         open={modalOpen}

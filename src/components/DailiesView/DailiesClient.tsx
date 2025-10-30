@@ -23,12 +23,10 @@ export default function DailiesClient() {
   const deleteTask = useTaskStore((s) => s.deleteTask);
   const updateTask = useTaskStore((s) => s.updateTask);
   const projects = useProjectStore((s) => s.projects);
-  const resetIfNeeded = useTaskStore((s) => s.resetDailiesIfNeeded);
-  const resetNow = useTaskStore((s) => s.resetDailiesNow);
-  const loadTasks = useTaskStore((s) => s.loadTasks);
   const [editing, setEditing] = React.useState<Task | null>(null);
   const [deleting, setDeleting] = React.useState<Task | null>(null);
   const [creating, setCreating] = React.useState(false);
+
   const edit = (t: Partial<Task> | string) => {
     // accept either a Task-like object or an id string
     const id = typeof t === 'string' ? t : t?.id;
@@ -44,7 +42,7 @@ export default function DailiesClient() {
   const view: 'full' | 'mini' = density === 'compact' ? 'mini' : 'full';
 
   // Extracted to a hook for testability and separation of concerns
-  useDailyResetScheduler({ loadTasks, resetIfNeeded, resetNow });
+  useDailyResetScheduler();
 
   // status changes are handled via TaskCard onStatusChange
 

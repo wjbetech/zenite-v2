@@ -22,11 +22,15 @@ export default function TaskModal({
   onOpenChange,
   initial,
   allowCreateProject,
+  onSave,
+  submitLabel,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   initial?: Partial<Task> & { id?: string };
   allowCreateProject?: boolean;
+  // optional callback for callers who want to be notified when a task is saved
+  onSave?: (id: string, patch: Partial<Task>) => void;
   submitLabel?: string;
 }) {
   const createTask = useTaskStore((s) => s.createTask);
@@ -160,7 +164,7 @@ export default function TaskModal({
       if (initial?.id) {
         const id = initial.id;
         await tryCreateProjectBeforeTask();
-        await updateTask(id, {
+        const patch = {
           title: sanitizeTitle(title || ''),
           notes: sanitizeDescription(notes || ''),
           dueDate,
@@ -169,7 +173,15 @@ export default function TaskModal({
           estimatedDuration: estimatedDuration ?? undefined,
           projectId,
           recurrence: recurrence ?? undefined,
-        });
+        } as Partial<Task>;
+        await updateTask(id, patch);
+        // Notify optional external handler that a task was saved (useful for server-backed lists)
+        try {
+          onSave?.(id, patch);
+        } catch (e) {
+          // swallow errors coming from external callbacks to avoid breaking modal flow
+          console.warn('TaskModal onSave callback threw', e);
+        }
       } else {
         createdProjectName = await tryCreateProjectBeforeTask();
 
@@ -540,7 +552,7 @@ export default function TaskModal({
           submitError={submitError}
           onCancel={() => onOpenChange(false)}
           saving={saving}
-          submitLabel={initial?.id ? 'Save' : 'Create'}
+          submitLabel={submitLabel ?? (initial?.id ? 'Save' : 'Create')}
         />
       </form>
     </div>

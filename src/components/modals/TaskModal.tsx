@@ -22,11 +22,16 @@ export default function TaskModal({
   onOpenChange,
   initial,
   allowCreateProject,
+  onSave: onSaveExternal,
+  submitLabel,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   initial?: Partial<Task> & { id?: string };
   allowCreateProject?: boolean;
+  // optional callback for callers who want to be notified when a task is saved
+  onSave?: (id: string, patch: Partial<Task>) => void;
+  submitLabel?: string;
 }) {
   const createTask = useTaskStore((s) => s.createTask);
   const updateTask = useTaskStore((s) => s.updateTask);
@@ -38,6 +43,11 @@ export default function TaskModal({
   const [dueTime, setDueTime] = useState<string | null>(initial?.dueTime ?? null);
   const [recurrence, setRecurrence] = useState<string | null>(initial?.recurrence ?? 'once');
   const [projectId, setProjectId] = useState<string | null>(initial?.projectId ?? null);
+  const [estimatedDuration, setEstimatedDuration] = useState<number | undefined>(
+    initial?.estimatedDuration ?? undefined,
+  );
+  const [durationHours, setDurationHours] = useState<string>('');
+  const [durationMinutes, setDurationMinutes] = useState<string>('');
   const projects = useProjectStore((s) => s.projects);
   const [newProjectCreated, setNewProjectCreated] = useState(false);
   const [showTaskInputs, setShowTaskInputs] = useState(true);
@@ -61,6 +71,17 @@ export default function TaskModal({
     setDueTime(initial?.dueTime ?? null);
     setRecurrence(initial?.recurrence ?? 'once');
     setProjectId(initial?.projectId ?? null);
+    setEstimatedDuration(initial?.estimatedDuration ?? undefined);
+    // initialize hours/minutes inputs from estimatedDuration (minutes)
+    if (initial?.estimatedDuration && Number.isFinite(initial.estimatedDuration)) {
+      const hh = Math.floor(initial.estimatedDuration / 60).toString();
+      const mm = (initial.estimatedDuration % 60).toString();
+      setDurationHours(hh);
+      setDurationMinutes(mm);
+    } else {
+      setDurationHours('');
+      setDurationMinutes('');
+    }
     // reset the 'new project created' subheader when modal opens or initial changes
     setNewProjectCreated(false);
     // default: when opened as New Project (and not editing) hide task inputs
@@ -113,6 +134,9 @@ export default function TaskModal({
     }
   }
 
+  // Helpers to convert between minutes (number) and HH:MM time input value
+  // durationHours/durationMinutes are kept in sync with estimatedDuration below
+
   async function submit(e?: React.FormEvent) {
     e?.preventDefault();
     if (saving) return;
@@ -139,16 +163,43 @@ export default function TaskModal({
     try {
       if (initial?.id) {
         const id = initial.id;
-        await tryCreateProjectBeforeTask();
-        await updateTask(id, {
+        const patch = {
           title: sanitizeTitle(title || ''),
           notes: sanitizeDescription(notes || ''),
           dueDate,
           startsAt,
           dueTime,
+          estimatedDuration: estimatedDuration ?? undefined,
           projectId,
           recurrence: recurrence ?? undefined,
-        });
+        } as Partial<Task>;
+
+        // If a caller provided an onSave handler, delegate persistence to it. This
+        // keeps server-backed consumers (project lists) in control of how updates
+        // are applied and matches the previous EditTaskModal behavior used in tests.
+        if (onSaveExternal) {
+          try {
+            // call synchronously so tests that mock onSave see the call immediately
+            (onSaveExternal as unknown as (id: string, patch: Partial<Task>) => void)(
+              id,
+              patch,
+            );
+          } catch (e) {
+            console.warn('TaskModal onSave callback threw', e);
+          }
+        } else {
+          // default internal behavior: update the task via the local store / API
+          await updateTask(id, patch);
+          try {
+            if (typeof onSaveExternal === 'function')
+              (onSaveExternal as unknown as (id: string, patch: Partial<Task>) => void)(
+                id,
+                patch,
+              );
+          } catch (e) {
+            console.warn('TaskModal onSave callback threw', e);
+          }
+        }
       } else {
         createdProjectName = await tryCreateProjectBeforeTask();
 
@@ -160,6 +211,7 @@ export default function TaskModal({
             dueDate,
             startsAt,
             dueTime,
+            estimatedDuration: estimatedDuration ?? undefined,
             projectId,
             recurrence: recurrence ?? undefined,
           });
@@ -280,16 +332,18 @@ export default function TaskModal({
     })();
   }
 
+  // form classes: remove border when creating a new task (no initial.id)
+  const formClass = `relative z-10 w-full max-w-2xl bg-base-100 rounded-lg p-6 shadow-lg ${
+    initial?.id ? 'border-1' : ''
+  }`;
+
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <TaskModalLocalToast toast={localToast} />
       <div className="absolute inset-0 bg-black/80" onClick={() => onOpenChange(false)} />
-      <form
-        onSubmit={submit}
-        className="relative z-10 w-full max-w-2xl bg-base-100 rounded-lg p-6 shadow-lg border-1"
-      >
+      <form onSubmit={submit} className={formClass}>
         <h3 className="text-lg font-medium mb-3">
           {initial?.id ? 'Edit Task' : allowCreateProject ? 'Add New Project' : 'Add New Task'}
         </h3>
@@ -329,6 +383,8 @@ export default function TaskModal({
           <>
             <label className="block mb-1">Title</label>
             <input
+              aria-label={initial?.recurrence === 'daily' ? 'Daily task title' : 'Task title'}
+              data-testid="task-title-input"
               value={title}
               onChange={(e) => {
                 const v = e.target.value;
@@ -354,43 +410,122 @@ export default function TaskModal({
               rows={4}
             />
 
-            <label className="block mt-5">
-              <div className="text-sm">Due Date</div>
-              <input
-                type="date"
-                value={dueDate ? dueDate.split('T')[0] : ''}
-                onChange={(e) =>
-                  setDueDate(e.target.value ? new Date(e.target.value).toISOString() : null)
-                }
-                className="pika-single p-2 rounded-lg bg-base-100"
-              />
+            <label className="label mt-5">
+              <span className="label-text text-base-content">
+                Due Date
+                <span className="text-xs text-base-content"> (optional)</span>
+              </span>
             </label>
+            <input
+              type="date"
+              className="input input-bordered rounded-md w-full"
+              value={dueDate ? dueDate.split('T')[0] : ''}
+              onChange={(e) =>
+                setDueDate(e.target.value ? new Date(e.target.value).toISOString() : null)
+              }
+            />
 
             {/* Start and due time inputs placed under Due Date */}
             <div className="mt-3 flex flex-col gap-3 md:flex-row">
               <div className="w-full md:w-1/2">
-                <label className="block mb-1 text-sm">Start</label>
+                <label className="label">
+                  <span className="label-text text-base-content">
+                    Start Time
+                    <span className="text-xs text-base-content"> (optional)</span>
+                  </span>
+                </label>
                 <input
                   type="datetime-local"
+                  className="input input-bordered rounded-md w-full"
                   value={startsAt ? toLocalDateTimeValue(startsAt) : ''}
                   onChange={(e) =>
                     setStartsAt(e.target.value ? new Date(e.target.value).toISOString() : null)
                   }
-                  className="p-2 rounded-lg bg-base-100 w-full"
                 />
               </div>
 
               <div className="w-full md:w-1/2">
-                <label className="block mb-1 text-sm">Due time</label>
+                <label className="label">
+                  <span className="label-text text-base-content">
+                    Due Time
+                    <span className="text-xs text-base-content"> (optional)</span>
+                  </span>
+                </label>
                 <input
                   type="time"
+                  className="input input-bordered rounded-md w-full"
                   value={dueTime ? toTimeValue(dueTime) : ''}
                   onChange={(e) => {
                     const time = e.target.value; // HH:MM
                     const composed = composeDueTimeIso(dueDate ?? null, time ?? null);
                     setDueTime(composed);
                   }}
-                  className="p-2 rounded-lg bg-base-100 w-full"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-row align-middle py-4 gap-2 items-center mt-5">
+              <label className="label mr-4">
+                <span className="label-text align-middle text-base-content">
+                  Estimated duration (hrs. / mins.)
+                </span>
+              </label>
+              {/* push inputs to the right and keep them inline */}
+              <div className="flex flex-row gap-2 w-full items-center justify-end">
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  className="input input-bordered rounded-md w-20 max-w-[5rem] pr-4 text-right"
+                  value={durationHours}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setDurationHours(v);
+                    const hh = v === '' ? 0 : Number(v);
+                    const mm = durationMinutes === '' ? 0 : Number(durationMinutes);
+                    if (
+                      !Number.isFinite(hh) ||
+                      !Number.isFinite(mm) ||
+                      hh < 0 ||
+                      mm < 0 ||
+                      mm > 60
+                    ) {
+                      setEstimatedDuration(undefined);
+                    } else {
+                      const total = hh * 60 + mm;
+                      setEstimatedDuration(total > 0 ? total : undefined);
+                    }
+                  }}
+                  aria-label="Estimated duration hours"
+                  placeholder="0"
+                />
+                <input
+                  type="number"
+                  min={0}
+                  max={60}
+                  step={1}
+                  className="input input-bordered rounded-md w-20 max-w-[5rem] pr-4 text-right"
+                  value={durationMinutes}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setDurationMinutes(v);
+                    const hh = durationHours === '' ? 0 : Number(durationHours);
+                    const mm = v === '' ? 0 : Number(v);
+                    if (
+                      !Number.isFinite(hh) ||
+                      !Number.isFinite(mm) ||
+                      hh < 0 ||
+                      mm < 0 ||
+                      mm > 60
+                    ) {
+                      setEstimatedDuration(undefined);
+                    } else {
+                      const total = hh * 60 + mm;
+                      setEstimatedDuration(total > 0 ? total : undefined);
+                    }
+                  }}
+                  aria-label="Estimated duration minutes"
+                  placeholder="0"
                 />
               </div>
             </div>
@@ -437,7 +572,7 @@ export default function TaskModal({
           submitError={submitError}
           onCancel={() => onOpenChange(false)}
           saving={saving}
-          submitLabel={initial?.id ? 'Save' : 'Create'}
+          submitLabel={submitLabel ?? (initial?.id ? 'Save' : 'Create')}
         />
       </form>
     </div>

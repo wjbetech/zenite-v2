@@ -388,7 +388,7 @@ export default function TaskCard({
         >
           <div className="flex items-start justify-between gap-4">
             <div
-              className={`py-2 text-lg leading-relaxed ${statusStyles.supportingText} whitespace-pre-wrap break-words flex-1`}
+              className={`py-2 text-md leading-relaxed ${statusStyles.supportingText} whitespace-pre-wrap break-words flex-1`}
             >
               {t.notes ? t.notes : <span className="italic opacity-60">No description</span>}
             </div>

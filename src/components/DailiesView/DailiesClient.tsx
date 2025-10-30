@@ -8,7 +8,7 @@ import TaskCard, { type Task as CardTask } from '../TaskCard';
 import NativeSortableDaily from '../NativeSortableDaily';
 import EditTaskModal from '../modals/EditTaskModal';
 import ConfirmDeleteModal from '../modals/ConfirmDeleteModal';
-import CreateDailyModal from '../modals/CreateDailyModal';
+import TaskModal from '../modals/TaskModal';
 import useDailyResetScheduler from '../../hooks/useDailyResetScheduler';
 import DailiesLoading from './DailiesLoading';
 import DailiesEmpty from './DailiesEmpty';
@@ -177,7 +177,12 @@ export default function DailiesClient() {
         task={editing}
         onSave={handleSave}
       />
-      <CreateDailyModal open={creating} onOpenChange={(v) => setCreating(v)} />
+      <TaskModal
+        open={creating}
+        onOpenChange={(v) => setCreating(v)}
+        initial={{ recurrence: 'daily' }}
+        submitLabel="Create Daily"
+      />
       <ConfirmDeleteModal
         open={!!deleting}
         onCancel={() => setDeleting(null)}

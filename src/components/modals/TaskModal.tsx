@@ -22,7 +22,7 @@ export default function TaskModal({
   onOpenChange,
   initial,
   allowCreateProject,
-  onSave,
+  onSave: onSaveExternal,
   submitLabel,
 }: {
   open: boolean;
@@ -163,7 +163,6 @@ export default function TaskModal({
     try {
       if (initial?.id) {
         const id = initial.id;
-        await tryCreateProjectBeforeTask();
         const patch = {
           title: sanitizeTitle(title || ''),
           notes: sanitizeDescription(notes || ''),
@@ -174,13 +173,32 @@ export default function TaskModal({
           projectId,
           recurrence: recurrence ?? undefined,
         } as Partial<Task>;
-        await updateTask(id, patch);
-        // Notify optional external handler that a task was saved (useful for server-backed lists)
-        try {
-          onSave?.(id, patch);
-        } catch (e) {
-          // swallow errors coming from external callbacks to avoid breaking modal flow
-          console.warn('TaskModal onSave callback threw', e);
+
+        // If a caller provided an onSave handler, delegate persistence to it. This
+        // keeps server-backed consumers (project lists) in control of how updates
+        // are applied and matches the previous EditTaskModal behavior used in tests.
+        if (onSaveExternal) {
+          try {
+            // call synchronously so tests that mock onSave see the call immediately
+            (onSaveExternal as unknown as (id: string, patch: Partial<Task>) => void)(
+              id,
+              patch,
+            );
+          } catch (e) {
+            console.warn('TaskModal onSave callback threw', e);
+          }
+        } else {
+          // default internal behavior: update the task via the local store / API
+          await updateTask(id, patch);
+          try {
+            if (typeof onSaveExternal === 'function')
+              (onSaveExternal as unknown as (id: string, patch: Partial<Task>) => void)(
+                id,
+                patch,
+              );
+          } catch (e) {
+            console.warn('TaskModal onSave callback threw', e);
+          }
         }
       } else {
         createdProjectName = await tryCreateProjectBeforeTask();
@@ -365,6 +383,8 @@ export default function TaskModal({
           <>
             <label className="block mb-1">Title</label>
             <input
+              aria-label={initial?.recurrence === 'daily' ? 'Daily task title' : 'Task title'}
+              data-testid="task-title-input"
               value={title}
               onChange={(e) => {
                 const v = e.target.value;

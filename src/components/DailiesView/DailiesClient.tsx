@@ -54,8 +54,8 @@ export default function DailiesClient() {
   // deletion is handled from the task card directly; modal no longer supports delete
 
   return (
-    <div className="mx-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-visible max-w-[95%]">
-      <header className="max-w-6xl px-3">
+    <div className="mx-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-visible max-w-[95%] pb-12">
+      <header className="max-w-6xl px-3 mb-6">
         <div className="mx-auto w-full max-w-6xl">
           <div className="relative flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -102,14 +102,14 @@ export default function DailiesClient() {
       </header>
 
       <div className="flex-1 min-h-0 flex flex-col">
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-4 pb-10">
-          <div className="space-y-6">
+        <div className="flex-1 min-h-0 overflow-y-auto px-3 pt-2 pb-6">
+          <div className="space-y-3">
             <div className="max-w-md">
               <TimerWidget open={timerOpen} onOpenChange={(v) => setTimerOpen(v)} />
             </div>
 
-            <section className="mb-[74px]">
-              <div className="transition-all duration-300 ease-in-out pt-4 pb-2 px-0">
+            <section className="mb-4">
+              <div className="transition-all duration-150 ease-in-out pt-2 pb-0 px-0">
                 {tasksLoading ? (
                   <DailiesLoading />
                 ) : daily.length === 0 ? (
@@ -160,7 +160,7 @@ export default function DailiesClient() {
                         }}
                       />
                     )}
-                    containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
+                    containerClassName="space-y-3 md:space-y-4 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
                   />
                 )}
               </div>

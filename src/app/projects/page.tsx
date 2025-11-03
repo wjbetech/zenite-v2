@@ -54,7 +54,7 @@ export default async function Page() {
   });
 
   return (
-    <main className="">
+    <main className="mx-6 pt-[52px] flex flex-col flex-1 min-h-0 overflow-x-visible">
       <ProjectsClient initialProjects={serialized} />
     </main>
   );

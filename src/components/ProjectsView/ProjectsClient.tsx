@@ -115,8 +115,8 @@ export default function ProjectsClient({ initialProjects }: Props) {
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-x-visible px-6 pt-[124px]">
-      <header className="pb-6">
+    <div className="flex flex-col flex-1 min-h-0 overflow-x-visible pt-[var(--nav-height)]">
+      <header className="pb-6 flex-shrink-0">
         <div className="mx-auto w-full max-w-6xl">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
 
@@ -136,26 +136,28 @@ export default function ProjectsClient({ initialProjects }: Props) {
         </div>
       </header>
 
-      <div className="flex flex-col gap-6 pb-10">
-        {loading ? (
-          <ProjectsLoading />
-        ) : dbUnavailable ? (
-          <ProjectsDbUnavailable />
-        ) : (mounted ? projects.length === 0 : (initialProjects?.length ?? 0) === 0) ? (
-          <ProjectsEmpty />
-        ) : (
-          <ProjectsList
-            projects={mounted ? displayedProjects : initialProjects ?? []}
-            onDelete={(id) => {
-              setPendingDeleteId(id);
-              setConfirmOpen(true);
-            }}
-            onEdit={(id) => {
-              setEditingProjectId(id);
-              setEditModalOpen(true);
-            }}
-          />
-        )}
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-visible">
+        <div className="flex flex-col gap-6 pb-10">
+          {loading ? (
+            <ProjectsLoading />
+          ) : dbUnavailable ? (
+            <ProjectsDbUnavailable />
+          ) : (mounted ? projects.length === 0 : (initialProjects?.length ?? 0) === 0) ? (
+            <ProjectsEmpty />
+          ) : (
+            <ProjectsList
+              projects={mounted ? displayedProjects : initialProjects ?? []}
+              onDelete={(id) => {
+                setPendingDeleteId(id);
+                setConfirmOpen(true);
+              }}
+              onEdit={(id) => {
+                setEditingProjectId(id);
+                setEditModalOpen(true);
+              }}
+            />
+          )}
+        </div>
       </div>
       <ConfirmModal
         open={confirmOpen}

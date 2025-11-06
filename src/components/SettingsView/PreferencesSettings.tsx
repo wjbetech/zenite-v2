@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import useSettingsStore from '../lib/settingsStore';
+import useSettingsStore from '../../lib/settingsStore';
 
 // Small presentational subcomponents exported for use by the Settings page
 // Display density is intentionally omitted — moved to a separate UX decision.

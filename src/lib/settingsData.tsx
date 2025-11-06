@@ -6,8 +6,8 @@ import {
   TaskListSettings,
   NotificationsSettings,
   PrivacySettings,
-} from '../components/PreferencesSettings';
-import { DisplayDensity } from '../components/PreferencesSettings';
+} from '../components/SettingsView/PreferencesSettings';
+import { DisplayDensity } from '../components/SettingsView/PreferencesSettings';
 
 export const sections = [
   {

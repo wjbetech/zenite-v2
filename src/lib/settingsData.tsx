@@ -1,5 +1,5 @@
 import React from 'react';
-import ThemeDropdown from '../components/ThemeDropdown';
+import ThemeDropdown from '../components/SettingsView/ThemeDropdown';
 import DashboardViewsSettings from '@/components/DashboardView/DashboardViewsSettings';
 import {
   TaskCreationDefaults,

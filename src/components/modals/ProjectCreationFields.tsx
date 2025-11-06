@@ -1,6 +1,9 @@
 'use client';
 
 import React from 'react';
+import { normalizeWhitespaceForTyping } from '../../lib/text-sanitizer';
+import { sanitizeTitle } from '../../lib/text-format';
+import { sanitizeDescriptionPreserveNewlines } from '../../lib/text-format';
 
 export default function ProjectCreationFields({
   newProjectName,
@@ -19,10 +22,11 @@ export default function ProjectCreationFields({
 }) {
   return (
     <div className="mb-8">
-      <label className="block mb-2">New project</label>
+      <label className="block mb-2">New Project</label>
       <input
         value={newProjectName}
-        onChange={(e) => setNewProjectName(e.target.value)}
+        onChange={(e) => setNewProjectName(normalizeWhitespaceForTyping(e.target.value))}
+        onBlur={() => setNewProjectName(sanitizeTitle(newProjectName || ''))}
         onKeyDown={onCreateProjectKeyDown}
         className="input w-full mb-2 rounded-lg"
         disabled={newProjectLoading}
@@ -33,8 +37,11 @@ export default function ProjectCreationFields({
       <textarea
         id="new-project-description"
         value={newProjectDescription}
-        onChange={(e) => setNewProjectDescription(e.target.value)}
-        className="textarea w-full rounded-lg bg-base-100"
+        onChange={(e) => setNewProjectDescription(normalizeWhitespaceForTyping(e.target.value))}
+        onBlur={() =>
+          setNewProjectDescription(sanitizeDescriptionPreserveNewlines(newProjectDescription || ''))
+        }
+        className="textarea w-full rounded-lg bg-base-100 whitespace-pre-wrap"
         rows={3}
         disabled={newProjectLoading}
         placeholder="Optional description for the project"

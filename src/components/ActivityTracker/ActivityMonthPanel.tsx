@@ -18,7 +18,23 @@ export default function ActivityMonthPanel({
   onHideTooltip: () => void;
 }) {
   const monthWeeks = weeksForMonth(monthDate);
-  const cells = monthWeeks.flat();
+  let cells = monthWeeks.flat();
+  // Trim trailing cells that belong to the following month and have no activity
+  // and no activityDetails. This prevents rendering extra empty squares at the
+  // end of the month for visual cleanliness.
+  for (let i = cells.length - 1; i >= 0; i--) {
+    const d = cells[i];
+    const inMonth = d.getMonth() === monthDate.getMonth();
+    const key = formatDateISO(d);
+    const count = map[key] ?? 0;
+    const titles = activityDetails?.[key] ?? [];
+    if (!inMonth && count === 0 && (!titles || titles.length === 0)) {
+      cells = cells.slice(0, i);
+      continue;
+    }
+    // Once we encounter a cell that should remain, stop trimming
+    break;
+  }
   const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (

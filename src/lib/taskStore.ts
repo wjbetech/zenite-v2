@@ -2,12 +2,17 @@
 
 import { create } from 'zustand';
 import api, { UpdateTaskPayload } from './api';
+import useSettingsStore from './settingsStore';
+import { sanitizeTitle, sanitizeDescription } from './text-format';
 
 export type Task = {
   id: string;
   title: string;
   notes?: string;
+  estimatedDuration?: number;
   dueDate?: string | null;
+  startsAt?: string | null;
+  dueTime?: string | null;
   recurrence?: string | null;
   createdAt: string;
   completed?: boolean;
@@ -20,7 +25,10 @@ export type Task = {
 export type CreateTaskInput = {
   title: string;
   notes?: string;
+  estimatedDuration?: number;
   dueDate?: string | null;
+  startsAt?: string | null;
+  dueTime?: string | null;
   recurrence?: string | null;
   projectId?: string | null;
   started?: boolean;
@@ -49,7 +57,15 @@ const mapRemoteTask = (remote: Record<string, unknown>): Task => ({
   id: (remote.id as string) ?? '',
   title: (remote.title as string) ?? 'Untitled',
   notes: (remote.notes as string) ?? undefined,
+  estimatedDuration: (() => {
+    const v = remote.estimatedDuration;
+    if (typeof v === 'number') return v as number;
+    if (typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v))) return Number(v);
+    return undefined;
+  })(),
   dueDate: (remote.dueDate as string | null | undefined) ?? null,
+  startsAt: (remote.startsAt as string | null | undefined) ?? null,
+  dueTime: (remote.dueTime as string | null | undefined) ?? null,
   recurrence: (remote.recurrence as string | null | undefined) ?? null,
   createdAt: (remote.createdAt as string) ?? new Date().toISOString(),
   completed: remote.completed === true,
@@ -85,17 +101,25 @@ const useTaskStore = create<State>((set, get) => ({
   },
 
   async createTask(payload) {
-    const response = await api.createTask({
-      title: payload.title,
-      description: payload.notes,
+    const requestPayload = {
+      title: sanitizeTitle(payload.title),
+      description: sanitizeDescription(payload.notes || ''),
+      estimatedDuration: payload.estimatedDuration,
       dueDate: payload.dueDate ?? null,
+      startsAt: payload.startsAt ?? null,
+      dueTime: payload.dueTime ?? null,
       recurrence: payload.recurrence ?? null,
       projectId: payload.projectId ?? null,
       started: payload.started,
       completed: payload.completed,
       completedAt: payload.completedAt ?? null,
-    });
+    };
+
+    const response = await api.createTask(requestPayload);
     const created = mapRemoteTask(response as Record<string, unknown>);
+    // Ensure client-side copy is sanitized as well
+    created.title = sanitizeTitle(created.title);
+    if (created.notes) created.notes = sanitizeDescription(created.notes);
     set({ tasks: [created, ...get().tasks] });
     return created;
   },
@@ -104,14 +128,23 @@ const useTaskStore = create<State>((set, get) => ({
     const payload: UpdateTaskPayload = { id };
 
     if (patch.title !== undefined) {
-      payload.title = patch.title;
+      payload.title = sanitizeTitle(patch.title as string);
     }
     if (patch.notes !== undefined) {
-      payload.notes = patch.notes;
-      payload.description = patch.notes;
+      payload.notes = sanitizeDescription(patch.notes as string);
+      payload.description = sanitizeDescription(patch.notes as string);
+    }
+    if (patch.estimatedDuration !== undefined) {
+      payload.estimatedDuration = patch.estimatedDuration ?? null;
     }
     if (patch.dueDate !== undefined) {
       payload.dueDate = patch.dueDate;
+    }
+    if (patch.startsAt !== undefined) {
+      payload.startsAt = patch.startsAt ?? null;
+    }
+    if (patch.dueTime !== undefined) {
+      payload.dueTime = patch.dueTime ?? null;
     }
     if (patch.recurrence !== undefined) {
       payload.recurrence = patch.recurrence;
@@ -134,6 +167,9 @@ const useTaskStore = create<State>((set, get) => ({
 
     const response = await api.updateTask(payload);
     const updated = mapRemoteTask(response as Record<string, unknown>);
+    // Ensure client-side copy is sanitized as well
+    updated.title = sanitizeTitle(updated.title);
+    if (updated.notes) updated.notes = sanitizeDescription(updated.notes);
     const tasks = get().tasks.map((t) => (t.id === id ? { ...t, ...updated } : t));
     set({ tasks });
     return updated;
@@ -150,9 +186,25 @@ const useTaskStore = create<State>((set, get) => ({
     try {
       const last = window.localStorage.getItem(LAST_DAILY_RESET_KEY);
       const today = todayKey();
-      if (last !== today) {
-        await get().resetDailiesNow();
+      // If we've already reset today, nothing to do
+      if (last === today) return;
+
+      // Respect user's configured daily reset time (local)
+      const configured = useSettingsStore.getState().dailyResetTime;
+      if (configured) {
+        // configured is expected as 'HH:MM'
+        const [hhStr, mmStr] = configured.split(':');
+        const hh = Number(hhStr ?? '0');
+        const mm = Number(mmStr ?? '0');
+        const now = new Date();
+        const resetToday = new Date(now);
+        resetToday.setHours(hh, mm, 0, 0);
+        // Only reset if the current local time has passed the configured reset time
+        if (now < resetToday) return;
       }
+
+      // Time condition met or no configured time — perform reset
+      await get().resetDailiesNow();
     } catch (err) {
       console.error('resetDailiesIfNeeded failed', err);
     }

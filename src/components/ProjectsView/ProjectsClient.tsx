@@ -10,6 +10,7 @@ import { Plus } from 'lucide-react';
 import api from '../../lib/api';
 import { toast } from 'react-toastify';
 import { createProjectAndUpdateStore } from './projectsClientActions';
+import { isDbUnavailableError, extractErrorMessage } from '../../lib/db-error';
 import ProjectsList from './ProjectsList';
 import ProjectsLoading from './ProjectsLoading';
 import ProjectsDbUnavailable from './ProjectsDbUnavailable';
@@ -64,8 +65,8 @@ export default function ProjectsClient({ initialProjects }: Props) {
         toast.dismiss();
         toast.success('Project created', { autoClose: 4000, position: 'top-center' });
       } catch (err) {
-        console.error('ProjectsClient: failed to create project', err);
-        setDbUnavailable(true);
+        console.error('ProjectsClient: failed to create project', extractErrorMessage(err));
+        if (isDbUnavailableError(err)) setDbUnavailable(true);
         if (err instanceof Error) {
           throw err;
         }
@@ -104,8 +105,8 @@ export default function ProjectsClient({ initialProjects }: Props) {
         toast.dismiss();
         toast.success('Project updated', { autoClose: 3000, position: 'top-center' });
       } catch (err) {
-        console.error('ProjectsClient: failed to update project', err);
-        setDbUnavailable(true);
+        console.error('ProjectsClient: failed to update project', extractErrorMessage(err));
+        if (isDbUnavailableError(err)) setDbUnavailable(true);
         if (err instanceof Error) throw err;
         throw new Error('Failed to update project');
       }
@@ -114,8 +115,8 @@ export default function ProjectsClient({ initialProjects }: Props) {
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-x-visible px-6 pt-[124px]">
-      <header className="pb-6 px-3">
+    <div className="flex flex-col flex-1 min-h-0 overflow-x-visible pt-[var(--nav-height)]">
+      <header className="pb-6 flex-shrink-0">
         <div className="mx-auto w-full max-w-6xl">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
 
@@ -135,26 +136,28 @@ export default function ProjectsClient({ initialProjects }: Props) {
         </div>
       </header>
 
-      <div className="flex flex-col gap-6 pb-10 px-3">
-        {loading ? (
-          <ProjectsLoading />
-        ) : dbUnavailable ? (
-          <ProjectsDbUnavailable />
-        ) : (mounted ? projects.length === 0 : (initialProjects?.length ?? 0) === 0) ? (
-          <ProjectsEmpty />
-        ) : (
-          <ProjectsList
-            projects={mounted ? displayedProjects : initialProjects ?? []}
-            onDelete={(id) => {
-              setPendingDeleteId(id);
-              setConfirmOpen(true);
-            }}
-            onEdit={(id) => {
-              setEditingProjectId(id);
-              setEditModalOpen(true);
-            }}
-          />
-        )}
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-visible px-2 pt-4 mb-10">
+        <div className="flex flex-col gap-6">
+          {loading ? (
+            <ProjectsLoading />
+          ) : dbUnavailable ? (
+            <ProjectsDbUnavailable />
+          ) : (mounted ? projects.length === 0 : (initialProjects?.length ?? 0) === 0) ? (
+            <ProjectsEmpty />
+          ) : (
+            <ProjectsList
+              projects={mounted ? displayedProjects : initialProjects ?? []}
+              onDelete={(id) => {
+                setPendingDeleteId(id);
+                setConfirmOpen(true);
+              }}
+              onEdit={(id) => {
+                setEditingProjectId(id);
+                setEditModalOpen(true);
+              }}
+            />
+          )}
+        </div>
       </div>
       <ConfirmModal
         open={confirmOpen}
@@ -176,8 +179,8 @@ export default function ProjectsClient({ initialProjects }: Props) {
             toast.dismiss();
             toast.success('Project has been deleted', { autoClose: 4000, position: 'top-center' });
           } catch (err) {
-            console.error('failed to delete project', err);
-            setDbUnavailable(true);
+            console.error('failed to delete project', extractErrorMessage(err));
+            if (isDbUnavailableError(err)) setDbUnavailable(true);
             toast.error(`Failed to delete project: ${String((err as Error).message ?? err)}`);
           } finally {
             setDeleting(false);

@@ -4,6 +4,7 @@ import React from 'react';
 import DataLoading from '../ui/DataLoading';
 // ...existing code...
 import TabsBox from './TabsBox';
+import TaskViewToggle from '../TaskViewToggle';
 import DashboardHeader from './DashboardHeader';
 import ImminentList from './ImminentList';
 import NewList from './NewList';
@@ -14,6 +15,7 @@ import useTaskStore from '../../lib/taskStore';
 import { buildActivityFrom, TaskLike } from '../../lib/activityUtils';
 import ConfirmDeleteModal from '../modals/ConfirmDeleteModal';
 import TaskModal from '../modals/TaskModal';
+import EditTaskModal from '../modals/EditTaskModal';
 import { useState, useEffect, useRef } from 'react';
 import useScrollableTabs from '../../hooks/useScrollableTabs';
 import { daysUntil } from '../../lib/date-utils';
@@ -72,6 +74,8 @@ export default function Dashboard() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Task> | undefined>(undefined);
+  // editTask holds a full Task when an existing task is being edited via EditTaskModal
+  const [editTask, setEditTask] = useState<Task | null>(null);
   const [deleting, setDeleting] = useState<Task | null>(null);
   const [modalMode, setModalMode] = useState<'task' | 'project'>('task');
   // view state moved into useDashboardTabs hook
@@ -92,8 +96,6 @@ export default function Dashboard() {
   // derive `all` directly from the store to preserve the global ordering
   // (storeTasks is the canonical ordered list; use it as the source of truth)
   const all = [...storeTasks].slice(0, 50);
-  // heatmap controls layout; we no longer vary the item cap per-section
-
   const newTasks = [...all].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
@@ -101,15 +103,12 @@ export default function Dashboard() {
     .filter((t) => t.dueDate)
     .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
   // Include daily recurrence tasks in Today and This Week views.
-  // Use the canonical `all` ordering and filter so we don't introduce duplicates
-  // or change the store ordering.
   const today = [...all].filter((t) => {
     const isDaily = (t.recurrence ?? 'once') === 'daily';
     if (isDaily) return true;
     if (!t.dueDate) return false;
     return daysUntil(t.dueDate) === 0;
   });
-
   const week = [...all].filter((t) => {
     const isDaily = (t.recurrence ?? 'once') === 'daily';
     if (isDaily) return true;
@@ -117,6 +116,11 @@ export default function Dashboard() {
     const days = daysUntil(t.dueDate);
     return days >= 0 && days <= 6; // this week including today
   });
+
+  const handleEditSave = (id: string, patch: Partial<Task>) => {
+    void updateTask(id, patch);
+    setEditTask(null);
+  };
 
   // Dev-only diagnostics: guard logs out during tests to keep test output clean
   useEffect(() => {
@@ -220,7 +224,7 @@ export default function Dashboard() {
 
   return (
     <div
-      className="px-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-hidden"
+      className="px-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-hidden overflow-y-visible relative"
       style={{ boxSizing: 'border-box' }}
     >
       {/* Header, heatmap and lists container */}
@@ -243,66 +247,70 @@ export default function Dashboard() {
         activityMap={activityMap}
         activityDetails={activityDetails}
       />
-
-      <div className="flex-1 flex flex-col min-h-0">
-        {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
-        <div className="flex-1 min-h-0">
+      {/* When loading, show a fixed, centered spinner that doesn't affect layout height.
+          When not loading, render the task lists container. */}
+      {tasksLoading ? (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <DataLoading label="Fetching tasks…" variant="primary" compact />
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col min-h-0">
+          {/* Tabs and view toggle: keep these outside the scrollable area so they remain fixed */}
           <div
-            className="mx-auto w-full"
+            className="mx-auto w-full relative"
             style={{
               maxWidth: 'calc(100vw - var(--sidebar-width) - 3rem)',
               boxSizing: 'border-box',
             }}
           >
-            {/* Tabs - horizontally scrollable using TabsBox component */}
-            <TabsBox
-              tabsRef={tabsRef}
-              onPointerDown={onPointerDown}
-              onPointerMove={onPointerMove}
-              onPointerUp={onPointerUp}
-              onScroll={onScroll}
-              scrollTabsBy={scrollTabsBy}
-              canScrollLeft={canScrollLeft}
-              canScrollRight={canScrollRight}
-              didDrag={didDrag}
-              tabDefs={tabDefs}
-              activeView={effectiveView}
-              setView={setEffectiveView}
-            />
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1">
+                <TabsBox
+                  tabsRef={tabsRef}
+                  onPointerDown={onPointerDown}
+                  onPointerMove={onPointerMove}
+                  onPointerUp={onPointerUp}
+                  onScroll={onScroll}
+                  scrollTabsBy={scrollTabsBy}
+                  canScrollLeft={canScrollLeft}
+                  canScrollRight={canScrollRight}
+                  didDrag={didDrag}
+                  tabDefs={tabDefs}
+                  activeView={effectiveView}
+                  setView={setEffectiveView}
+                />
+              </div>
+            </div>
 
-            {/* Task list content */}
-            <div className="pt-4 overflow-hidden w-full">
-              {tasksLoading ? (
-                <div className="flex flex-col items-center justify-center py-24 text-center w-full">
-                  <DataLoading label="Fetching tasks…" variant="primary" />
-                </div>
-              ) : (
-                <>
-                  {showImminent && effectiveView === 'imminent' && (
-                    <React.Suspense>
-                      <ImminentList
-                        tasks={soonest}
-                        heatmapOpen={heatmapOpen}
-                        onEdit={(t: Partial<Task>) => {
-                          setEditing(t);
-                          setModalOpen(true);
-                        }}
-                        onDeleteById={(id: string) => {
-                          const found = storeTasks.find((x) => x.id === id) ?? null;
-                          setDeleting(found);
-                        }}
-                        onStatusChange={handleStatusChange}
-                      />
-                    </React.Suspense>
-                  )}
+            <TaskViewToggle />
+          </div>
 
-                  {showNew && effectiveView === 'new' && (
-                    <NewList
-                      tasks={newTasks}
+          {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
+          {/* Make this inner area the only vertical scroll container so header, tabs and toggle stay fixed */}
+          <div className="flex-1 min-h-0 overflow-y-auto mb-12">
+            <div
+              className="mx-auto w-full relative"
+              style={{
+                maxWidth: 'calc(100vw - var(--sidebar-width) - 3rem)',
+                boxSizing: 'border-box',
+              }}
+            >
+              {/* Task list content (render spinner OR the lists so they share space).
+          Add bottom padding inside the scrollable area so the last TaskCard
+          doesn't butt up against the viewport bottom. Because this padding
+          lives inside the `overflow-y-auto` scroll container it won't
+          increase the page height or create an outer scrollbar. */}
+              <div className="pt-4 overflow-visible w-full">
+                {showImminent && effectiveView === 'imminent' && (
+                  <React.Suspense>
+                    <ImminentList
+                      tasks={soonest}
                       heatmapOpen={heatmapOpen}
                       onEdit={(t: Partial<Task>) => {
-                        setEditing(t);
-                        setModalOpen(true);
+                        const id = t?.id;
+                        if (!id) return;
+                        const found = storeTasks.find((x) => x.id === id) ?? null;
+                        if (found) setEditTask(found);
                       }}
                       onDeleteById={(id: string) => {
                         const found = storeTasks.find((x) => x.id === id) ?? null;
@@ -310,61 +318,87 @@ export default function Dashboard() {
                       }}
                       onStatusChange={handleStatusChange}
                     />
-                  )}
+                  </React.Suspense>
+                )}
 
-                  {showToday && effectiveView === 'today' && (
-                    <TodayList
-                      tasks={today}
-                      heatmapOpen={heatmapOpen}
-                      storeTasks={storeTasks}
-                      setTasks={setTasks}
-                      onEdit={(t: Partial<Task>) => {
-                        setEditing(t);
-                        setModalOpen(true);
-                      }}
-                      onDeleteById={(id: string) => deleteTask(id)}
-                      onStatusChange={handleStatusChange}
-                    />
-                  )}
+                {showNew && effectiveView === 'new' && (
+                  <NewList
+                    tasks={newTasks}
+                    heatmapOpen={heatmapOpen}
+                    onEdit={(t: Partial<Task>) => {
+                      const id = t?.id;
+                      if (!id) return;
+                      const found = storeTasks.find((x) => x.id === id) ?? null;
+                      if (found) setEditTask(found);
+                    }}
+                    onDeleteById={(id: string) => {
+                      const found = storeTasks.find((x) => x.id === id) ?? null;
+                      setDeleting(found);
+                    }}
+                    onStatusChange={handleStatusChange}
+                  />
+                )}
 
-                  {showWeek && effectiveView === 'week' && (
-                    <WeekList
-                      tasks={week}
-                      heatmapOpen={heatmapOpen}
-                      storeTasks={storeTasks}
-                      setTasks={setTasks}
-                      onEdit={(t: Partial<Task>) => {
-                        setEditing(t);
-                        setModalOpen(true);
-                      }}
-                      onDeleteById={(id: string) => {
-                        const found = storeTasks.find((x) => x.id === id) ?? null;
-                        setDeleting(found);
-                      }}
-                      onStatusChange={handleStatusChange}
-                    />
-                  )}
-                </>
-              )}
+                {showToday && effectiveView === 'today' && (
+                  <TodayList
+                    tasks={today}
+                    heatmapOpen={heatmapOpen}
+                    storeTasks={storeTasks}
+                    setTasks={setTasks}
+                    onEdit={(t: Partial<Task>) => {
+                      const id = t?.id;
+                      if (!id) return;
+                      const found = storeTasks.find((x) => x.id === id) ?? null;
+                      if (found) setEditTask(found);
+                    }}
+                    onDeleteById={(id: string) => deleteTask(id)}
+                    onStatusChange={handleStatusChange}
+                  />
+                )}
 
-              {/* If there are no tasks at all (and we're not loading), show a centered empty state
+                {showWeek && effectiveView === 'week' && (
+                  <WeekList
+                    tasks={week}
+                    heatmapOpen={heatmapOpen}
+                    storeTasks={storeTasks}
+                    setTasks={setTasks}
+                    onEdit={(t: Partial<Task>) => {
+                      const id = t?.id;
+                      if (!id) return;
+                      const found = storeTasks.find((x) => x.id === id) ?? null;
+                      if (found) setEditTask(found);
+                    }}
+                    onDeleteById={(id: string) => {
+                      const found = storeTasks.find((x) => x.id === id) ?? null;
+                      setDeleting(found);
+                    }}
+                    onStatusChange={handleStatusChange}
+                  />
+                )}
+
+                {/* If there are no tasks at all (and we're not loading), show a centered empty state
                   inside the task-list area so it appears where the lists normally render. If
                   tasksError is present we hint that the DB may be down. */}
-              {all.length === 0 && !tasksLoading && (
-                <div className="flex items-center justify-center py-24 w-full">
-                  <div className="text-center text-base-content/50">
-                    <p>
-                      {tasksError
-                        ? 'Unable to load tasks — the database may be unavailable. Check your local DB and try again, or contact the administrator (wjbetech@gmail.com)'
-                        : 'No tasks found — try creating one or contact the administrator (wjbetech@gmail.com)'}
-                    </p>
+                {all.length === 0 && !tasksLoading && (
+                  <div className="flex items-center justify-center py-24 w-full">
+                    <div className="text-center text-base-content/50">
+                      <p>
+                        {tasksError
+                          ? 'Unable to load tasks — the database may be unavailable. Check your local DB and try again, or contact the administrator (wjbetech@gmail.com)'
+                          : 'No tasks found — try creating one or contact the administrator (wjbetech@gmail.com)'}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Removed absolute overlay to avoid covering the scrollbar. The scroll
+        container now has `mb-12` so its track ends above the page bottom
+        while the page height remains unchanged. */}
 
       <TaskModal
         open={modalOpen}
@@ -374,6 +408,14 @@ export default function Dashboard() {
         }}
         initial={editing}
         allowCreateProject={modalMode === 'project'}
+      />
+      <EditTaskModal
+        open={!!editTask}
+        onOpenChange={(v) => !v && setEditTask(null)}
+        task={editTask}
+        onSave={(id, patch) => {
+          handleEditSave(id, patch);
+        }}
       />
       <ConfirmDeleteModal
         open={!!deleting}

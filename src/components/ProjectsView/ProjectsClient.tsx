@@ -117,7 +117,10 @@ export default function ProjectsClient({ initialProjects }: Props) {
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-x-visible pt-[var(--nav-height)]">
       <header className="pb-6 flex-shrink-0">
-        <div className="mx-auto w-full max-w-6xl">
+        <div
+          className="mx-auto w-full px-0"
+          style={{ maxWidth: 'calc(100vw - var(--sidebar-width) - 3rem)', boxSizing: 'border-box' }}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
 
           <div className="relative flex items-center justify-between">

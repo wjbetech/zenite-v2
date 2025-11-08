@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import TaskCard, { type Task } from './TaskCard';
 import useProjectStore from '../lib/projectStore';
 import useSettingsStore from '../lib/settingsStore';
@@ -30,6 +30,14 @@ export default function TaskSection({
   expanded = false,
   noInnerScroll = false,
 }: TaskSectionProps) {
+  useEffect(() => {
+    // Ensure a lightweight daily-reset check runs once on pages that render tasks.
+    // This is cheap and idempotent.
+    try {
+      // dynamic import so tests can mock module state if needed
+      void import('../lib/dailyResetOnLoad').then((m) => m.ensureDailyResetOnLoad());
+    } catch {}
+  }, []);
   const projects = useProjectStore((s) => s.projects);
   const density = useSettingsStore((s) => s.density);
   const view: 'full' | 'mini' = density === 'compact' ? 'mini' : 'full';

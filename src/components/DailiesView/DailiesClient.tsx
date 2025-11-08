@@ -55,8 +55,11 @@ export default function DailiesClient() {
 
   return (
     <div className="mx-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-visible max-w-[95%] pb-12">
-      <header className="max-w-6xl px-3 mb-6">
-        <div className="mx-auto w-full max-w-6xl">
+      <header className="pb-6">
+        <div
+          className="mx-auto w-full px-0"
+          style={{ maxWidth: 'calc(100vw - var(--sidebar-width) - 3rem)', boxSizing: 'border-box' }}
+        >
           <div className="relative flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h1 className="display-font text-3xl md:text-3xl font-semibold mb-0 text-center text-emerald-600 md:text-left w-full md:w-auto">

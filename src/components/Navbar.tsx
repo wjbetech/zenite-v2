@@ -76,7 +76,7 @@ export default function Navbar({ initialIsSignedIn, initialUser }: Props) {
     <nav
       role="navigation"
       aria-label="Main"
-      className="absolute top-0 left-0 right-0 z-50 flex w-full "
+      className="fixed top-0 left-0 right-0 z-50 flex w-full "
       style={{ height: 'var(--nav-height)' }}
     >
       <div className="mx-auto px-4 py-3 flex items-center w-full justify-between">

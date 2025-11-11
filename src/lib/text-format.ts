@@ -3,7 +3,7 @@
  * Keep this focused: normalize whitespace, then apply title-casing with a
  * small-word list that remains lowercase unless it's the first word.
  */
-import { normalizeWhitespace } from './text-sanitizer';
+import { normalizeWhitespace, normalizeWhitespaceForTyping } from './text-sanitizer';
 
 const DEFAULT_SMALL_WORDS = [
   'a',
@@ -110,6 +110,33 @@ export function sanitizeDescription(input: string): string {
 
   // Join with a single space between sentences
   return parts.join(' ');
+}
+
+/**
+ * Sanitize a description while preserving paragraph/newline boundaries.
+ * Each paragraph (separated by one or more newlines) is sanitized as a
+ * standalone block (capitalized sentences, terminal punctuation ensured)
+ * and paragraphs are rejoined with a single blank line between them.
+ */
+export function sanitizeDescriptionPreserveNewlines(input: string): string {
+  if (!input) return '';
+  // Normalize CRLF -> LF and collapse weird whitespace, but keep newlines
+  const normalized = normalizeWhitespaceForTyping(input).replace(/\r\n?/g, '\n');
+  // Split into paragraphs on one or more newlines
+  const paragraphs = normalized
+    .split(/\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (paragraphs.length === 0) return '';
+
+  const sanitized = paragraphs
+    .map((para) => {
+      // Reuse existing sentence logic by calling sanitizeDescription on the paragraph
+      return sanitizeDescription(para);
+    })
+    .join('\n\n');
+
+  return sanitized;
 }
 
 const exported = {

@@ -8,7 +8,7 @@ import TaskCard, { type Task as CardTask } from '../TaskCard';
 import NativeSortableDaily from '../NativeSortableDaily';
 import EditTaskModal from '../modals/EditTaskModal';
 import ConfirmDeleteModal from '../modals/ConfirmDeleteModal';
-import CreateDailyModal from '../modals/CreateDailyModal';
+import TaskModal from '../modals/TaskModal';
 import useDailyResetScheduler from '../../hooks/useDailyResetScheduler';
 import DailiesLoading from './DailiesLoading';
 import DailiesEmpty from './DailiesEmpty';
@@ -21,14 +21,12 @@ export default function DailiesClient() {
   const tasksLoading = useTaskStore((s) => s.loading);
   const tasksError = useTaskStore((s) => s.error);
   const deleteTask = useTaskStore((s) => s.deleteTask);
-  const updateTask = useTaskStore((s) => s.updateTask);
+  const updateTask = useTaskStore((s) => s.updateTaskOptimistic ?? s.updateTask);
   const projects = useProjectStore((s) => s.projects);
-  const resetIfNeeded = useTaskStore((s) => s.resetDailiesIfNeeded);
-  const resetNow = useTaskStore((s) => s.resetDailiesNow);
-  const loadTasks = useTaskStore((s) => s.loadTasks);
   const [editing, setEditing] = React.useState<Task | null>(null);
   const [deleting, setDeleting] = React.useState<Task | null>(null);
   const [creating, setCreating] = React.useState(false);
+
   const edit = (t: Partial<Task> | string) => {
     // accept either a Task-like object or an id string
     const id = typeof t === 'string' ? t : t?.id;
@@ -44,21 +42,25 @@ export default function DailiesClient() {
   const view: 'full' | 'mini' = density === 'compact' ? 'mini' : 'full';
 
   // Extracted to a hook for testability and separation of concerns
-  useDailyResetScheduler({ loadTasks, resetIfNeeded, resetNow });
+  useDailyResetScheduler();
 
   // status changes are handled via TaskCard onStatusChange
 
   const handleSave = (id: string, patch: Partial<Task>) => {
-    updateTask(id, patch);
+    // use optimistic store method when available
+    void updateTask(id, patch).catch((err) => console.error('DailiesClient: failed to save', err));
     setEditing(null);
   };
 
   // deletion is handled from the task card directly; modal no longer supports delete
 
   return (
-    <div className="mx-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-visible max-w-[95%]">
-      <header className="max-w-6xl px-3">
-        <div className="mx-auto w-full max-w-6xl">
+    <div className="mx-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-visible max-w-[95%] pb-12">
+      <header className="pb-6">
+        <div
+          className="mx-auto w-full px-0"
+          style={{ maxWidth: 'calc(100vw - var(--sidebar-width) - 3rem)', boxSizing: 'border-box' }}
+        >
           <div className="relative flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h1 className="display-font text-3xl md:text-3xl font-semibold mb-0 text-center text-emerald-600 md:text-left w-full md:w-auto">
@@ -104,14 +106,14 @@ export default function DailiesClient() {
       </header>
 
       <div className="flex-1 min-h-0 flex flex-col">
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-4 pb-10">
-          <div className="space-y-6">
+        <div className="flex-1 min-h-0 overflow-y-auto px-3 pt-2 pb-6">
+          <div className="space-y-3">
             <div className="max-w-md">
               <TimerWidget open={timerOpen} onOpenChange={(v) => setTimerOpen(v)} />
             </div>
 
-            <section className="mb-[74px]">
-              <div className="transition-all duration-300 ease-in-out pt-4 pb-2 px-0">
+            <section className="mb-4">
+              <div className="transition-all duration-150 ease-in-out pt-2 pb-0 px-0">
                 {tasksLoading ? (
                   <DailiesLoading />
                 ) : daily.length === 0 ? (
@@ -162,7 +164,7 @@ export default function DailiesClient() {
                         }}
                       />
                     )}
-                    containerClassName="space-y-6 md:space-y-7 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
+                    containerClassName="space-y-3 md:space-y-4 xl:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6"
                   />
                 )}
               </div>
@@ -177,7 +179,12 @@ export default function DailiesClient() {
         task={editing}
         onSave={handleSave}
       />
-      <CreateDailyModal open={creating} onOpenChange={(v) => setCreating(v)} />
+      <TaskModal
+        open={creating}
+        onOpenChange={(v) => setCreating(v)}
+        initial={{ recurrence: 'daily' }}
+        submitLabel="Create Daily"
+      />
       <ConfirmDeleteModal
         open={!!deleting}
         onCancel={() => setDeleting(null)}

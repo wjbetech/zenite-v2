@@ -19,6 +19,9 @@ type ApiTask = {
   title: string;
   description?: string | null;
   dueDate?: string | null;
+  dueTime?: string | null;
+  startsAt?: string | null;
+  estimatedDuration?: number | string | null;
   createdAt: string;
   completedAt?: string | null;
 };
@@ -53,6 +56,15 @@ export default function ProjectTasksClient({ projectId }: Props) {
           title: t.title,
           notes: t.description ?? undefined,
           dueDate: t.dueDate ?? null,
+          dueTime: (t as ApiTask).dueTime ?? null,
+          startsAt: (t as ApiTask).startsAt ?? null,
+          estimatedDuration: (() => {
+            const v = (t as ApiTask).estimatedDuration;
+            if (typeof v === 'number') return v as number;
+            if (typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v)))
+              return Number(v);
+            return undefined;
+          })(),
           createdAt: t.createdAt,
           completed: !!t.completedAt,
           // Bind the projectId so TaskSection / TaskCard can render the project badge
@@ -86,6 +98,10 @@ export default function ProjectTasksClient({ projectId }: Props) {
           ? { started: false, completed: true, completedAt: nowIso }
           : { started: false, completed: false, completedAt: null };
 
+      // Optimistic update: apply change locally immediately for snappy UI
+      const prev = tasks.slice();
+      setTasks((prevState) => prevState.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+
       try {
         const updated = await api.updateTask({ id, ...patch });
         const payload = updated as Partial<ApiTask> & {
@@ -97,6 +113,15 @@ export default function ProjectTasksClient({ projectId }: Props) {
           title: payload.title ?? 'Untitled',
           notes: payload.notes ?? undefined,
           dueDate: payload.dueDate ?? null,
+          dueTime: (payload as ApiTask).dueTime ?? null,
+          startsAt: (payload as ApiTask).startsAt ?? null,
+          estimatedDuration: (() => {
+            const v = (payload as ApiTask).estimatedDuration;
+            if (typeof v === 'number') return v as number;
+            if (typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v)))
+              return Number(v);
+            return undefined;
+          })(),
           createdAt: payload.createdAt ?? new Date().toISOString(),
           completed: !!payload.completed,
           // ensure we also reflect the started flag returned by the API
@@ -104,22 +129,31 @@ export default function ProjectTasksClient({ projectId }: Props) {
           // preserve project context so TaskCard shows the connected project
           projectId,
         };
-        setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updatedTask } : t)));
+        setTasks((prevState) => prevState.map((t) => (t.id === id ? { ...t, ...updatedTask } : t)));
       } catch (err) {
         console.error('ProjectTasksClient: failed to update task status', err);
+        // revert optimistic change
+        setTasks(prev);
       }
     },
-    [projectId],
+    [projectId, tasks],
   );
 
-  const handleDelete = useCallback(async (id: string) => {
-    try {
-      await api.deleteTask(id);
-      setTasks((prev) => prev.filter((t) => t.id !== id));
-    } catch (err) {
-      console.error('ProjectTasksClient: failed to delete task', err);
-    }
-  }, []);
+  const handleDelete = useCallback(
+    async (id: string) => {
+      // Optimistic delete: remove locally first, then call API and revert on error
+      const prev = tasks.slice();
+      setTasks((prevState) => prevState.filter((t) => t.id !== id));
+      try {
+        await api.deleteTask(id);
+      } catch (err) {
+        console.error('ProjectTasksClient: failed to delete task', err);
+        // revert optimistic removal
+        setTasks(prev);
+      }
+    },
+    [tasks],
+  );
 
   const handleEdit = useCallback(
     (t: Partial<Task> | undefined) => {
@@ -134,6 +168,9 @@ export default function ProjectTasksClient({ projectId }: Props) {
 
   const handleSave = useCallback(
     async (id: string, patch: Partial<Task>) => {
+      // Optimistic save: apply patch locally first
+      const prev = tasks.slice();
+      setTasks((prevState) => prevState.map((t) => (t.id === id ? { ...t, ...patch } : t)));
       try {
         const updated = await api.updateTask({ id, ...patch });
         const payload = updated as Partial<ApiTask> & {
@@ -145,20 +182,31 @@ export default function ProjectTasksClient({ projectId }: Props) {
           title: payload.title ?? 'Untitled',
           notes: payload.notes ?? undefined,
           dueDate: payload.dueDate ?? null,
+          dueTime: (payload as ApiTask).dueTime ?? null,
+          startsAt: (payload as ApiTask).startsAt ?? null,
+          estimatedDuration: (() => {
+            const v = (payload as ApiTask).estimatedDuration;
+            if (typeof v === 'number') return v as number;
+            if (typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v)))
+              return Number(v);
+            return undefined;
+          })(),
           createdAt: payload.createdAt ?? new Date().toISOString(),
           completed: !!payload.completed,
           // ensure project association remains for rendering
           projectId,
         };
-        setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updatedTask } : t)));
+        setTasks((prevState) => prevState.map((t) => (t.id === id ? { ...t, ...updatedTask } : t)));
       } catch (err) {
         console.error('ProjectTasksClient: failed to save edited task', err);
+        // revert optimistic change
+        setTasks(prev);
       } finally {
         setEditOpen(false);
         setEditingTask(null);
       }
     },
-    [projectId],
+    [projectId, tasks],
   );
 
   if (loading) return <DataLoading label="Loading tasks…" variant="accent" />;

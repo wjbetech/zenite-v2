@@ -6,6 +6,7 @@ import assertClerkKeySafe from './clerkKeyGuard';
 import React, { useEffect, useState } from 'react';
 import AuthRedirect from './AuthRedirect';
 import { ToastContainer } from 'react-toastify';
+import useDailyResetScheduler from '../hooks/useDailyResetScheduler';
 
 // Map DaisyUI themes to react-toastify theme prop
 function mapDaisyToToastTheme(d?: string | null) {
@@ -159,6 +160,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       } catch {}
     };
   }, []);
+  // start the daily reset scheduler while the app is open
+  useDailyResetScheduler();
   return (
     <ClerkProvider>
       <ThemeProvider>

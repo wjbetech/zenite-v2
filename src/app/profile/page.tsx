@@ -8,11 +8,13 @@ export const metadata = {
 
 export default function ProfilePage() {
   return (
-    <main className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-4">Profile</h1>
-      <ProfileHeader />
+    <main className="m-6 mt-[124px] flex flex-col flex-1 min-h-0">
+      <div className="max-w-6xl mx-auto w-full">
+        <h1 className="text-3xl font-bold mb-4">Profile</h1>
+        <ProfileHeader />
 
-      <ProfileCounts />
+        <ProfileCounts />
+      </div>
     </main>
   );
 }

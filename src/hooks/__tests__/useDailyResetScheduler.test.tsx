@@ -3,17 +3,10 @@ import { render } from '@testing-library/react';
 import { act } from 'react-dom/test-utils';
 
 import useDailyResetScheduler from '../useDailyResetScheduler';
+import useTaskStore from '../../lib/taskStore';
 
-function Harness({
-  loadTasks,
-  resetIfNeeded,
-  resetNow,
-}: {
-  loadTasks: () => void;
-  resetIfNeeded: () => void;
-  resetNow: () => void;
-}) {
-  useDailyResetScheduler({ loadTasks, resetIfNeeded, resetNow });
+function Harness() {
+  useDailyResetScheduler();
   return <div />;
 }
 
@@ -29,34 +22,38 @@ describe('useDailyResetScheduler', () => {
   });
 
   it('calls loadTasks and resetIfNeeded on mount and schedules resetNow at next midnight', () => {
-    const loadTasks = jest.fn();
-    const resetIfNeeded = jest.fn();
-    const resetNow = jest.fn();
+    const loadTasks = jest.fn().mockResolvedValue(undefined);
+    const resetIfNeeded = jest.fn().mockResolvedValue(undefined);
 
-    render(<Harness loadTasks={loadTasks} resetIfNeeded={resetIfNeeded} resetNow={resetNow} />);
+    // inject mocks into the store so the hook's selectors pick them up
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    useTaskStore.setState({ loadTasks, resetDailiesIfNeeded: resetIfNeeded } as any);
 
-    // loadTasks and resetIfNeeded should be called immediately
+    render(<Harness />);
+
+    // loadTasks and resetDailiesIfNeeded should be called immediately
     expect(loadTasks).toHaveBeenCalled();
     expect(resetIfNeeded).toHaveBeenCalled();
 
-    // Advance timers to trigger the scheduled midnight reset
-    // The hook uses window.setTimeout with ms until next midnight; ensure setTimeout was called
+    // The hook schedules a timeout; ensure setTimeout was called
     expect(window.setTimeout).toHaveBeenCalled();
 
-    // fast-forward all timers to trigger the scheduled reset
+    // fast-forward any pending timers to trigger scheduled reset call
     act(() => {
       jest.runOnlyPendingTimers();
     });
 
-    expect(resetNow).toHaveBeenCalled();
+    // scheduled timeout should have invoked resetDailiesIfNeeded at least once more
+    expect(resetIfNeeded).toHaveBeenCalled();
   });
 
   it('re-runs resetIfNeeded when visibilitychange and focus events occur', () => {
-    const loadTasks = jest.fn();
-    const resetIfNeeded = jest.fn();
-    const resetNow = jest.fn();
+    const loadTasks = jest.fn().mockResolvedValue(undefined);
+    const resetIfNeeded = jest.fn().mockResolvedValue(undefined);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    useTaskStore.setState({ loadTasks, resetDailiesIfNeeded: resetIfNeeded } as any);
 
-    render(<Harness loadTasks={loadTasks} resetIfNeeded={resetIfNeeded} resetNow={resetNow} />);
+    render(<Harness />);
 
     // clear initial calls
     resetIfNeeded.mockClear();

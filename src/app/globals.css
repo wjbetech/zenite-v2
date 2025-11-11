@@ -387,3 +387,21 @@ button:focus-visible {
     letter-spacing: -0.015em;
   }
 }
+
+/* Number input spacing utility
+   Adds a small gap between the numeric text and the native spin controls
+   without moving the spin buttons themselves. Works by adding right padding
+   for the text and pulling the native spin buttons back to the edge using
+   a small negative margin on WebKit browsers. Apply the `num-input-gap`
+   class to number inputs that require this visual spacing. */
+.num-input-gap {
+  position: relative;
+  padding-right: 0.9rem; /* space between number text and spinner */
+  box-sizing: border-box;
+}
+.num-input-gap::-webkit-inner-spin-button,
+.num-input-gap::-webkit-outer-spin-button {
+  /* Pull native spin buttons towards the right edge so they visually
+     overlap the padding area while the numeric text stays left. */
+  margin-right: -0.6rem;
+}

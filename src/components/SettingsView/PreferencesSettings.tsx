@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import useSettingsStore from '../lib/settingsStore';
+import useSettingsStore from '../../lib/settingsStore';
 
 // Small presentational subcomponents exported for use by the Settings page
 // Display density is intentionally omitted — moved to a separate UX decision.
@@ -130,6 +130,8 @@ export function TaskCreationDefaults() {
 export function TaskListSettings() {
   const showCompleted = useSettingsStore((s) => s.showCompleted);
   const setShowCompleted = useSettingsStore((s) => s.setShowCompleted);
+  const dailyResetTime = useSettingsStore((s) => s.dailyResetTime);
+  const setDailyResetTime = useSettingsStore((s) => s.setDailyResetTime);
 
   return (
     <div>
@@ -142,6 +144,22 @@ export function TaskListSettings() {
         />
         <span className="text-sm">Show completed tasks</span>
       </label>
+
+      <div className="mt-4">
+        <label className="flex flex-col">
+          <span className="text-sm">Daily tasks reset time (local)</span>
+          <input
+            type="time"
+            className="input input-sm mt-2 max-w-[10rem]"
+            value={dailyResetTime ?? ''}
+            onChange={(e) => setDailyResetTime(e.target.value || null)}
+            aria-label="Daily reset time"
+          />
+          <span className="text-xs text-muted mt-1">
+            When daily tasks roll over to not-started (local time).
+          </span>
+        </label>
+      </div>
     </div>
   );
 }

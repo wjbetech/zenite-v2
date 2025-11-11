@@ -69,7 +69,7 @@ export default function Dashboard() {
   }, [loadTasks]);
 
   const deleteTask = useTaskStore((s) => s.deleteTask);
-  const updateTask = useTaskStore((s) => s.updateTask);
+  const updateTask = useTaskStore((s) => s.updateTaskOptimistic ?? s.updateTask);
   const setTasks = useTaskStore((s) => s.setTasks);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -118,8 +118,22 @@ export default function Dashboard() {
   });
 
   const handleEditSave = (id: string, patch: Partial<Task>) => {
-    void updateTask(id, patch);
-    setEditTask(null);
+    // Optimistic update: apply edit locally first, then persist via store
+    const prev = useTaskStore.getState().tasks.slice();
+    const optimistic = prev.map((t) => (t.id === id ? { ...t, ...patch } : t));
+    setTasks(optimistic);
+
+    (async () => {
+      try {
+        await updateTask(id, patch);
+      } catch (err) {
+        console.error('Dashboard: failed to save edits', err);
+        // revert optimistic change on failure
+        setTasks(prev);
+      } finally {
+        setEditTask(null);
+      }
+    })();
   };
 
   // Dev-only diagnostics: guard logs out during tests to keep test output clean
@@ -176,19 +190,14 @@ export default function Dashboard() {
           : { started: false, completed: false, completedAt: null };
 
       try {
+        // delegate to store's optimistic implementation
         const updated = await updateTask(id, patch);
         if (process.env.NODE_ENV !== 'test') console.log('Dashboard: updated task', updated);
       } catch (err) {
         console.error('Dashboard: failed to update task status', err);
-        const current = useTaskStore.getState().tasks.find((t) => t.id === id) ?? null;
-        if (current) {
-          const patched = { ...current, ...patch } as Task;
-          const next = [...useTaskStore.getState().tasks.filter((t) => t.id !== id), patched];
-          setTasks(next);
-        }
       }
     },
-    [updateTask, setTasks],
+    [updateTask],
   );
 
   // Build activity map and details from task completions
@@ -224,7 +233,7 @@ export default function Dashboard() {
 
   return (
     <div
-      className="px-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-hidden overflow-y-visible"
+      className="px-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-hidden overflow-y-visible relative"
       style={{ boxSizing: 'border-box' }}
     >
       {/* Header, heatmap and lists container */}
@@ -255,8 +264,39 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="flex-1 flex flex-col min-h-0">
+          {/* Tabs and view toggle: keep these outside the scrollable area so they remain fixed */}
+          <div
+            className="mx-auto w-full relative"
+            style={{
+              maxWidth: 'calc(100vw - var(--sidebar-width) - 3rem)',
+              boxSizing: 'border-box',
+            }}
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1">
+                <TabsBox
+                  tabsRef={tabsRef}
+                  onPointerDown={onPointerDown}
+                  onPointerMove={onPointerMove}
+                  onPointerUp={onPointerUp}
+                  onScroll={onScroll}
+                  scrollTabsBy={scrollTabsBy}
+                  canScrollLeft={canScrollLeft}
+                  canScrollRight={canScrollRight}
+                  didDrag={didDrag}
+                  tabDefs={tabDefs}
+                  activeView={effectiveView}
+                  setView={setEffectiveView}
+                />
+              </div>
+            </div>
+
+            <TaskViewToggle />
+          </div>
+
           {/* Task lists container; ActivityHeatmap intentionally remains outside this background */}
-          <div className="flex-1 min-h-0">
+          {/* Make this inner area the only vertical scroll container so header, tabs and toggle stay fixed */}
+          <div className="flex-1 min-h-0 overflow-y-auto mb-12">
             <div
               className="mx-auto w-full relative"
               style={{
@@ -264,30 +304,11 @@ export default function Dashboard() {
                 boxSizing: 'border-box',
               }}
             >
-              {/* Tabs - horizontally scrollable using TabsBox component */}
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <TabsBox
-                    tabsRef={tabsRef}
-                    onPointerDown={onPointerDown}
-                    onPointerMove={onPointerMove}
-                    onPointerUp={onPointerUp}
-                    onScroll={onScroll}
-                    scrollTabsBy={scrollTabsBy}
-                    canScrollLeft={canScrollLeft}
-                    canScrollRight={canScrollRight}
-                    didDrag={didDrag}
-                    tabDefs={tabDefs}
-                    activeView={effectiveView}
-                    setView={setEffectiveView}
-                  />
-                </div>
-              </div>
-
-              {/* task lists render here when not loading */}
-              <TaskViewToggle />
-
-              {/* Task list content (render spinner OR the lists so they share space) */}
+              {/* Task list content (render spinner OR the lists so they share space).
+          Add bottom padding inside the scrollable area so the last TaskCard
+          doesn't butt up against the viewport bottom. Because this padding
+          lives inside the `overflow-y-auto` scroll container it won't
+          increase the page height or create an outer scrollbar. */}
               <div className="pt-4 overflow-visible w-full">
                 {showImminent && effectiveView === 'imminent' && (
                   <React.Suspense>
@@ -383,6 +404,10 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Removed absolute overlay to avoid covering the scrollbar. The scroll
+        container now has `mb-12` so its track ends above the page bottom
+        while the page height remains unchanged. */}
 
       <TaskModal
         open={modalOpen}

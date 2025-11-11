@@ -88,7 +88,6 @@ function getStatusStyles(isStarted: boolean, isDone: boolean, isStale: boolean):
       supportingText: 'text-secondary dark:text-secondary',
     };
   }
-
   return {
     accentBar: 'bg-base-300',
     cardBorder: 'border-base-200/80',
@@ -117,11 +116,9 @@ export default function TaskCard({
 
   // Control expansion state - mini view starts collapsed, full view starts expanded
   const [localExpanded, setLocalExpanded] = React.useState(view === 'full');
-
   const isCollapsedMini = view === 'mini' && !localExpanded;
 
-  // Keep localExpanded in sync with the global `view` prop: when the user toggles
-  // Full/Mini globally, cards should reflect that default state immediately.
+  // Keep localExpanded in sync with the global `view` prop
   React.useEffect(() => {
     setLocalExpanded(view === 'full');
   }, [view]);
@@ -137,7 +134,7 @@ export default function TaskCard({
   const projectIdOrNull = t.projectId as string | null | undefined;
   let projectName: string | undefined = undefined;
   if (typeof asRecord.projectName === 'string') {
-    projectName = asRecord.projectName;
+    projectName = asRecord.projectName as string;
   } else if (
     asRecord.project &&
     typeof (asRecord.project as Record<string, unknown>).name === 'string'
@@ -180,7 +177,29 @@ export default function TaskCard({
 
   const statusStyles = getStatusStyles(isStarted, isDone, isStaleCompleted);
 
-  const dueLabel = t.dueDate ? new Date(t.dueDate).toLocaleString() : 'No due date';
+  // Prefer dueTime when available, format both due and start times without seconds.
+  const dueLabel = t.dueTime
+    ? formatDateTimeShort(t.dueTime) ?? 'No due date'
+    : t.dueDate
+    ? formatDateTimeShort(t.dueDate) ?? 'No due date'
+    : 'No due date';
+  const startsLabel = t.startsAt ? formatDateTimeShort(t.startsAt) : null;
+
+  // Format a date/time string to a locale-aware "date HH:MM" without seconds.
+  function formatDateTimeShort(value?: string | null) {
+    if (!value) return null;
+    try {
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return null;
+      const datePart = d.toLocaleDateString();
+      const timePart = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return `${datePart} ${timePart}`;
+    } catch {
+      return null;
+    }
+  }
+
+  // (kept format helper above) we don't need separate short vars here
   const estimatedLabel = (() => {
     const estimated: number | undefined = t.estimatedDuration ?? undefined;
     if (typeof estimated === 'number' && estimated > 0) {
@@ -279,11 +298,7 @@ export default function TaskCard({
           <div className={`flex-1 min-w-0 ${isCollapsedMini ? 'flex items-center' : 'space-y-2'}`}>
             <div className="flex items-center justify-between gap-3 w-full">
               <div className="flex min-w-0 flex-1 items-center gap-2">
-                <h3
-                  className={`${
-                    isCollapsedMini ? 'text-base leading-none' : 'card-title text-lg leading-snug'
-                  } font-semibold text-base-content m-0`}
-                >
+                <h3 className="text-base leading-none font-semibold text-base-content m-0">
                   {t.title}
                 </h3>
 
@@ -371,21 +386,48 @@ export default function TaskCard({
           }`}
           style={{ maxHeight: localExpanded ? `${expandedHeight}px` : '0px' }}
         >
-          <div className={`py-2 text-lg leading-relaxed ${statusStyles.supportingText}`}>
-            {t.notes ? t.notes : <span className="italic opacity-60">No description</span>}
+          <div className="flex items-start justify-between gap-4">
+            <div
+              className={`py-2 text-md leading-relaxed ${statusStyles.supportingText} whitespace-pre-wrap break-words flex-1`}
+            >
+              {t.notes ? t.notes : <span className="italic opacity-60">No description</span>}
+            </div>
+
+            {/* Estimated duration pill aligned to the far-right of the description */}
+            <div className="flex-shrink-0 self-start mt-2">
+              <span
+                className="text-base-content font-medium whitespace-nowrap"
+                title={estimatedLabel}
+              >
+                Est · {estimatedLabel}
+              </span>
+            </div>
           </div>
 
           <div
-            className={`flex flex-wrap items-center gap-2 font-medium text-xl ${
+            className={`w-full grid grid-cols-3 items-center gap-2 font-medium text-sm ${
               localExpanded ? 'mt-2' : 'mt-0'
             }`}
           >
-            <span className={`${statusStyles.badge} whitespace-nowrap`} title={dueLabel}>
-              Due · {dueLabel}
-            </span>
-            <span className={`${statusStyles.badge} whitespace-nowrap`} title={estimatedLabel}>
-              Est · {estimatedLabel}
-            </span>
+            <div className="col-span-1">
+              <span
+                className={`${statusStyles.badge} w-full text-left inline-block truncate`}
+                title={startsLabel ?? 'No start time'}
+              >
+                {startsLabel ? `Start · ${startsLabel}` : '—'}
+              </span>
+            </div>
+
+            <div className="col-span-1 text-center">—</div>
+
+            <div className="col-span-1 text-right">
+              <span
+                className={`${statusStyles.badge} w-full inline-block truncate`}
+                title={dueLabel}
+              >
+                Due · {dueLabel}
+              </span>
+            </div>
           </div>
         </div>
       </div>

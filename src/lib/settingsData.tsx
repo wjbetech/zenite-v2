@@ -1,13 +1,13 @@
 import React from 'react';
-import ThemeDropdown from '../components/ThemeDropdown';
+import ThemeDropdown from '../components/SettingsView/ThemeDropdown';
 import DashboardViewsSettings from '@/components/DashboardView/DashboardViewsSettings';
 import {
   TaskCreationDefaults,
   TaskListSettings,
   NotificationsSettings,
   PrivacySettings,
-} from '../components/PreferencesSettings';
-import { DisplayDensity } from '../components/PreferencesSettings';
+} from '../components/SettingsView/PreferencesSettings';
+import { DisplayDensity } from '../components/SettingsView/PreferencesSettings';
 
 export const sections = [
   {

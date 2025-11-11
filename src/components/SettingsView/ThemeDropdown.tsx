@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import useThemeStore from '../lib/themeStore';
+import useThemeStore from '../../lib/themeStore';
 
 const THEMES = ['pastel', 'cupcake', 'nord', 'business', 'dim'] as const;
 

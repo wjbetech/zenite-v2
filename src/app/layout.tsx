@@ -126,7 +126,10 @@ export default async function RootLayout({
           {/* Navbar now overlays content. Do not apply top padding so pages sit underneath the absolute navbar. */}
           <div className="flex h-screen">
             <ConditionalSidebar isLoggedIn={isLoggedIn} />
-            <main className="flex-1 h-full flex flex-col min-h-0">{children}</main>
+            {/* main should not provide the scroll bar for page-specific content; child views
+        (like Settings) will create their own scroll containers so the Navbar stays
+        visually independent and scrollbars start below the nav. */}
+            <main className="flex-1 h-full flex flex-col min-h-0 overflow-hidden">{children}</main>
           </div>
         </Providers>
       </body>

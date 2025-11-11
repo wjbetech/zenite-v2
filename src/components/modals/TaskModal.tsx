@@ -34,7 +34,7 @@ export default function TaskModal({
   submitLabel?: string;
 }) {
   const createTask = useTaskStore((s) => s.createTask);
-  const updateTask = useTaskStore((s) => s.updateTask);
+  const updateTask = useTaskStore((s) => s.updateTaskOptimistic ?? s.updateTask);
 
   const [title, setTitle] = useState(initial?.title ?? '');
   const [notes, setNotes] = useState(initial?.notes ?? '');

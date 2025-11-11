@@ -69,7 +69,7 @@ export default function Dashboard() {
   }, [loadTasks]);
 
   const deleteTask = useTaskStore((s) => s.deleteTask);
-  const updateTask = useTaskStore((s) => s.updateTask);
+  const updateTask = useTaskStore((s) => s.updateTaskOptimistic ?? s.updateTask);
   const setTasks = useTaskStore((s) => s.setTasks);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -118,8 +118,22 @@ export default function Dashboard() {
   });
 
   const handleEditSave = (id: string, patch: Partial<Task>) => {
-    void updateTask(id, patch);
-    setEditTask(null);
+    // Optimistic update: apply edit locally first, then persist via store
+    const prev = useTaskStore.getState().tasks.slice();
+    const optimistic = prev.map((t) => (t.id === id ? { ...t, ...patch } : t));
+    setTasks(optimistic);
+
+    (async () => {
+      try {
+        await updateTask(id, patch);
+      } catch (err) {
+        console.error('Dashboard: failed to save edits', err);
+        // revert optimistic change on failure
+        setTasks(prev);
+      } finally {
+        setEditTask(null);
+      }
+    })();
   };
 
   // Dev-only diagnostics: guard logs out during tests to keep test output clean
@@ -176,19 +190,14 @@ export default function Dashboard() {
           : { started: false, completed: false, completedAt: null };
 
       try {
+        // delegate to store's optimistic implementation
         const updated = await updateTask(id, patch);
         if (process.env.NODE_ENV !== 'test') console.log('Dashboard: updated task', updated);
       } catch (err) {
         console.error('Dashboard: failed to update task status', err);
-        const current = useTaskStore.getState().tasks.find((t) => t.id === id) ?? null;
-        if (current) {
-          const patched = { ...current, ...patch } as Task;
-          const next = [...useTaskStore.getState().tasks.filter((t) => t.id !== id), patched];
-          setTasks(next);
-        }
       }
     },
-    [updateTask, setTasks],
+    [updateTask],
   );
 
   // Build activity map and details from task completions

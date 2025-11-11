@@ -21,7 +21,7 @@ export default function DailiesClient() {
   const tasksLoading = useTaskStore((s) => s.loading);
   const tasksError = useTaskStore((s) => s.error);
   const deleteTask = useTaskStore((s) => s.deleteTask);
-  const updateTask = useTaskStore((s) => s.updateTask);
+  const updateTask = useTaskStore((s) => s.updateTaskOptimistic ?? s.updateTask);
   const projects = useProjectStore((s) => s.projects);
   const [editing, setEditing] = React.useState<Task | null>(null);
   const [deleting, setDeleting] = React.useState<Task | null>(null);
@@ -47,7 +47,8 @@ export default function DailiesClient() {
   // status changes are handled via TaskCard onStatusChange
 
   const handleSave = (id: string, patch: Partial<Task>) => {
-    updateTask(id, patch);
+    // use optimistic store method when available
+    void updateTask(id, patch).catch((err) => console.error('DailiesClient: failed to save', err));
     setEditing(null);
   };
 

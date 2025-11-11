@@ -45,6 +45,16 @@ type State = {
   createTask: (payload: CreateTaskInput) => Promise<Task>;
   updateTask: (id: string, patch: Partial<Task>) => Promise<Task>;
   deleteTask: (id: string) => Promise<void>;
+  // optimistic operations
+  pending?: Record<
+    string,
+    {
+      token: string;
+      prev?: Task | null;
+    }
+  >;
+  updateTaskOptimistic: (id: string, patch: Partial<Task>) => Promise<Task>;
+  deleteTaskOptimistic: (id: string) => Promise<void>;
   resetDailiesIfNeeded: () => Promise<void>;
   resetDailiesNow: () => Promise<void>;
 };
@@ -79,6 +89,7 @@ const useTaskStore = create<State>((set, get) => ({
   tasks: [],
   loading: false,
   error: null,
+  pending: {},
 
   setTasks(tasks) {
     set({ tasks });
@@ -173,6 +184,117 @@ const useTaskStore = create<State>((set, get) => ({
     const tasks = get().tasks.map((t) => (t.id === id ? { ...t, ...updated } : t));
     set({ tasks });
     return updated;
+  },
+
+  async updateTaskOptimistic(id, patch) {
+    // Create a token to reconcile out-of-order responses
+    const token = `tok-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const prevTasks = get().tasks.slice();
+    const prev = prevTasks.find((t) => t.id === id) ?? null;
+
+    // mark pending for this task
+    set((s) => ({ pending: { ...(s.pending ?? {}), [id]: { token, prev } } }));
+
+    // apply optimistic patch immediately
+    const optimistic = prevTasks.map((t) => (t.id === id ? { ...t, ...patch } : t));
+    set({ tasks: optimistic });
+
+    // build payload similar to updateTask
+    const payload: UpdateTaskPayload = { id };
+    if (patch.title !== undefined) payload.title = sanitizeTitle(patch.title as string);
+    if (patch.notes !== undefined) {
+      payload.notes = sanitizeDescription(patch.notes as string);
+      payload.description = sanitizeDescription(patch.notes as string);
+    }
+    if (patch.estimatedDuration !== undefined)
+      payload.estimatedDuration = patch.estimatedDuration ?? null;
+    if (patch.dueDate !== undefined) payload.dueDate = patch.dueDate;
+    if (patch.startsAt !== undefined) payload.startsAt = patch.startsAt ?? null;
+    if (patch.dueTime !== undefined) payload.dueTime = patch.dueTime ?? null;
+    if (patch.recurrence !== undefined) payload.recurrence = patch.recurrence;
+    if (patch.projectId !== undefined) payload.projectId = patch.projectId;
+    if (patch.ownerId !== undefined) payload.ownerId = patch.ownerId;
+    if (patch.started !== undefined) payload.started = patch.started;
+    if (patch.completed !== undefined) payload.completed = patch.completed;
+    if (patch.completedAt !== undefined) payload.completedAt = patch.completedAt;
+
+    try {
+      const response = await api.updateTask(payload);
+      const updated = mapRemoteTask(response as Record<string, unknown>);
+      // sanitize
+      updated.title = sanitizeTitle(updated.title);
+      if (updated.notes) updated.notes = sanitizeDescription(updated.notes);
+
+      // reconcile: only apply server response if token still current
+      const currentPending = get().pending?.[id];
+
+      if (!currentPending || currentPending.token !== token) {
+        // newer change exists; do not overwrite and keep pending entry intact
+        return updated;
+      }
+
+      const tasks = get().tasks.map((t) => (t.id === id ? { ...t, ...updated } : t));
+      // apply server-updated task and clear pending
+      set({ tasks });
+      set((s) => {
+        const p = { ...(s.pending ?? {}) };
+        delete p[id];
+        return { pending: p } as Partial<State>;
+      });
+      return updated;
+    } catch (err) {
+      // revert only if this optimistic is still the latest
+      const currentPending = get().pending?.[id];
+      if (currentPending && currentPending.token === token) {
+        const restored = prev ? prevTasks.map((t) => (t.id === id ? prev : t)) : prevTasks;
+        set({ tasks: restored });
+        set((s) => {
+          const p = { ...(s.pending ?? {}) };
+          delete p[id];
+          return { pending: p } as Partial<State>;
+        });
+      }
+      throw err;
+    }
+  },
+
+  async deleteTaskOptimistic(id) {
+    const token = `tok-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const prevTasks = get().tasks.slice();
+    const prev = prevTasks.find((t) => t.id === id) ?? null;
+
+    set((s) => ({ pending: { ...(s.pending ?? {}), [id]: { token, prev } } }));
+    // optimistic remove
+    set({ tasks: prevTasks.filter((t) => t.id !== id) });
+
+    try {
+      await api.deleteTask(id);
+      // clear pending
+      set((s) => {
+        const p = { ...(s.pending ?? {}) };
+        delete p[id];
+        return { pending: p } as Partial<State>;
+      });
+      return;
+    } catch (err) {
+      // revert if still latest
+      const currentPending = get().pending?.[id];
+      if (currentPending && currentPending.token === token) {
+        set({ tasks: prevTasks });
+        set((s) => {
+          const p = { ...(s.pending ?? {}) };
+          delete p[id];
+          return { pending: p } as Partial<State>;
+        });
+      } else {
+        set((s) => {
+          const p = { ...(s.pending ?? {}) };
+          delete p[id];
+          return { pending: p } as Partial<State>;
+        });
+      }
+      throw err;
+    }
   },
 
   async deleteTask(id) {

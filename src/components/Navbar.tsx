@@ -197,14 +197,14 @@ export default function Navbar({ initialIsSignedIn, initialUser }: Props) {
             <>
               <SignInButton mode="modal">
                 <span>
-                  <button className="btn border-2 border-base-content btn-success cursor-pointer">
+                  <button className="btn border-2 border-success-content btn-success cursor-pointer">
                     Login
                   </button>
                 </span>
               </SignInButton>
               <SignInButton mode="modal">
                 <span>
-                  <button className="btn border-2 border-base-content btn-accent cursor-pointer">
+                  <button className="btn border-2 border-success-content btn-accent cursor-pointer">
                     Sign up
                   </button>
                 </span>

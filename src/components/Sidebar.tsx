@@ -30,10 +30,9 @@ export default function Sidebar({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
   const projects = useProjectStore((s) => s.projects);
   const updateProject = useProjectStore((s) => s.updateProject);
-  const sortedProjects = React.useMemo(() =>
-    projects
-      .slice()
-      .sort((a: Project, b: Project) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0)),
+  const sortedProjects = React.useMemo(
+    () =>
+      projects.slice().sort((a: Project, b: Project) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0)),
     [projects],
   );
 
@@ -228,7 +227,10 @@ export default function Sidebar({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
                               {mounted && sortedProjects.length > 5 && (
                                 <div className="mt-1 px-2">
-                                  <Link href="/projects" className="text-sm text-emerald-600 hover:underline">
+                                  <Link
+                                    href="/projects"
+                                    className="text-sm text-emerald-600 hover:underline"
+                                  >
                                     Go to projects →
                                   </Link>
                                 </div>

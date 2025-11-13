@@ -3,6 +3,7 @@
 import React from 'react';
 import useProjectStore, { Project } from '../lib/projectStore';
 import { projectSlug } from '../lib/utils';
+import { truncatePreserveWords } from '../lib/string-utils';
 import { useUser } from '@clerk/nextjs';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -29,6 +30,12 @@ export default function Sidebar({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
   const projects = useProjectStore((s) => s.projects);
   const updateProject = useProjectStore((s) => s.updateProject);
+  const sortedProjects = React.useMemo(() =>
+    projects
+      .slice()
+      .sort((a: Project, b: Project) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0)),
+    [projects],
+  );
 
   const [projectsOpen, setProjectsOpen] = React.useState<boolean>(
     !!pathname && pathname.startsWith('/projects'),
@@ -172,13 +179,8 @@ export default function Sidebar({ isLoggedIn }: { isLoggedIn?: boolean }) {
                           ) : projects.length === 0 ? (
                             <div className="text-xs text-gray-500">No projects yet</div>
                           ) : (
-                            projects
-                              .slice()
-                              .sort(
-                                (a: Project, b: Project) =>
-                                  (b.starred ? 1 : 0) - (a.starred ? 1 : 0),
-                              )
-                              .map((p: Project) => {
+                            <>
+                              {sortedProjects.slice(0, 5).map((p: Project) => {
                                 const slug = projectSlug(p.name ?? '');
                                 const projectPath = `/projects/${slug}`;
                                 const isActiveProject = pathname === projectPath;
@@ -197,7 +199,13 @@ export default function Sidebar({ isLoggedIn }: { isLoggedIn?: boolean }) {
                                     >
                                       <span className="inline-flex items-center gap-2">
                                         <FolderOpen className="w-4 h-4" />
-                                        <span className="truncate">{p.name}</span>
+                                        <span
+                                          className="truncate"
+                                          title={p.name ?? ''}
+                                          aria-label={p.name ?? ''}
+                                        >
+                                          {truncatePreserveWords(p.name, 15)}
+                                        </span>
                                       </span>
                                     </Link>
                                     <button
@@ -216,7 +224,16 @@ export default function Sidebar({ isLoggedIn }: { isLoggedIn?: boolean }) {
                                     </button>
                                   </div>
                                 );
-                              })
+                              })}
+
+                              {mounted && sortedProjects.length > 5 && (
+                                <div className="mt-1 px-2">
+                                  <Link href="/projects" className="text-sm text-emerald-600 hover:underline">
+                                    Go to projects →
+                                  </Link>
+                                </div>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>

@@ -43,7 +43,7 @@ export default function HomeHero() {
               ) : (
                 <SignInButton mode="modal">
                   <button
-                    className="btn btn-success inline-flex items-center justify-center font-semibold border-2 border-base-content transition px-4 py-2 text-sm xl:px-5 xl:py-2 xl:text-base"
+                    className="btn btn-success inline-flex items-center justify-center font-semibold border-2 border-success-content transition px-4 py-2 text-sm xl:px-5 xl:py-2 xl:text-base"
                     aria-label="Get started"
                   >
                     Get Started

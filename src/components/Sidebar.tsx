@@ -3,6 +3,7 @@
 import React from 'react';
 import useProjectStore, { Project } from '../lib/projectStore';
 import { projectSlug } from '../lib/utils';
+import { truncatePreserveWords } from '../lib/string-utils';
 import { useUser } from '@clerk/nextjs';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -197,7 +198,9 @@ export default function Sidebar({ isLoggedIn }: { isLoggedIn?: boolean }) {
                                     >
                                       <span className="inline-flex items-center gap-2">
                                         <FolderOpen className="w-4 h-4" />
-                                        <span className="truncate">{p.name}</span>
+                                        <span className="truncate" title={p.name ?? ''} aria-label={p.name ?? ''}>
+                                          {truncatePreserveWords(p.name, 15)}
+                                        </span>
                                       </span>
                                     </Link>
                                     <button

@@ -11,8 +11,17 @@ export async function ensureDailyResetOnLoad(): Promise<void> {
   if (hasRunThisSession) return;
   hasRunThisSession = true;
   try {
+    // Defensive: in some test environments `useTaskStore` may be mocked
+    // or replaced such that the exported value doesn't include a
+    // `getState` function. Guard against that to avoid throwing a
+    // TypeError which can cascade and make tests order-dependent.
+    if (!useTaskStore || typeof (useTaskStore as any).getState !== 'function') {
+      // nothing to do — safely return without error
+      return;
+    }
+
     const state = useTaskStore.getState();
-    if (typeof state.resetDailiesIfNeeded === 'function') {
+    if (state && typeof state.resetDailiesIfNeeded === 'function') {
       await state.resetDailiesIfNeeded();
     }
   } catch (err) {

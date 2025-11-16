@@ -17,7 +17,10 @@ export async function ensureDailyResetOnLoad(): Promise<void> {
     // TypeError which can cascade and make tests order-dependent.
     // Avoid using `any` to satisfy linter rules; cast to `unknown` and
     // inspect the `getState` property safely.
-    if (!useTaskStore || typeof (useTaskStore as unknown as { getState?: unknown }).getState !== 'function') {
+    if (
+      !useTaskStore ||
+      typeof (useTaskStore as unknown as { getState?: unknown }).getState !== 'function'
+    ) {
       // nothing to do — safely return without error
       return;
     }

@@ -14,6 +14,7 @@ import {
   ChevronRight,
   ChevronDown,
   LayoutDashboard,
+  Calendar,
   Repeat2,
   Folder,
   Settings,
@@ -69,6 +70,7 @@ export default function Sidebar({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const nav = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     // Today removed — tasks for today are shown on the Dashboard
+    { href: '/calendar', label: 'Calendar', icon: Calendar },
     { href: '/dailies', label: 'Dailies', icon: Repeat2 },
     { href: '/projects', label: 'Projects', icon: Folder },
     { href: '/settings', label: 'Settings', icon: Settings },

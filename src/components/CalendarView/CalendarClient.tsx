@@ -1,9 +1,12 @@
 'use client';
 
 import React from 'react';
-// removed Calendar icon per UX update — keep the title text only
+import useTaskStore from '../../lib/taskStore';
+import Calendar from './Calendar';
 
 export default function CalendarClient() {
+  const tasks = useTaskStore((state) => state.tasks);
+
   return (
     <div className="mx-6 mt-[124px] flex flex-col flex-1 min-h-0 overflow-x-visible pb-12">
       <header className="pb-6">
@@ -22,13 +25,11 @@ export default function CalendarClient() {
       </header>
 
       <div className="flex-1 min-h-0 flex flex-col">
-        <div className="flex-1 min-h-0 overflow-y-auto px-3 pt-2 pb-6">
+        <div className="flex-1 min-h-0 overflow-y-auto pt-2 pb-0">
           <div className="space-y-3">
             <section className="mb-4">
               <div className="transition-all duration-150 ease-in-out pt-2 pb-0 px-0">
-                <div className="text-sm text-gray-500">
-                  Calendar view coming soon — placeholder.
-                </div>
+                <Calendar tasks={tasks} />
               </div>
             </section>
           </div>

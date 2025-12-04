@@ -35,18 +35,29 @@ const getDatabaseUrl = () => {
 
 const prodUrl = getDatabaseUrl();
 
-// If a specific URL was determined for production, pass it to PrismaClient so
-// it uses the intended datasource instead of relying on env at import-time.
+// If a specific URL was determined for production, prefer passing it to the
+// PrismaClient constructor rather than embedding a `url` in the schema file
+// (Prisma v7+ enforces this). We still set `process.env.DATABASE_URL` as a
+// fallback so other tooling that reads the env continues to work.
 const globalAny = global as unknown as { prisma?: PrismaClient };
 
-// If prodUrl is present, ensure Prisma reads it from env (PrismaClient constructor
-// reads process.env.DATABASE_URL). This avoids type gymnastics with the
-// `datasources` constructor option.
 if (prodUrl) {
   process.env.DATABASE_URL = process.env.DATABASE_URL ?? prodUrl;
 }
 
-const prisma = globalAny.prisma ?? new PrismaClient();
+// Build a minimal options object for PrismaClient. Newer Prisma versions
+// support either `datasources` to override the `db` datasource, or
+// `accelerateUrl` when using Prisma Accelerate. Detect `PRISMA_ACCELERATE_URL`
+// and prefer it; otherwise supply the resolved DB URL as the `db` datasource.
+const clientOptions: Record<string, unknown> = {};
+if (process.env.PRISMA_ACCELERATE_URL) {
+  clientOptions.accelerateUrl = process.env.PRISMA_ACCELERATE_URL;
+} else if (prodUrl || process.env.DATABASE_URL) {
+  clientOptions.datasources = { db: prodUrl ?? process.env.DATABASE_URL };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const prisma = globalAny.prisma ?? new PrismaClient(clientOptions as any);
 
 if (process.env.NODE_ENV !== 'production') globalAny.prisma = prisma;
 

@@ -53,7 +53,11 @@ const clientOptions: Record<string, unknown> = {};
 if (process.env.PRISMA_ACCELERATE_URL) {
   clientOptions.accelerateUrl = process.env.PRISMA_ACCELERATE_URL;
 } else if (prodUrl || process.env.DATABASE_URL) {
-  clientOptions.datasources = { db: prodUrl ?? process.env.DATABASE_URL };
+  // Prisma expects datasources to be an object with a `url` field:
+  // { datasources: { db: { url: "CONNECTION_STRING" } } }
+  // Previously we passed the string directly which causes
+  // PrismaClientConstructorValidationError.
+  clientOptions.datasources = { db: { url: prodUrl ?? process.env.DATABASE_URL } };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import MonthView from './MonthView';
 import WeekView from './WeekView';
 import DayView from './DayView';
@@ -8,12 +8,13 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { startOfWeek, addDays, formatDateKey } from './dateUtils';
 import type { Task } from '../../lib/taskStore';
 
-type Props = { tasks: Task[] };
+type Props = {
+  tasks: Task[];
+  center: Date;
+  view: 'month' | 'week' | 'day';
+};
 
-export default function Calendar({ tasks }: Props) {
-  const [center, setCenter] = useState(() => new Date());
-  const [view, setView] = useState<'month' | 'week' | 'day'>('month');
-
+export default function Calendar({ tasks, center, view }: Props) {
   const title = center.toLocaleString(undefined, { month: 'long', year: 'numeric' });
 
   const weekRangeTitle = () => {
@@ -33,54 +34,10 @@ export default function Calendar({ tasks }: Props) {
     { id: 'day', label: 'Day' },
   ];
 
-  const handleToday = () => {
-    setView('day');
-    setCenter(new Date());
-  };
+  // header controls are provided by the page-level CalendarClient; Calendar only renders views.
 
   return (
     <div className="rounded-[32px] shadow-2xl shadow-emerald-100/40">
-      <div
-        className="mx-auto w-full px-0"
-        style={{ maxWidth: 'calc(100vw - var(--sidebar-width) - 3rem)', boxSizing: 'border-box' }}
-      >
-        <div className="flex flex-col gap-4 px-0 py-6">
-          <div className="flex flex-wrap items-center gap-4">
-            <h2 className="text-2xl font-semibold text-slate-900">
-              {view === 'month' ? title : view === 'week' ? weekRangeTitle() : dayTitle()}
-            </h2>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="inline-flex items-center gap-1 rounded-full bg-slate-100/80 p-1">
-                {viewOptions.map(({ id, label }) => {
-                  const active = view === id;
-                  return (
-                    <button
-                      key={id}
-                      onClick={() => setView(id)}
-                      className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
-                        active
-                          ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200/60'
-                          : 'text-slate-500 hover:text-slate-800'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <button
-                className="rounded-full border border-slate-200 px-4 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-emerald-200 hover:text-emerald-700"
-                onClick={handleToday}
-              >
-                Today
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div
         className="mt-0 mx-auto w-full"
         style={{ maxWidth: 'calc(100vw - var(--sidebar-width) - 3rem)', boxSizing: 'border-box' }}
